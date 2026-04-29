@@ -1,12 +1,15 @@
-# StudiKompass 🧭
+# 🧭 StudiKompass 
 
 ## Inhaltsverzeichnis
-* 🤖 [Einführung](#einführung)
-* 🤸🏼 [Setup](#setup)
+1. 🤖 [Einführung](#einführung)
+2. ⚙️ [Tech Stack](#techStack)
+3. 🤸🏼 [Setup](#setup)
 
 ## 🤖 Einführung
 
 **Studierenden Kompass** ist eine interaktive Webapp, die Studierende dabei unterstützt, ihre akademische Laufbahn strategisch auf individuelle Berufsziele auszurichten. Durch einen dynamischen Studienverlaufsplan werden Module visualisiert und die Semesterplanung strukturiert.
+
+## ⚙️ Tech Stack
 
 ## 🤸🏼 Setup
 Folge diesen Schritten, um das Projekt lokal auf deinem Rechner einzurichten.
