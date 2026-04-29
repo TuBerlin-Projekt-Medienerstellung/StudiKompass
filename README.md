@@ -1,8 +1,8 @@
 # StudiKompass 🧭
 
 ## Inhaltsverzeichnis
-* [🤖 Einführung](#einführung)
-* [🤸🏼 Setup](#setup)
+* 🤖 [Einführung](#einführung)
+* 🤸🏼 [Setup](#setup)
 
 ## 🤖 Einführung
 
