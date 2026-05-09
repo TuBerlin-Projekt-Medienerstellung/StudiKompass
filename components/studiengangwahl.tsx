@@ -67,7 +67,7 @@ export default async function Studiengangwahl() {
                             <select 
                                 name="studiengang"
                                 defaultValue={profile?.studiengang || ""}
-                                className="w-full bg-zinc-200 dark:bg-zinc-800 border border-zinc-700 text-black dark:text-white rounded-lg px-4 py-2 outline-none"
+                                className="w-full bg-zinc-200 dark:bg-zinc-800 border border-zinc-700 text-black dark:text-white rounded-lg px-4 py-2 outline-hidden"
                             >
                                 <option value="">-- Wähle deinen Studiengang aus --</option>
                                 {officialDegrees.map((deg, index) => (
