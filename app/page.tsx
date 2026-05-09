@@ -10,7 +10,7 @@ export default function Home() {
     <main className="flex flex-col items-center justify-center min-h-screen bg-zinc-100 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 px-6">
       {/* Background Stuff*/}
       <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
-        <div className="absolute -top-[10%] -left-[10%] w-[40%] h-[40%] bg-red-900/20 dark:bg-emerald-900/20 blur-[120px] rounded-full" />
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-red-900/20 dark:bg-emerald-900/20 blur-[120px] rounded-full" />
         <header className="flex flex-col items-center space-y-4">{/*Uhhh..width and height are random, since we don't have a Logo yet..*/}
             <Image
             src= "/Kompass_bild.png"
