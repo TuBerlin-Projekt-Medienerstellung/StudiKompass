@@ -1,10 +1,6 @@
-import { DeployButton } from "@/components/deploy-button";
-import { EnvVarWarning } from "@/components/env-var-warning";
-import { AuthButton } from "@/components/auth-button";
-import { ThemeSwitcher } from "@/components/theme-switcher";
-import { hasEnvVars } from "@/lib/utils";
 import Link from "next/link";
-import { Suspense } from "react";
+import { ThemeSwitcher } from "@/components/theme-switcher";
+import { LogoutButton } from "@/components/logout-button";
 
 export default function ProtectedLayout({
   children,
@@ -12,44 +8,44 @@ export default function ProtectedLayout({
   children: React.ReactNode;
 }) {
   return (
-    <main className="min-h-screen flex flex-col items-center">
-      <div className="flex-1 w-full flex flex-col gap-20 items-center">
-        <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-          <div className="w-full max-w-5xl flex justify-between items-center p-3 px-5 text-sm">
-            <div className="flex gap-5 items-center font-semibold">
-              <Link href={"/"}>Next.js Supabase Starter</Link>
-              <div className="flex items-center gap-2">
-                <DeployButton />
-              </div>
-            </div>
-            {!hasEnvVars ? (
-              <EnvVarWarning />
-            ) : (
-              <Suspense>
-                <AuthButton />
-              </Suspense>
-            )}
+    <div className="min-h-screen flex flex-col bg-zinc-100 dark:bg-zinc-950 text-zinc-950 dark:text-zinc-100">
+      
+      {/* Navbar for testing the new routing */}
+      <nav className="w-full border-b border-zinc-300 dark:border-zinc-800 bg-zinc-200 dark:bg-zinc-900 h-16 flex items-center px-6">
+        <div className="w-full max-w-5xl mx-auto flex justify-between items-center">
+          
+          {/* Logo..and old design, bc the new fonts and stuff aren't ready */}
+          <div className="font-black text-xl tracking-tighter">
+            Stu<span className="text-red-600 dark:text-emerald-500">Pass</span>
           </div>
-        </nav>
-        <div className="flex-1 flex flex-col gap-20 max-w-5xl p-5">
-          {children}
-        </div>
 
-        <footer className="w-full flex items-center justify-center border-t mx-auto text-center text-xs gap-8 py-16">
-          <p>
-            Powered by{" "}
-            <a
-              href="https://supabase.com/?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-              target="_blank"
-              className="font-bold hover:underline"
-              rel="noreferrer"
-            >
-              Supabase
-            </a>
-          </p>
+          {/* Routing Tabs for the new pages (forum, settings and modules..)*/}
+          <div className="flex gap-6 font-semibold text-sm">
+            <Link href="/protected/dashboard" className="hover:text-zinc-500 dark:hover:text-zinc-400 transition-colors">
+              Dashboard
+            </Link>
+            <Link href="/protected/forum" className="hover:text-zinc-500 dark:hover:text-zinc-400 transition-colors">
+              Forum
+            </Link>
+            <Link href="/protected/modules" className="hover:text-zinc-500 dark:hover:text-zinc-400 transition-colors">
+              Module
+            </Link>
+            <Link href="/protected/settings" className="hover:text-zinc-500 dark:hover:text-zinc-400 transition-colors">
+              Einstellungen
+            </Link>
+          </div>
+
           <ThemeSwitcher />
-        </footer>
-      </div>
-    </main>
+          <LogoutButton/>
+
+        </div>
+      </nav>
+
+
+      <main className="flex-1 w-full max-w-5xl mx-auto p-6">
+        {children}
+      </main>
+      
+    </div>
   );
 }
