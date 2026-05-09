@@ -24,7 +24,7 @@ Stelle sicher, dass die folgenden Programme auf deinem Rechner installiert sind:
 **Repository klonen:**
 
 ```bash
-git clone https://github.com/LuntNicolas/StudiKompass.git
+[git clone https://github.com/LuntNicolas/StudiKompass.git](https://github.com/TuBerlin-Projekt-Medienerstellung/StudiKompass.git)
 cd StudiKompass
 ```
 
