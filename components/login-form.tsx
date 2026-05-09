@@ -20,26 +20,42 @@ export function LoginForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.SubmitEvent) => {
     e.preventDefault();
     const supabase = createClient();
+    let loginEmail = identifier;
     setIsLoading(true);
     setError(null);
-
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      if (!identifier.includes("@")) { 
+        const { data: fetchedEmail, error: rpcError } = await supabase.rpc(
+          "get_email_by_username",
+          { passed_username: identifier } 
+        );
+        {/*If the user logged in using his user (in the db queries under: Auth_with_user)*/}
+        if (rpcError || !fetchedEmail) {
+          throw new Error("Benutzername nicht gefunden!"); 
+        }
+        
+        loginEmail = fetchedEmail;
+      }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password: password,
+        
       });
-      if (error) throw error;
-      // Update this route to redirect to an authenticated route. The user already has an active session.
-      router.push("/protected");
+
+      if (signInError) throw signInError;    
+      router.push("/protected/dashboard");
+      {/*Update this route to redirect to an authenticated route. The user already has an active session.*/}
+
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
@@ -53,21 +69,21 @@ export function LoginForm({
         <CardHeader>
           <CardTitle className="text-2xl">Login</CardTitle>
           <CardDescription>
-            Enter your email below to login to your account
+            Gib deine TU E-mail oder deinen Benutzernamen ein, um dich anzumelden
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="identifier">E-mail oder Benutzername</Label>
                 <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
+                  id="identifier"
+                  type="text"
+                  placeholder="m@example.com or User_name"
                   required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">
@@ -84,7 +100,7 @@ export function LoginForm({
                   id="password"
                   type="password"
                   required
-                  value={password}
+                  value={password} 
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
@@ -108,3 +124,4 @@ export function LoginForm({
     </div>
   );
 }
+
