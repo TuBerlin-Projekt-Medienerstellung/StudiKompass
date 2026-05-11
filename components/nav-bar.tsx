@@ -19,7 +19,7 @@ const NavBar = () => {
             className={`overflow-hidden md:h-screen md:w-72 w-full px-4 p-4 flex flex-col md:border-r-2 fixed justify-between ${mobileOpen ? "h-screen bg-background" : "h-16"}`}>
             <div className="flex flex-col gap-4 w-full">
                 <div className="w-full flex flex-row justify-between items-center pb-3 border-b-2 md:border-none">
-                    <Link className="flex items-center gap-2" href="/planner">
+                    <Link className="flex items-center gap-2" href="/protected/planner">
                         <div className="relative md:size-10 size-8">
                             <Image
                                 src="/logo/Kompass.svg"
