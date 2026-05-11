@@ -1,7 +1,22 @@
-import type { NextConfig } from "next";
+import type {NextConfig} from "next";
 
 const nextConfig: NextConfig = {
-  cacheComponents: true,
+    cacheComponents: true,
+    images: {
+        remotePatterns: [
+            {
+                hostname: "picsum.photos",
+            }
+        ]
+    },
+    turbopack: {
+        rules: {
+            "*.svg": {
+                loaders: ["@svgr/webpack"],
+                as: "*.js",
+            },
+        },
+    },
 };
 
 export default nextConfig;
