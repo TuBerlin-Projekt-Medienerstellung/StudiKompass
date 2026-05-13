@@ -57,8 +57,6 @@ export default async function Studiengangwahl() {
         <div className="w-full">
             <section className="w-full max-w-4xl space-y-8">
                 <div className="bg-zinc-200 dark:bg-zinc-900 border border-zinc-600 dark:border-zinc-800 p-6 rounded-xl">
-                    <h2 className="text-xl font-semibold mb-4">Profile Settings</h2>
-                    
                     <form action={updateProfile} className="space-y-4">
                         <div>
                             <label className="block text-sm font-medium text-black dark:text-zinc-400 mb-2">
