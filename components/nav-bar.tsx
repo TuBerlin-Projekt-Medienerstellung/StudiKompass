@@ -7,12 +7,36 @@ import {useMediaQuery} from "react-responsive";
 import {navBarLinks} from "@/constants";
 import {X, Menu} from "lucide-react"
 import {usePathname} from "next/navigation";
-import {useState} from "react";
+import {useState, useEffect} from "react";
+import { createClient } from '@/lib/supabase/client'
+
+type Profile = {
+    username: string | null
+    studiengang: string | null
+}
 
 const NavBar = () => {
     const isMobile = useMediaQuery({query: '(max-width: 600px)'});
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
+    const [profile, setProfile] = useState<Profile | null>(null);
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            const supabase = createClient()
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return
+
+            const { data } = await supabase
+                .from('profiles')
+                .select('username, studiengang')
+                .eq('id', user.id)
+                .single()
+
+            setProfile(data)
+        }
+        fetchProfile()
+    }, [])
 
     return (
         <nav
@@ -65,8 +89,8 @@ const NavBar = () => {
                             />
                         </div>
                         <div className="flex flex-col">
-                            <h3>Max Mustermann</h3>
-                            <p className="opacity-60">Informatik B. Sc.</p>
+                            <h3>{profile?.username ?? '...'}</h3>
+                            <p className="opacity-60">{profile?.studiengang ?? '...'}</p>
                         </div>
                     </div>
                     <div>
