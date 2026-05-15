@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
 
-export default function Settings() {
+export default function Settings({ refreshKey }: { refreshKey: number }) {
     const [email, setEmail] = useState<string | null>(null)
     const [profile, setProfile] = useState<any>(null)
     const [userId, setUserId] = useState<string | null>(null)
@@ -27,7 +27,7 @@ export default function Settings() {
             setEmail(user.email ?? null)
         }
         fetchData()
-    }, [])
+    }, [refreshKey])
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
@@ -75,9 +75,9 @@ export default function Settings() {
 
                     {/* Info */}
                     <div className="flex flex-col">
-                        <span className="font-semibold text-sm">{profile?.username ?? "—"}</span>
-                        <span className="text-xs text-muted-foreground">{profile?.studiengang ?? "—"}</span>
-                        <span className="text-xs text-muted-foreground">{email ?? "—"}</span>
+                        <span className="font-semibold text-base">{profile?.username ?? "—"}</span>
+                        <span className="text-sm text-muted-foreground">{profile?.studiengang ?? "—"}</span>
+                        <span className="text-sm text-muted-foreground">{email ?? "—"}</span>
                     </div>
                 </div>
 
