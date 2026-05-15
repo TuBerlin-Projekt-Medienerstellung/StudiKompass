@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
@@ -23,7 +24,7 @@ export default async function PublicProfilePage({
         <div className="flex flex-col items-center gap-4 p-8">
             <div className="relative size-24">
                 <Image
-                    src={profile.avatar_url ?? 'https://picsum.photos/200'} //default avatar
+                    src={profile.avatar_url ?? 'https://picsum.photos/200'} //default avatar from Lennart 
                     alt={profile.username ?? 'Profile'}
                     fill
                     className="rounded-full object-cover"
