@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { revalidatePath } from "next/cache";
+import StudiengangForm from "./studiengangwahl-form"
 
 {/*Need to connect to TU VPN to access?*/}
 export default async function Studiengangwahl() {
@@ -63,60 +63,15 @@ export default async function Studiengangwahl() {
         .eq("id", user.id)
         .single();
 
-        // selecting the degree, however bc this is based on speculation, we will leave it as is for now..
-    const updateProfile = async (formData: FormData) => {
-        "use server";
-        const selection = formData.get("studiengang") as string;
-        const supabase = await createClient();
-        const { data: { user } } = await supabase.auth.getUser();
-
-        if (user) {
-            await supabase.from("profiles").update({ studiengang: selection }).eq("id", user.id);
-            revalidatePath("/protected/settings");
-            }
-        };
 
     return (
-        <div className="w-full">
-            <section className="w-full space-y-8">
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-600 dark:border-zinc-800 p-6 rounded-xl">
-                    <form action={updateProfile} className="space-y-4">
-                        <div>
-                            <label className="block text-base font-semibold text-black dark:text-white mb-2">
-                                Studiengangwahl
-                            </label>
-                            <select 
-                                name="studiengang"
-                                defaultValue={profile?.studiengang || ""}
-                                className="w-full bg-zinc-200 dark:bg-zinc-800 border border-zinc-700 text-black dark:text-white rounded-lg px-4 py-2 outline-hidden"
-                            >
-                                <option value="">-- Wähle deinen Studiengang aus --</option>
-                                {officialDegrees.map((deg, index) => {
-                                    // studiengangart is an object { name: "Bachelor" } per the API spec
-                                    const typeName = deg?.studiengangart?.name ?? "";
+         <StudiengangForm
+            degrees={officialDegrees}
+            current={profile?.studiengang ?? ""} 
+                />
+            )
+        }
 
-                                    // Combine Name + Type (e.g. "Informatik (Master)") to prevent duplicate names
-                                    const displayName = typeName
-                                        ? `${deg?.name} (${typeName})`
-                                        : (deg?.name || "Unbekannter Studiengang");
-
-                                    return (
-                                        <option key={deg?.id?.toString() || index} value={displayName}>
-                                            {displayName}
-                                        </option>
-                                    );
-                                })}
-                            </select>
-                        </div>
-                        
-                        <button type="submit" className="text-base bg-zinc-400 hover:bg-zinc-200 dark:bg-emerald-600 dark:hover:bg-emerald-500 px-6 py-2 rounded-lg font-bold transition-all">
-                            Studiengang speichern
-                        </button>
-                    </form>
-                </div>
-            </section>
-        </div>
-    );
-}
+        
 
 

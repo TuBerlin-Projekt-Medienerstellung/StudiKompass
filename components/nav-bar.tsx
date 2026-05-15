@@ -38,11 +38,15 @@ const NavBar = () => {
     useEffect(() => {
         fetchProfileData()
     }, [fetchProfileData])
-
+ //omfg I knew I had to add an Eventlistener with fetch as I did with avatar, AI aint gonna replace me muhahah
     useEffect(() => {
-            window.addEventListener("avatar-updated", fetchProfileData)
-            return () => window.removeEventListener("avatar-updated", fetchProfileData)
-        }, [fetchProfileData])
+    window.addEventListener("avatar-updated", fetchProfileData)
+    window.addEventListener("studiengang-updated", fetchProfileData) 
+    return () => {
+        window.removeEventListener("avatar-updated", fetchProfileData)
+        window.removeEventListener("studiengang-updated", fetchProfileData) 
+    }
+    }, [fetchProfileData])
     
     //console.log("CURRENT DB URL IS:", profile?.avatar_url);
     return (
@@ -96,8 +100,8 @@ const NavBar = () => {
                             />
                         </div>
                         <div className="flex flex-col">
-                            <h3>{profile?.username ?? '...'}</h3>
-                            <p className="opacity-60">{profile?.studiengang ?? '...'}</p>
+                            <h3 className="text-sm font-semibold text-black">{profile?.username ?? '...'}</h3>
+                            <p className="text-sm opacity-60">{profile?.studiengang ?? '...'}</p>
                         </div>
                     </div>
                     <div>
