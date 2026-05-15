@@ -75,9 +75,9 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
 
                     {/* Info */}
                     <div className="flex flex-col">
-                        <span className="font-semibold text-base">{profile?.username ?? "—"}</span>
-                        <span className="text-sm text-muted-foreground">{profile?.studiengang ?? "—"}</span>
-                        <span className="text-sm text-muted-foreground">{email ?? "—"}</span>
+                        <span className="font-semibold text-xl">{profile?.username ?? "—"}</span>
+                        <span className="text-base text-muted-foreground">{profile?.studiengang ?? "—"}</span>
+                        <span className="text-base text-muted-foreground">{email ?? "—"}</span>
                     </div>
                 </div>
 
