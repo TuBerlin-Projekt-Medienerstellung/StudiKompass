@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic'
+import { connection } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
@@ -8,6 +8,7 @@ export default async function PublicProfilePage({
 }: {
     params: Promise<{ username: string }>
 }) {
+    await connection()
     const { username } = await params
 
     const supabase = await createClient()
