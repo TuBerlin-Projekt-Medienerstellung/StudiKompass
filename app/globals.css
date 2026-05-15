@@ -9,6 +9,8 @@
     --color-foreground: var(--foreground);
 
     --color-oxblood: #E7000B;
+    --color-dark-khaki: #2D3319;
+    --color-sandy-brown: #F29E4C;
 
     --color-card: hsl(var(--card));
     --color-card-foreground: hsl(var(--card-foreground));
