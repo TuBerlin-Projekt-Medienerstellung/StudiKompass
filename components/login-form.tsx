@@ -84,6 +84,7 @@ export function LoginForm({
                   required
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
+                  className= "text-black dark:text-white"
                 />
               </div>
               <div className="grid gap-2">
@@ -102,6 +103,7 @@ export function LoginForm({
                   required
                   value={password} 
                   onChange={(e) => setPassword(e.target.value)}
+                                    className= "text-black dark:text-white"
                 />
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}

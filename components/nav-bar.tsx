@@ -7,12 +7,13 @@ import {useMediaQuery} from "react-responsive";
 import {navBarLinks} from "@/constants";
 import {X, Menu} from "lucide-react"
 import {usePathname} from "next/navigation";
-import {useState, useEffect} from "react";
+import {useState, useEffect, useCallback} from "react";
 import { createClient } from '@/lib/supabase/client'
 
 type Profile = {
     username: string | null
     studiengang: string | null
+    avatar_url: string | null
 }
 
 const NavBar = () => {
@@ -21,23 +22,29 @@ const NavBar = () => {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [profile, setProfile] = useState<Profile | null>(null);
 
-    useEffect(() => {
-        const fetchProfile = async () => {
-            const supabase = createClient()
-            const { data: { user } } = await supabase.auth.getUser()
-            if (!user) return
+    const fetchProfileData = useCallback(async () => {
+        const supabase = createClient()
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) return
 
-            const { data } = await supabase
-                .from('profiles')
-                .select('username, studiengang')
-                .eq('id', user.id)
-                .single()
+        const { data } = await supabase
+            .from('profiles')
+            .select('username, studiengang, avatar_url')
+            .eq('id', user.id)
+            .single()
 
-            setProfile(data)
-        }
-        fetchProfile()
+        setProfile(data)
     }, [])
+    useEffect(() => {
+        fetchProfileData()
+    }, [fetchProfileData])
 
+    useEffect(() => {
+            window.addEventListener("avatar-updated", fetchProfileData)
+            return () => window.removeEventListener("avatar-updated", fetchProfileData)
+        }, [fetchProfileData])
+    
+    //console.log("CURRENT DB URL IS:", profile?.avatar_url);
     return (
         <nav
             className={`overflow-hidden md:h-screen md:w-72 w-full px-4 p-4 flex flex-col md:border-r-2 fixed justify-between ${mobileOpen ? "h-screen bg-background" : "h-16"}`}>
@@ -82,7 +89,7 @@ const NavBar = () => {
                     <div className="flex flex-row gap-4 md:justify-start justify-center items-center">
                         <div className="relative size-10">
                             <Image
-                                src="https://picsum.photos/200"
+                                src={profile?.avatar_url || "/default-avatar.png"}
                                 alt="placeholder"
                                 fill
                                 className="rounded-4xl"

@@ -15,9 +15,9 @@ export default async function Studiengangwahl() {
         `${process.env.studiengaenge_API_URL}?pageSize=500`,
         {
             headers: process.env.Studiengaenge_API_KEY
-                ? { 'x-api-key': process.env.Studiengaenge_API_KEY }  // ← fix here
+                ? { 'x-api-key': process.env.Studiengaenge_API_KEY }  //used bearer before, email says form apikey required
                 : {},
-            next: { revalidate: 86400 }
+            next: { revalidate: 86400 } //still the same caching to reduce unwanted traffic and prevent slow flow
         }
     );
 
@@ -78,11 +78,11 @@ export default async function Studiengangwahl() {
 
     return (
         <div className="w-full">
-            <section className="w-full max-w-4xl space-y-8">
-                <div className="bg-zinc-200 dark:bg-zinc-900 border border-zinc-600 dark:border-zinc-800 p-6 rounded-xl">
+            <section className="w-full space-y-8">
+                <div className="bg-white dark:bg-zinc-900 border border-zinc-600 dark:border-zinc-800 p-6 rounded-xl">
                     <form action={updateProfile} className="space-y-4">
                         <div>
-                            <label className="block text-sm font-medium text-black dark:text-zinc-400 mb-2">
+                            <label className="block text-base font-semibold text-black dark:text-white mb-2">
                                 Studiengangwahl
                             </label>
                             <select 
@@ -109,7 +109,7 @@ export default async function Studiengangwahl() {
                             </select>
                         </div>
                         
-                        <button type="submit" className="bg-zinc-400 hover:bg-zinc-200 dark:bg-emerald-600 dark:hover:bg-emerald-500 px-6 py-2 rounded-lg font-bold transition-all">
+                        <button type="submit" className="text-base bg-zinc-400 hover:bg-zinc-200 dark:bg-emerald-600 dark:hover:bg-emerald-500 px-6 py-2 rounded-lg font-bold transition-all">
                             Studiengang speichern
                         </button>
                     </form>

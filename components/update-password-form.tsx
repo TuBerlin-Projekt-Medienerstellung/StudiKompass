@@ -24,7 +24,7 @@ export function UpdatePasswordForm({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
+  const handleForgotPassword = async (e: React.SubmitEvent) => {
     e.preventDefault();
     const supabase = createClient();
     setIsLoading(true);
@@ -43,11 +43,11 @@ export function UpdatePasswordForm({
   };
 
   return (
-    <div className={cn("flex flex-col gap-6", className)} {...props}>
+    <div className={cn("bg-white dark:bg-zinc-900 border border-zinc-600 dark:border-zinc-800 p-6 rounded-xl", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl">Reset Your Password</CardTitle>
-          <CardDescription>
+          <CardTitle className="text-base font-semibold text-black mb-2">Reset Your Password</CardTitle>
+          <CardDescription className="text-zinc-500">
             Please enter your new password below.
           </CardDescription>
         </CardHeader>
