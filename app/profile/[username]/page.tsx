@@ -1,4 +1,4 @@
-import { connection } from 'next/server'
+import { unstable_noStore as noStore } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
@@ -8,7 +8,7 @@ export default async function PublicProfilePage({
 }: {
     params: Promise<{ username: string }>
 }) {
-    await connection()
+    noStore()
     const { username } = await params
 
     const supabase = await createClient()
