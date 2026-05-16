@@ -1,16 +1,26 @@
-// Basis-URL der MOSES Demo-API der TU Berlin
 const BASE_URL = "https://demo.moses.tu-berlin.de/moses/api/v1";
-
-// Standard-Header für alle API-Anfragen
 const HEADERS = {
     "accept": "application/json",
     "x-api-key": process.env.MOSES_API_KEY || ""
 };
 
-// Hilfsfunktion für API-Anfragen an MOSES
 async function fetchMoses(path: string) {
     const res = await fetch(`${BASE_URL}${path}`, { headers: HEADERS });
     return res.json();
+}
+
+async function getBereichPfad(bereichId: number): Promise<string[]> {
+    const data = await fetchMoses(`/studiengangsbereich/${bereichId}`);
+    const bereich = data.data?.[0];
+
+    if (!bereich) return [];
+
+    if (bereich.parent?.id) {
+        const elternPfad = await getBereichPfad(bereich.parent.id);
+        return [...elternPfad, bereich.name];
+    }
+
+    return [bereich.name];
 }
 
 export async function GET(request: Request) {
@@ -18,13 +28,10 @@ export async function GET(request: Request) {
         const { searchParams } = new URL(request.url);
         const studiengangId = searchParams.get("studiengangId");
 
-        // Pflichtparameter prüfen
         if (!studiengangId) {
             return Response.json({ error: "studiengangId fehlt" }, { status: 400 });
         }
 
-        // 1. Studiengang abrufen und neueste StuPO ermitteln
-        // Die neueste StuPO hat die höchste ID
         const studiengangDaten = await fetchMoses(`/studiengang/${studiengangId}`);
         const studiengang = studiengangDaten.data?.[0];
 
@@ -36,8 +43,6 @@ export async function GET(request: Request) {
             s.id > max.id ? s : max
         );
 
-        // 2. Studiengangsabbildung abrufen
-        // Verbindet die StuPO mit den zugehörigen Modullisten
         const abbildungDaten = await fetchMoses(`/studiengangsabbildung?stupoId=${neuesteStupo.id}`);
         const abbildung = abbildungDaten.data?.[0];
 
@@ -45,8 +50,6 @@ export async function GET(request: Request) {
             return Response.json({ error: "Keine Studiengangsabbildung gefunden" }, { status: 404 });
         }
 
-        // 3. Alle Modullisten seitenweise abrufen und nach Studiengangsabbildung filtern
-        // pageSize=1000 um sicherzustellen dass alle Seiten abgerufen werden
         const ersteSeite = await fetchMoses(`/modulliste?pageSize=1000`);
         const totalPages = ersteSeite.totalPages;
         let alleModullisten = [...ersteSeite.data];
@@ -56,18 +59,16 @@ export async function GET(request: Request) {
             alleModullisten = [...alleModullisten, ...seite.data];
         }
 
-        // Nur Modullisten die zur aktuellen Studiengangsabbildung gehören
         const gefilterteModullisten = alleModullisten.filter((ml: any) =>
             ml.studiengangsabbildung?.id === abbildung.id
         );
 
         if (gefilterteModullisten.length === 0) {
             return Response.json({
-                error: "Keine Modulliste gefunden — dieser Studiengang ist in der Demo-API nicht vollständig hinterlegt. In der echten MOSES API sollte dies funktionieren."
+                error: "Keine Modulliste gefunden — dieser Studiengang ist in der Demo-API nicht vollständig hinterlegt."
             }, { status: 404 });
         }
 
-        // 4. Neueste Modulliste nehmen (höchste Semester-ID)
         const aktuelleModulliste = gefilterteModullisten.reduce((max: any, ml: any) =>
             (ml.semester?.id || 0) > (max.semester?.id || 0) ? ml : max
         );
@@ -78,34 +79,36 @@ export async function GET(request: Request) {
             return Response.json({ error: "Keine Module in dieser Modulliste" }, { status: 404 });
         }
 
-        // 5. Für jede Zuordnung die vollständigen Moduldaten abrufen
-        // Ein Modul kann mehrfach erscheinen wenn es in mehreren Studienbereichen wählbar ist
-        // In diesem Fall ist die Kombination aus id + kategorie eindeutig, nicht die id allein
         const module = [];
         for (const z of zuordnungen) {
-            // Vollständige Zuordnungsdaten abrufen
             const zuordnungRaw = await fetchMoses(`/studiengangszuordnung/${z.id}`);
             const zuordnung = zuordnungRaw.data?.[0];
 
-            // bolognamodulversion abrufen um die bolognamodul-ID zu bekommen
             const versionRaw = await fetchMoses(`/bolognamodulversion/${zuordnung?.bolognamodulVersion?.id}`);
             const version = versionRaw.data?.[0];
 
-            // bolognamodul abrufen um die korrekte Nummer für die MOSES-URL zu bekommen
-            // Die "number" ist die offizielle Modulnummer die in der MOSES-URL verwendet wird
             const bolognamodulRaw = await fetchMoses(`/bolognamodul/${version?.bolognamodul?.id}`);
             const bolognamodul = bolognamodulRaw.data?.[0];
+
+            const beschreibungId = version?.bolognamodulBeschreibung?.id;
+            const beschreibungRaw = beschreibungId
+                ? await fetchMoses(`/bolognamodulbeschreibung/${beschreibungId}`)
+                : null;
+            const beschreibung = beschreibungRaw?.data?.[0];
+
+            const bereichId = zuordnung?.studiengangsbereich?.id;
+            const bereichPfad = bereichId ? await getBereichPfad(bereichId) : [];
 
             module.push({
                 id: zuordnung?.bolognamodulVersion?.id,
                 name: zuordnung?.name,
-                // Studiengangsbereich z.B. "Pflichtmodule", "Wahlpflichtmodule", "Mathematische Grundlagen"
-                kategorie: zuordnung?.studiengangsbereich?.name,
-                // Leistungspunkte (ECTS)
+                bereichPfad,
                 lp: zuordnung?.modullp,
                 pruefungsform: zuordnung?.bolognamodulPruefungsform?.name,
                 turnus: zuordnung?.makroturnus?.name,
-                // Link zur offiziellen MOSES-Modulseite mit der korrekten Modulnummer
+                lernergebnisse: beschreibung?.lernergebnisseDE ?? null,
+                lehrinhalte: beschreibung?.lehrinhalteDE ?? null,
+                voraussetzungen: beschreibung?.lehrveranstaltungsvoraussetzungenDE ?? null,
                 mosesUrl: `https://moseskonto.tu-berlin.de/moses/modultransfersystem/bolognamodule/beschreibung/anzeigen.html?nummer=${bolognamodul?.number}`
             });
         }
