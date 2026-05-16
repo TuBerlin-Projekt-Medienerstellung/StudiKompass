@@ -20,7 +20,7 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## URLS to use:
+## URLS to use with the code:
 
 http://localhost:3000/api/module?studiengangId=37
 
@@ -28,7 +28,7 @@ Die oben genannte url zeigt alle module und dessen infos vom Studiengang "Maschi
 
 http://localhost:3000/api/bereichregel?studiengangId=37
 
-Die zweite URL zeigt die Bereichsregeln (wie viele min/max LP oder wie viele Module erreiht werden müssen) des jeweiligen Modulbereichs.
+Die zweite URL zeigt die Bereichsregeln (wie viele min/max LP oder wie viele Module erreiht werden müssen) des jeweiligen Modulbereichs des Studiengangs Maschinenbau Bc (83 mit 37 ersetzen, wenn für Maschinenbau Ms).
 
 Sry dass ich das so unordentlich in die readme packe, ich muss jetzt los bis 23 arbeiten lol
 
