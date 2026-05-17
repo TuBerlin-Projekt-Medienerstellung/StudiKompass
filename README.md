@@ -154,8 +154,8 @@ Studiengang
               └── Modulliste (neueste)
                     └── Studiengangszuordnung
                           ├── Bolivamodulversion
-                          │     ├── Bolivamodul (für MOSES-URL)
-                          │     └── Bolivamodulbeschreibung (für Lernergebnisse etc.)
+                          │     ├── Bolognamodul (für MOSES-URL)
+                          │     └── Bolognamodulbeschreibung (für Lernergebnisse etc.)
                           └── Studiengangsbereich (rekursiv → Bereichspfad)
 ```
 
