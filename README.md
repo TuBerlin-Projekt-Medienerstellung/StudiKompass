@@ -12,7 +12,11 @@ Dieser Branch enthält die ersten experimentellen API-Routen für das NAVIS-Proj
 
 ```env
 MOSES_API_KEY=dein-api-key-hier
+```
 
+> ⚠️ Die `.env.local` Datei wird von `.gitignore` ignoriert und darf **niemals** ins Repository gepusht werden.
+
+---
 
 ## Projekt starten
 
