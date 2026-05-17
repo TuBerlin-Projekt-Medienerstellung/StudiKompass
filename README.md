@@ -1,6 +1,6 @@
 # NAVIS – MOSES API Routes (`api-routes/first-experiments`)
 
-Dieser Branch enthält die ersten experimentellen API-Routen für das NAVIS-Projekt. Ziel ist es, Modulinformationen aus der [MOSES-Datenbank der TU Berlin](https://moses.tu-berlin.de) abzurufen und für die NAVIS-Modulkarten bereitzustellen.
+Dieser Branch enthält die ersten experimentellen API-Routen für das NAVIS-Projekt. Ziel ist es, Modulinformationen aus der MOSES-Datenbank der TU Berlin abzurufen und für die NAVIS-Modulkarten bereitzustellen.
 
 ---
 
