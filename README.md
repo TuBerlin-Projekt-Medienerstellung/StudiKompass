@@ -1,36 +1,177 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# NAVIS – MOSES API Routes (`api-routes/first-experiments`)
 
-## Getting Started
+Dieser Branch enthält die ersten experimentellen API-Routen für das NAVIS-Projekt. Ziel ist es, Modulinformationen aus der MOSES-Datenbank der TU Berlin abzurufen und für die NAVIS-Modulkarten bereitzustellen.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Voraussetzungen
+
+- [Node.js](https://nodejs.org/) installiert
+- Zugriff auf einen MOSES-API-Key (Demo oder Produktiv)
+- Eine `.env.local` Datei im Projektroot mit folgendem Inhalt:
+
+```env
+MOSES_API_KEY=dein-api-key-hier
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+> ⚠️ Die `.env.local` Datei wird von `.gitignore` ignoriert und darf **niemals** ins Repository gepusht werden.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Projekt starten
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Die Anwendung läuft dann auf `http://localhost:3000`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## API-Routen Übersicht
 
-## Deploy on Vercel
+### 1. `/api/module` — Modulliste eines Studiengangs
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+**Zweck:**
+Gibt alle Module eines Studiengangs mit ihren vollständigen Informationen zurück, inklusive Bereichszuordnung, ECTS, Prüfungsform, Turnus, Lernergebnissen, Lehrinhalten, Voraussetzungen und einem direkten Link zur MOSES-Modulseite.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Aufruf:**
+```
+GET http://localhost:3000/api/module?studiengangId=37
+```
+
+| Parameter | Beschreibung |
+|---|---|
+| `studiengangId` | Die MOSES-ID des gewünschten Studiengangs (z.B. `37` für Maschinenbau B.Sc.) |
+
+**Beispiel-Output (ein Modul):**
+```json
+{
+  "id": 22914,
+  "name": "Strömungsmechanisches Projekt",
+  "bereichPfad": ["Wahlpflichtmodule", "Projekt"],
+  "lp": 6,
+  "pruefungsform": "Portfolioprüfung",
+  "turnus": "Winter- und Sommersemester",
+  "lernergebnisse": "Die Studierenden sollen...",
+  "lehrinhalte": "Folgende Themen werden behandelt...",
+  "voraussetzungen": "a) obligatorisch: ...",
+  "mosesUrl": "https://moseskonto.tu-berlin.de/moses/modultransfersystem/bolognamodule/beschreibung/anzeigen.html?nummer=50592"
+}
+```
+
+**Erklärung der Felder:**
+
+- `bereichPfad` — Zeigt die vollständige Hierarchie des Studiengangsbereichs, dem das Modul zugeordnet ist (von oben nach unten). Das erste Element entspricht dem Pflicht-/Wahlpflichtstatus, das letzte Element der Themenkategorie.
+- `lernergebnisse` — Beschreibt die Kompetenzen und Kenntnisse, die nach dem Bestehen des Moduls erworben wurden (aus MOSES-Modulbeschreibung).
+- `lehrinhalte` — Beschreibt die behandelten Themen und Inhalte des Moduls.
+- `voraussetzungen` — Listet Pflicht- und Wunschvoraussetzungen als Freitext auf (eine direkte Modulverlinkung ist in MOSES nicht vorgesehen).
+- `mosesUrl` — Direktlink zur offiziellen Modulbeschreibungsseite auf MOSES.
+
+---
+
+### 2. `/api/bereichregel` — Bereichsbaum mit Wahlregeln
+
+**Zweck:**
+Gibt den vollständigen Bereichsbaum eines Studiengangs zurück, inklusive aller Wahlregeln pro Bereich. Diese Informationen beschreiben, wie viele ECTS oder Module ein Studierender aus einem bestimmten Bereich bestehen muss oder darf.
+
+**Aufruf:**
+```
+GET http://localhost:3000/api/bereichregel?studiengangId=37
+```
+
+| Parameter | Beschreibung |
+|---|---|
+| `studiengangId` | Die MOSES-ID des gewünschten Studiengangs |
+
+**Beispiel-Output (Ausschnitt):**
+```json
+{
+  "studiengang": "Maschinenbau",
+  "stupo": "Maschinenbau (B. Sc.) - StuPO 2017",
+  "bereiche": [
+    {
+      "id": 868,
+      "name": "Pflichtbereich",
+      "wahlregeln": [
+        { "typ": "BESTEHE_ALLE" }
+      ],
+      "kinder": [
+        {
+          "id": 870,
+          "name": "Naturwissenschaftliche Grundlagen",
+          "wahlregeln": [
+            { "typ": "BESTEHE_ALLE" }
+          ],
+          "kinder": []
+        }
+      ]
+    },
+    {
+      "id": 894,
+      "name": "Projekt",
+      "wahlregeln": [
+        { "typ": "BESTEHE_MIN_LP", "wert": 6 },
+        { "typ": "BESTEHE_MAX_LP", "wert": 6 }
+      ],
+      "kinder": []
+    }
+  ]
+}
+```
+
+**Erklärung der Wahlregeltypen:**
+
+| Typ | Bedeutung |
+|---|---|
+| `BESTEHE_ALLE` | Alle Module des Bereichs müssen bestanden werden (Pflichtbereich) |
+| `BESTEHE_MIN_LP` + `wert` | Mindestens X ECTS aus diesem Bereich müssen erreicht werden |
+| `BESTEHE_MAX_LP` + `wert` | Maximal X ECTS aus diesem Bereich dürfen angerechnet werden |
+| `BESTEHE_MIN_ANZAHL` + `wert` | Mindestens X Module aus diesem Bereich müssen bestanden werden |
+| `BESTEHE_MAX_ANZAHL` + `wert` | Maximal X Module aus diesem Bereich dürfen angerechnet werden |
+
+---
+
+## Bekannte Einschränkungen (Demo-API)
+
+Die Demo-API der TU Berlin ist eine abgespeckte Testumgebung. Folgende Einschränkungen sind bekannt:
+
+- Vollständige Modullisten sind nur für **Maschinenbau B.Sc. (ID: 37)** und **Maschinenbau M.Sc. (ID: 83)** vorhanden.
+- Andere Studiengänge sind zwar in der API gelistet, haben aber keine Moduldaten hinterlegt.
+- Für den produktiven Einsatz mit allen TU-Studiengängen wird der Zugriff auf die vollständige MOSES-Produktiv-API benötigt.
+
+---
+
+## Datenpfad (Technischer Hintergrund)
+
+Die MOSES-API ist stark verschachtelt. Ein Modul ist nicht direkt am Studiengang hängend, sondern über folgende Kette erreichbar:
+
+```
+Studiengang
+  └── StuPO (neueste = höchste ID)
+        └── Studiengangsabbildung
+              └── Modulliste (neueste)
+                    └── Studiengangszuordnung
+                          ├── Bolivamodulversion
+                          │     ├── Bolognamodul (für MOSES-URL)
+                          │     └── Bolognamodulbeschreibung (für Lernergebnisse etc.)
+                          └── Studiengangsbereich (rekursiv → Bereichspfad)
+```
+
+---
+
+## Dateipfade
+
+```
+app/
+└── api/
+    ├── module/
+    │   └── route.ts       ← /api/module
+    ├── bereichregel/
+    │   └── route.ts       ← /api/bereichregel
+    ├── studiengaenge/
+    │   └── route.ts       ← /api/studiengaenge
+    └── semester/
+        └── route.ts       ← /api/semester
+```
