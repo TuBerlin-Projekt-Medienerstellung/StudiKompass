@@ -1,5 +1,5 @@
 import type {Metadata} from "next";
-import {Commissioner} from "next/font/google";
+import {Quicksand} from "next/font/google";
 import {ThemeProvider} from "next-themes";
 import "./globals.css";
 
@@ -13,8 +13,8 @@ export const metadata: Metadata = {
     description: "The fastest way to build apps with Next.js and Supabase",
 };
 
-const commissioner = Commissioner({
-    variable: "--font-commissioner",
+const quicksand = Quicksand({
+    variable: "--font-quicksand",
     display: "swap",
     subsets: ["latin"],
 });
@@ -26,7 +26,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" suppressHydrationWarning>
-        <body className={`${commissioner.className} antialiased`}>
+        <body className={`${quicksand.className} antialiased`}>
         <ThemeProvider
             attribute="class"
             defaultTheme="system"

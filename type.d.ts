@@ -1,4 +1,4 @@
-import {LucideIcon} from "lucide-react";
+import { LucideIcon } from "lucide-react";
 
 declare global {
     interface navBarLink {
@@ -6,5 +6,10 @@ declare global {
         path: string,
         icon: LucideIcon
     }
+
+    interface detail {
+        name: string,
+        value: string
+    }
 }
-export {}
+export { }
