@@ -12,6 +12,7 @@
     --color-dark-khaki: #2D3319;
     --color-sandy-brown: #F29E4C;
     --color-blue-bell: #1F90CC;
+    --color-mint-leaf: #35AE80;
 
     --color-card: hsl(var(--card));
     --color-card-foreground: hsl(var(--card-foreground));
@@ -47,6 +48,8 @@
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
     --radius-sm: calc(var(--radius) - 4px);
+
+    --ease-in-expo: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /*
