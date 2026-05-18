@@ -1,14 +1,15 @@
 import type {NextConfig} from "next";
 
 const nextConfig: NextConfig = {
-    cacheComponents: true,
-    images: {
-        remotePatterns: [
-            {
-                hostname: "picsum.photos",
-            }
+    // cacheComponents: true,
+    images:{
+        remotePatterns:[    
+            //{protocol: "https", hostname: "picsum.photos" },
+            {protocol: "https", hostname: "hoxmogylxrsmohfdwelm.supabase.co" },
+                
         ]
     },
+
     turbopack: {
         rules: {
             "*.svg": {
