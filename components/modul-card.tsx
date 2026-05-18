@@ -1,14 +1,26 @@
-import { ChevronUp, Circle, CircleCheckBig, SquareArrowOutUpRight } from 'lucide-react';
+"use client";
+
+import { ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight } from 'lucide-react';
 import { details } from "@/constants";
 import Link from "next/link";
+import { useState } from 'react';
 
 const ModulCard = () => {
+
+    const [liked, setLiked] = useState(true);
+    const [open, setOpen] = useState(false);
+
+    function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    setLiked(e.target.checked);
+    }
+
     return (
         <div className='w-full flex border-y-2 border-x-4 rounded-xl p-6 flex-col gap-5'>
             <header className='w-full flex justify-between items-center'>
                 <div className='flex w-fit gap-2.5 '>
-                    <button>
-                        <Circle />
+                    {/**Button Modul erledigt oder nicht*/}
+                    <button onClick={() => setLiked(!liked)}>
+                        {liked ? <CircleCheckBig /> : <Circle />}
                     </button>
                     <div className='flex gap-6 items-center'>
                         {/** Hier fetchen für den Titel **/}
@@ -23,19 +35,27 @@ const ModulCard = () => {
                     </div>
 
                 </div>
-                <ChevronUp />
+                {/** Hier wird die Modulkarte ausgeklappt */}
+                <div onClick={() => setOpen(!open)}>
+                    {open ? <ChevronDown /> : <ChevronUp/>}
+                </div >
             </header>
-            <div>
-                <h2 className='font-semibold text-lg'>Beschreibung</h2>
-                {/** Hier fetchen für die Beschreibung **/}
-                <p className='opacity-80'>
-                    Im Projekt bearbeiten die Studierenden selbstständig in Gruppenarbeit konkrete Probleme. Ein grundsätzliches Projektthema wird vorgegeben, die Ausgestaltung kann in der Gruppe und unter Absprache mit der gruppenleitenden Person selbständig definiert werden. Fortschritte werden in regelmäßigen Absprachen Betreuern besprochen, die Ergebnisse werden in einer Zwischen- sowie in einer Abschlusspräsentation vor allen Teilnehmenden des Kurses vorgestellt sowie den Betreuern einem Projektbericht niedergelegt.
-                </p>
-            </div>
-            <div className='flex justify-between gap-2'>
+        
+        {/** Zusatzinformationen, die beim ausklappen gezeigt werden*/}
+        
+            {open && (
+                <div className='flex flex-col gap-y-5'>
+                    <div>
+                        <h2 className='font-semibold text-lg'>Beschreibung</h2>
+                        {/** Hier fetchen für die Beschreibung **/}
+                        <p className='opacity-80'>
+                        Im Projekt bearbeiten die Studierenden selbstständig in Gruppenarbeit konkrete Probleme. Ein grundsätzliches Projektthema wird vorgegeben, die Ausgestaltung kann in der Gruppe und unter Absprache mit der gruppenleitenden Person selbständig definiert werden. Fortschritte werden in regelmäßigen Absprachen Betreuern besprochen, die Ergebnisse werden in einer Zwischen- sowie in einer Abschlusspräsentation vor allen Teilnehmenden des Kurses vorgestellt sowie den Betreuern einem Projektbericht niedergelegt.
+                        </p>
+                    </div>
+                    <div className='flex justify-between gap-2'>
                 {/** Hier fetchen für die Details, gerade werden dummy daten von constants gefetchtet **/}
                 {details.map((detail) => (
-                    <div className='bg-[#E3E6EA] flex border-2 rounded-xl w-[296px] items-center p-4 flex-col'>
+                    <div className='bg-[#E3E6EA] flex border-2 rounded-xl w-1/4 items-center p-4 flex-col'>
                         <span>
                             {detail.name}
                         </span>
@@ -46,18 +66,22 @@ const ModulCard = () => {
                 ))}
 
 
-            </div>
-            <div className='flex rounded-lg gap-2'>
-                <button className='bg-[#8F13FD] text-white px-4 py-2 rounded-lg w-5/6'>
-                    Zum Planer hinzufügen
-                </button>
-                <Link href="#" className='bg-[#C40D1F] text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2'>
-                    zu Moses
-                    <SquareArrowOutUpRight className='justify-self-end'/>
-                </Link>
-            </div>
+                </div>
+                    <div className='flex rounded-lg gap-2'>
+                        <button className='bg-[#8F13FD] text-white px-4 py-2 rounded-lg w-5/6'>
+                            Zum Planer hinzufügen
+                        </button>
+                    {/** Hier Link von Moses einfügen */}
+                        <Link href="#" className='bg-[#C40D1F] text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2'>
+                            zu Moses
+                            <SquareArrowOutUpRight className='justify-self-end'/>
+                        </Link>
+                    </div>
+                </div>
+            )}
 
         </div>
+        
     )
 }
 
