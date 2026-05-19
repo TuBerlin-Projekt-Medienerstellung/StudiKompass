@@ -1,6 +1,5 @@
 import ModulCard from "@/components/modul-card";
 import {Plus, Search, Funnel} from 'lucide-react';
-import ModalCustomModal from "@/components/modal-custom-modal"
 
 export default function ModulesPage() {
     return (
