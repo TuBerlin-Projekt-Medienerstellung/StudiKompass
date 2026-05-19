@@ -25,9 +25,9 @@ const ModulCard = () => {
                         {liked ? <CircleCheckBig className="text-mint-leaf"/> : <Circle/>}
                     </button>
 
-                    <div className='flex gap-6 items-center'>
+                    <div className='flex gap-6 items-center md:flex-row flex-col'>
                         {/** Hier fetchen für den Titel **/}
-                        <h1 className='font-bold text-2xl'>Software Entwicklung</h1>
+                        <h1 className='font-bold md:text-2xl text-xl'>Software Entwicklung</h1>
                         <div className='flex gap-2'>
                             {/** Hier fetchen für Infos **/}
                             <div>6 ECTS</div>
@@ -67,11 +67,11 @@ const ModulCard = () => {
                                 den Betreuern einem Projektbericht niedergelegt.
                             </p>
                         </div>
-                        <div className='flex justify-between gap-2'>
+                        <div className='flex justify-between gap-2 md:flex-row flex-col'>
                             {/** Hier fetchen für die Details, gerade werden dummy daten von constants gefetchtet **/}
                             {details.map((detail, index) => (
                                 <div key={index}
-                                     className='bg-[#E3E6EA] flex border-2 rounded-xl w-1/4 items-center p-4 flex-col'>
+                                     className='bg-[#E3E6EA] flex border-2 rounded-xl w-full items-center p-4 flex-col'>
                         <span>
                             {detail.name}
                         </span>
@@ -84,12 +84,12 @@ const ModulCard = () => {
 
                         </div>
                         <div className='flex rounded-lg gap-2'>
-                            <button className='bg-[#8F13FD] text-white px-4 py-2 rounded-lg w-5/6'>
+                            <button className='bg-violet-ray text-white px-4 py-2 rounded-lg w-5/6'>
                                 Zum Planer hinzufügen
                             </button>
                             {/** Hier Link von Moses einfügen */}
                             <Link href="#"
-                                  className='bg-[#C40D1F] text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2'>
+                                  className='bg-flag-red text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2'>
                                 zu Moses
                                 <SquareArrowOutUpRight className='justify-self-end'/>
                             </Link>
