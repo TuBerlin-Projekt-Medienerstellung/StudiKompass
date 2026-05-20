@@ -68,7 +68,7 @@ const NavBar = () => {
                     <Link className="flex items-center gap-2" href="/protected/planner">
                         <div className="relative md:size-10 size-8">
                             <Image
-                                src="/logo/Kompass.svg"
+                                src="/logo/Compass-dark.svg"
                                 fill
                                 alt="logo-kompass"
                             />
