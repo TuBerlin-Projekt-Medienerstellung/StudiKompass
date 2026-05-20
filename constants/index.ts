@@ -1,4 +1,4 @@
-import {LayoutDashboard, BookOpen, TrendingUp, Settings} from "lucide-react"
+import { LayoutDashboard, BookOpen, TrendingUp, Settings } from "lucide-react"
 
 export const navBarLinks: navBarLink[] = [
     {name: "Planer", path: "/protected/planner", icon: LayoutDashboard},
