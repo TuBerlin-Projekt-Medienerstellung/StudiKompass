@@ -18,13 +18,15 @@ export default function ModulesPage() {
 
 
             <div className="flex flex-row gap-4">
-                <div className="border-2 rounded-2xl flex flex-2 py-3 px-5 gap-3 pointer-events-auto">
+                <div
+                    className="focus-within:border-blue-bell transition-colors border-2 rounded-2xl flex flex-2 py-3 px-5 gap-3 pointer-events-auto">
                     <label htmlFor="search"> <Search/></label>
-                    <input className="w-full" type="text" id="search" placeholder="Module durchsuchen"/>
+                    <input className="w-full focus:outline-none" type="text" id="search"
+                           placeholder="Module durchsuchen"/>
                 </div>
                 <div className="border-2 rounded-2xl py-3 px-5 flex">
                     <label htmlFor="types"> <Funnel/></label>
-                    <select name="types" id="types">
+                    <select className="focus:outline-none" name="types" id="types">
                         <option value="Elektronik">Elektronik</option>
                         <option value="Informatik">Informatik</option>
                         <option value="Mathematik">Mathematik</option>
@@ -32,13 +34,14 @@ export default function ModulesPage() {
                 </div>
                 <div className="border-2 rounded-2xl py-3 px-5 flex">
                     <label htmlFor="kindOfModul"> <Funnel/></label>
-                    <select name="kindOfModul" id="kindOfModul">
+                    <select className="focus:outline-none" name="kindOfModul" id="kindOfModul">
                         <option value="Pflichtmodul">Pflichtmodul</option>
                         <option value="Wahlpflichtmodul">Wahlpflichtmodul</option>
                         <option value="Wahlmodul">Wahlmodul</option>
                     </select>
                 </div>
             </div>
+            {/** Hier drüber iterieren **/}
             <div className="w-full">
                 <ModulCard/>
             </div>

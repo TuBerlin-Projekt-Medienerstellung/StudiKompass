@@ -52,6 +52,8 @@
     --radius-sm: calc(var(--radius) - 4px);
 
     --ease-in-expo: cubic-bezier(0.4, 0, 0.2, 1);
+
+    --animate-spin-slow: spin 20s linear infinite;
 }
 
 /*
@@ -121,5 +123,35 @@
     button {
         @apply cursor-pointer;
     }
+}
+
+/* Hero text slider starts */
+.slide {
+    display: inline-block;
+    flex-direction: column;
+    transition: all cubic-bezier(0.71, 0.03, 0.34, 1);
 
 }
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    animation: wordSlider 10s infinite cubic-bezier(0.9, 0.01, 0.3, 0.99);
+}
+
+@keyframes wordSlider {
+    0% {
+        transform: translateY(0.5%);
+    }
+    33.3333333333% {
+        transform: translateY(-33.3333333333%);
+    }
+    66.6666666667% {
+        transform: translateY(-66.6666666667%);
+    }
+    100% {
+        transform: translateY(0.5%);
+    }
+}
+
+/* Hero Text slider ends */

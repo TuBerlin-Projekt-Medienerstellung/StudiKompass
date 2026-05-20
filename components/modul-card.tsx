@@ -39,7 +39,7 @@ const ModulCard = () => {
 
                 </div>
                 {/** Hier wird die Modulkarte ausgeklappt */}
-                <div onClick={() => setOpen(!open)}>
+                <div className="cursor-pointer" onClick={() => setOpen(!open)}>
                     {open ? <ChevronUp/> : <ChevronDown/>}
                 </div>
             </header>

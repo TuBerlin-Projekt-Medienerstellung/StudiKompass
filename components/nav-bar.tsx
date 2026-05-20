@@ -89,7 +89,7 @@ const NavBar = () => {
                     {navBarLinks.map((link) => {
                         const isActive = pathname === link.path
                         return <Link href={link.path}
-                                     className={`w-full flex flex-row gap-2 px-4 py-3 rounded-2xl ${isActive ? "text-oxblood bg-oxblood/5" : "text-foreground"}`}
+                                     className={`w-full flex flex-row gap-2 px-4 py-3 rounded-2xl ${isActive ? "text-flag-red bg-flag-red/5" : "text-foreground"}`}
                                      key={link.name}
                                      onClick={() => setMobileOpen(false)}
                         >
