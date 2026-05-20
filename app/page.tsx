@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import {words} from "@/constants/index"
+import {words} from "@/constants"
 
 export const metadata = {
     title: 'Navis | TU Berlin',
