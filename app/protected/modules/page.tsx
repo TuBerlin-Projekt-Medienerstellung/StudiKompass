@@ -1,5 +1,6 @@
 import ModulCard from "@/components/modul-card";
 import {Plus, Search, Funnel} from 'lucide-react';
+import {modulInfo} from "@/constants";
 
 export default function ModulesPage() {
     return (
@@ -42,8 +43,10 @@ export default function ModulesPage() {
                 </div>
             </div>
             {/** Hier drüber iterieren **/}
-            <div className="w-full">
-                <ModulCard/>
+            <div className="w-full flex flex-col gap-4">
+                {modulInfo.map((info, index) =>
+                    <ModulCard key={index} {...info}/>
+                )}
             </div>
 
         </section>

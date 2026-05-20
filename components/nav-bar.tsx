@@ -9,6 +9,8 @@ import {X, Menu} from "lucide-react"
 import {usePathname} from "next/navigation";
 import {useState, useEffect, useCallback} from "react";
 import {createClient} from '@/lib/supabase/client'
+
+import {isAccessor} from "@babel/types";
 //Things to fix:
 
 // 1) bug with navbar in mobile mode (profile + studiengangwahl shouldn't cover content or be interactive -> dowpdown should disable current page functions) 
@@ -87,7 +89,8 @@ const NavBar = () => {
                 </div>
                 <div className="flex flex-col gap-2">
                     {navBarLinks.map((link) => {
-                        const isActive = pathname === link.path
+                        const isActive = pathname === link.path || pathname.startsWith(link.path + "/")
+                        console.log("pathname:", pathname, "| link.path:", link.path)
                         return <Link href={link.path}
                                      className={`w-full flex flex-row gap-2 px-4 py-3 rounded-2xl ${isActive ? "text-flag-red bg-flag-red/5" : "text-foreground"}`}
                                      key={link.name}

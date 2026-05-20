@@ -1,4 +1,4 @@
-import { LayoutDashboard, BookOpen, TrendingUp, Settings } from "lucide-react"
+import {LayoutDashboard, BookOpen, TrendingUp, Settings} from "lucide-react"
 
 export const navBarLinks: navBarLink[] = [
     {name: "Planer", path: "/protected/planner", icon: LayoutDashboard},
@@ -21,7 +21,7 @@ export const details: detail[] = [
     {name: "Leistungspunkte", value: "6"},
 ]
 
-export const modulInfo = [
+export const modulInfo: modulInfo[] = [
     {
         name: "Einführung in die Programmierung",
         leistungspunkte: 6,

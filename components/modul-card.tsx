@@ -5,7 +5,7 @@ import {details} from "@/constants";
 import Link from "next/link";
 import {useState} from 'react';
 
-const ModulCard = () => {
+const ModulCard = (props: modulInfo) => {
 
     const [liked, setLiked] = useState(true);
     const [open, setOpen] = useState(false);
@@ -13,6 +13,17 @@ const ModulCard = () => {
     // function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     //     setLiked(e.target.checked);
     // }
+
+    const {
+        name,
+        leistungspunkte,
+        semester,
+        modulArt,
+        beschreibung,
+        examform,
+        arbeitsaufwand,
+        link
+    } = props;
 
     return (
         <div
@@ -27,13 +38,13 @@ const ModulCard = () => {
 
                     <div className='flex gap-6 items-center md:flex-row flex-col'>
                         {/** Hier fetchen für den Titel **/}
-                        <h1 className='font-bold md:text-2xl text-xl'>Software Entwicklung</h1>
+                        <h1 className='font-bold md:text-2xl text-xl'>{name}</h1>
                         <div className='flex gap-2'>
                             {/** Hier fetchen für Infos **/}
-                            <div>6 ECTS</div>
-                            <span className=''>• Sose •</span>
+                            <div>{leistungspunkte} ECTS</div>
+                            <span className=''>• {semester} •</span>
                             {/** Color angepasst auf Pflicht/Wahlpflicht/wahlt **/}
-                            <p className='text-blue-bell'>Wahlpflichtmodul</p>
+                            <p className='text-blue-bell'>{modulArt}</p>
                         </div>
                     </div>
 
@@ -54,17 +65,7 @@ const ModulCard = () => {
                             <h2 className='font-semibold text-lg'>Beschreibung</h2>
                             {/** Hier fetchen für die Beschreibung **/}
                             <p className='opacity-80'>
-                                Im Projekt bearbeiten die Studierenden selbstständig in Gruppenarbeit konkrete Probleme.
-                                Ein
-                                grundsätzliches Projektthema wird vorgegeben, die Ausgestaltung kann in der Gruppe und
-                                unter
-                                Absprache mit der gruppenleitenden Person selbständig definiert werden. Fortschritte
-                                werden
-                                in regelmäßigen Absprachen Betreuern besprochen, die Ergebnisse werden in einer
-                                Zwischen-
-                                sowie in einer Abschlusspräsentation vor allen Teilnehmenden des Kurses vorgestellt
-                                sowie
-                                den Betreuern einem Projektbericht niedergelegt.
+                                {beschreibung}
                             </p>
                         </div>
                         <div className='flex justify-between gap-2 md:flex-row flex-col'>
@@ -88,7 +89,7 @@ const ModulCard = () => {
                                 Zum Planer hinzufügen
                             </button>
                             {/** Hier Link von Moses einfügen */}
-                            <Link href="#"
+                            <Link href={link}
                                   className='bg-flag-red text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2'>
                                 zu Moses
                                 <SquareArrowOutUpRight className='justify-self-end'/>
