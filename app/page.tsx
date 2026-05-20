@@ -71,7 +71,7 @@ export default function Home() {
                 <div className="flex flex-col sm:flex-row items-center justify-start gap-4 pt-4">
                     <Link
                         href="/auth/login"
-                        className="w-full sm:w-auto px-10 py-4 bg-flag-red shadow-[0px_4px_6px_-4px_rgba(231,0,11,0.20)] shadow-[0px_10px_15px_-3px_rgba(231,0,11,0.20)] text-white  font-bold rounded-xl transition-all hover:scale-105 active:scale-95"
+                        className="w-full sm:w-auto px-10 py-4 bg-flag-red shadow-[0px_4px_6px_-4px_rgba(231,0,11,0.20)] text-white  font-bold rounded-xl transition-all hover:scale-105 active:scale-95"
                     >
                         Login
                     </Link> {/*I dunno red is the official theme.. but green just looks so much better. Ig the team can vote: bg-rose-600/ bg-red-500?*/}
