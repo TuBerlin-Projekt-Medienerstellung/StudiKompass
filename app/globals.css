@@ -8,11 +8,13 @@
     --color-background: var(--background);
     --color-foreground: var(--foreground);
 
-    --color-oxblood: #E7000B;
-    --color-dark-khaki: #2D3319;
-    --color-sandy-brown: #F29E4C;
-    --color-blue-bell: #1F90CC;
-    --color-mint-leaf: #35AE80;
+    --color-flag-red: var(--flag-red);
+    --color-dark-khaki: var(--dark-khaki);
+    --color-sandy-brown: var(--sandy-brown);
+    --color-blue-bell: var(--blue-bell);
+    --color-mint-leaf: var(--mint-leaf);
+    --color-violet-ray: var(--violet-ray);
+    --color-raspbarry-plum: var(--raspbarry-plum);
 
     --color-card: hsl(var(--card));
     --color-card-foreground: hsl(var(--card-foreground));
@@ -50,6 +52,8 @@
     --radius-sm: calc(var(--radius) - 4px);
 
     --ease-in-expo: cubic-bezier(0.4, 0, 0.2, 1);
+
+    --animate-spin-slow: spin 20s linear infinite;
 }
 
 /*
@@ -74,6 +78,13 @@
     :root {
         --background: #F9FAFB;
         --foreground: #000000;
+        --flag-red: #C40D1F;
+        --dark-khaki: #2D3319;
+        --sandy-brown: #F29E4C;
+        --blue-bell: #1F90CC;
+        --mint-leaf: #35AE80;
+        --violet-ray: #8F13FD;
+        --raspbarry-plum: #B00F7F;
         --card: 0 0% 100%;
         --card-foreground: 0 0% 3.9%;
         --popover: 0 0% 100%;
@@ -108,4 +119,39 @@
     body {
         @apply bg-background text-foreground;
     }
+
+    button {
+        @apply cursor-pointer;
+    }
 }
+
+/* Hero text slider starts */
+.slide {
+    display: inline-block;
+    flex-direction: column;
+    transition: all cubic-bezier(0.71, 0.03, 0.34, 1);
+
+}
+
+.wrapper {
+    display: flex;
+    flex-direction: column;
+    animation: wordSlider 10s infinite cubic-bezier(0.9, 0.01, 0.3, 0.99);
+}
+
+@keyframes wordSlider {
+    0% {
+        transform: translateY(0.5%);
+    }
+    33.3333333333% {
+        transform: translateY(-33.3333333333%);
+    }
+    66.6666666667% {
+        transform: translateY(-66.6666666667%);
+    }
+    100% {
+        transform: translateY(0.5%);
+    }
+}
+
+/* Hero Text slider ends */

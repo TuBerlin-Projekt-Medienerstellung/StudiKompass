@@ -1,5 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
+import {words} from "@/constants"
+import Footer from "@/components/footer"
 
 export const metadata = {
     title: 'Navis | TU Berlin',
@@ -8,65 +10,86 @@ export const metadata = {
 export default function Home() {
     return (
         <main
-            className="flex flex-col items-center justify-center min-h-screen bg-zinc-100 text-zinc-950 dark:bg-zinc-950 dark:text-zinc-100 px-6">
+            className="flex flex-col justify-start min-h-screen bg-background text-zinc-950  ">
             {/* Background Stuff*/}
-            <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">
-                <div
-                    className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-red-900/20 dark:bg-emerald-900/20 blur-[120px] rounded-full"/>
-                <header
-                    className="flex flex-col items-center space-y-4">{/*Uhhh..width and height are random, since we don't have a Logo yet..*/}
-                    <Image
-                        src="/Kompass_bild.png"
-                        alt="LOGO"
-                        width={69}
-                        height={69}
-                        className="hover:animate-spin"
+            {/*<div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">*/}
+            {/*    <div*/}
+            {/*        className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-red-900/20 dark:bg-emerald-900/20 blur-[120px] rounded-full"/>*/}
+            {/*    <header*/}
+            {/*        className="flex flex-col items-center space-y-4">/!*Uhhh..width and height are random, since we don't have a Logo yet..*!/*/}
+            {/*        <Image*/}
+            {/*            src="/Kompass_bild.png"*/}
+            {/*            alt="LOGO"*/}
+            {/*            width={69}*/}
+            {/*            height={69}*/}
+            {/*            className="hover:animate-spin"*/}
 
-                    />{/*Idk.. I thought it would look cool if it spun on hover*/}
-                </header>
-            </div>
-
-            <div className="text-center max-w-3xl space-y-8">
-                {/*Title*/}
-                <header className="space-y-2">
-                    <h1 className="text-6xl md:text-7xl font-black tracking-tighter">
-                        Stu<span className="text-red-600 dark:text-emerald-500">Pass</span>
+            {/*        />/!*Idk.. I thought it would look cool if it spun on hover*!/*/}
+            {/*    </header>*/}
+            {/*</div>*/}
+            <section className=" p-15 ">
+                <div className="text-center max-w-3xl space-y-8">
+                    {/*Title*/}
+                    <h1 className="flex flex-row gap-6 w-96 items-center">
+                        <div className="relative flex size-24">
+                            <Image alt="logo" fill src="/logo/Compass-dark.svg" className="animate-spin-slow"/>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                            <div className="relative w-32 h-8">
+                                <Image src="/logo/Navis.svg" fill alt="Navis"/>
+                            </div>
+                            <p className="text-sm opacity-60 text-start">Navigations- und Visualisierungssystem für
+                                Studienplanung</p>
+                        </div>
                     </h1>
-                    <p className="text-red-600/80 dark:text-emerald-500/80 font-mono text-sm tracking-widest uppercase">
-                        TU Berlin Studenten-Kompass
+                    <h2 className="flex flex-row justify-start md:text-9xl text-6xl relative z-10 pointer-events-none md:min-w-200 min-w-96">
+                        Dein
+                        <span
+                            className="slide  absolute right-0 pt-0 h-full md:translate-y-1 translate-y-0 overflow-hidden">
+                        <span className="wrapper text-flag-red font-bold">
+                            {words.map((word, index) => (
+                                <span key={index}
+                                      className="flex items-center md:gap-3 gap-1 pb-2">
+                                    <span>{word.text}</span>
+                                </span>
+                            ))}
+                        </span>
+                    </span>
+                    </h2>
+
+
+                    {/* What do we aim to do */}
+                    <p className="text-zinc-900 opacity-70 text-lg md:text-xl text-start leading-relaxed">
+                        Dein Studium, perfekt organisiert. Plane Module, tracke ECTS, entdecke Vorlagen aus der
+                        Community
+                        und hol dir den vollen Durchblick mit unseren Kurz-Tutorials. <br/>
+                        <br/> Filter nach nur für dich relevanten Modulen; egal ob <span
+                        className="text-zinc-950 italic">Wahlpflicht</span> oder <span
+                        className="text-zinc-950 italic">Plicht</span>. <br/>
+                        Einfach mit der Campus-Mail einloggen und loslegen.
                     </p>
-                </header>
 
-                {/* What do we aim to do */}
-                <p className="text-zinc-900 dark:text-zinc-400 text-lg md:text-xl leading-relaxed">
-                    Dein Studium, perfekt organisiert. Plane Module, tracke ECTS, entdecke Vorlagen aus der Community
-                    und hol dir den vollen Durchblick mit unseren Kurz-Tutorials. <br/>
-                    <br/> Filter nach nur für dich relevanten Modulen; egal ob <span
-                    className="text-zinc-950 dark:text-zinc-200 italic">Wahlpflicht</span> oder <span
-                    className="text-zinc-950 dark:text-zinc-200 italic">Plicht</span>. <br/>
-                    Einfach mit der Campus-Mail einloggen und loslegen.
-                </p>
-
-                {/* Buttons */}
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-                    <Link
-                        href="/auth/login"
-                        className="w-full sm:w-auto px-10 py-4 bg-red-600 hover:bg-red-500 text-black dark:bg-emerald-600 dark:hover:bg-emerald-500 dark:text-white font-bold rounded-xl transition-all hover:scale-105 active:scale-95 shadow-lg shadow-red-900/20 dark:shadow-emerald-900/20"
-                    >
-                        Login
-                    </Link> {/*I dunno red is the official theme.. but green just looks so much better. Ig the team can vote: bg-rose-600/ bg-red-500?*/}
-                    <Link
-                        href="/auth/sign-up"
-                        className="w-full sm:w-auto px-10 py-4 bg-zinc-500 hover:bg-zinc-400 text-black dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-white font-bold rounded-xl border border-zinc-800 transition-all hover:scale-105 active:scale-95"
-                    > Create Account
-                    </Link>
+                    {/* Buttons */}
+                    <div className="flex flex-col sm:flex-row items-center justify-start gap-4 pt-4">
+                        <Link
+                            href="/auth/login"
+                            className="w-full sm:w-auto px-10 py-4 bg-flag-red shadow-[0px_4px_6px_-4px_rgba(231,0,11,0.20)] text-white  font-bold rounded-xl transition-all hover:scale-105 active:scale-95"
+                        >
+                            Login
+                        </Link> {/*I dunno red is the official theme.. but green just looks so much better. Ig the team can vote: bg-rose-600/ bg-red-500?*/}
+                        <Link
+                            href="/auth/sign-up"
+                            className="w-full sm:w-auto px-10 py-4 bg-zinc-500 hover:bg-zinc-400 text-black dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-white font-bold rounded-xl border border-zinc-800 transition-all hover:scale-105 active:scale-95"
+                        > Create Account
+                        </Link>
+                    </div>
                 </div>
-            </div>
+
+            </section>
+
 
             {/* Footer*/}
-            <footer className="absolute bottom-10 text-zinc-600 text-xs tracking-widest uppercase">
-                &copy; 2026 StuPass &bull; Developed by Fallen-debug {/* js a name_filler.. */}
-            </footer>
+            <Footer/>
         </main>
     );
 }
