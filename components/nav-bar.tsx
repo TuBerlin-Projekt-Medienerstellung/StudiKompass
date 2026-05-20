@@ -60,11 +60,20 @@ const NavBar = () => {
         }
     }, [fetchProfileData])
 
+    // scroll Lock
+    useEffect(() => {
+        if (!isMobile) return
+        document.body.style.overflow = mobileOpen ? "hidden" : ""
+        return () => {
+            document.body.style.overflow = ""
+        }
+    }, [mobileOpen, isMobile])
+
     //console.log("CURRENT DB URL IS:", profile?.avatar_url);
     //z-50 works still gotta remove scrollable (add freeze) later
     return (
         <nav
-            className={`z-50 overflow-hidden md:h-screen md:w-72 w-full px-4 p-4 flex flex-col md:border-r-2 fixed justify-between bg-background ${mobileOpen ? "h-screen" : "h-16"}`}>
+            className={`z-50 overflow-hidden md:h-screen md:w-72 w-full px-4 p-4 flex flex-col md:border-r-2 fixed justify-between bg-background transition-[height] duration-1200 ease-in-out ${mobileOpen ? "h-screen" : "h-16"}`}>
             <div className="flex flex-col gap-4 w-full">
                 <div className="w-full flex flex-row justify-between items-center pb-3 border-b-2 md:border-none">
                     <Link className="flex items-center gap-2" href="/protected/planner">
@@ -87,7 +96,10 @@ const NavBar = () => {
                     {isMobile && (mobileOpen ? (<X onClick={() => setMobileOpen(false)}/>) : (
                         <Menu onClick={() => setMobileOpen(true)}/>))}
                 </div>
-                <div className="flex flex-col gap-2">
+
+                {/*Nav Link*/}
+                <div
+                    className="flex flex-col gap-2">
                     {navBarLinks.map((link) => {
                         const isActive = pathname === link.path || pathname.startsWith(link.path + "/")
                         console.log("pathname:", pathname, "| link.path:", link.path)
