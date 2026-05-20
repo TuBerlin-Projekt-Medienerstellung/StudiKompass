@@ -1,4 +1,4 @@
-import { LucideIcon } from "lucide-react";
+import {LucideIcon} from "lucide-react";
 
 declare global {
     interface navBarLink {
@@ -7,9 +7,24 @@ declare global {
         icon: LucideIcon
     }
 
+    interface words {
+        text: string
+    }
+
     interface detail {
         name: string,
         value: string
     }
+
+    interface modulInfo {
+        name: string,
+        leistungspunkte: number,
+        semester: string,
+        modulArt: string,
+        beschreibung: string,
+        examform: string,
+        arbeitsaufwand: number,
+        link: string
+    }
 }
-export { }
+export {}

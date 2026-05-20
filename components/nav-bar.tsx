@@ -8,8 +8,10 @@ import {navBarLinks} from "@/constants";
 import {X, Menu} from "lucide-react"
 import {usePathname} from "next/navigation";
 import {useState, useEffect, useCallback} from "react";
-import { createClient } from '@/lib/supabase/client'
- //Things to fix:
+import {createClient} from '@/lib/supabase/client'
+
+import {isAccessor} from "@babel/types";
+//Things to fix:
 
 // 1) bug with navbar in mobile mode (profile + studiengangwahl shouldn't cover content or be interactive -> dowpdown should disable current page functions) 
 // 2) bug with navbar in mobile mode, can't be transparent 
@@ -34,10 +36,10 @@ const NavBar = () => {
 
     const fetchProfileData = useCallback(async () => {
         const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
+        const {data: {user}} = await supabase.auth.getUser()
         if (!user) return
 
-        const { data } = await supabase
+        const {data} = await supabase
             .from('profiles')
             .select('username, studiengang, avatar_url')
             .eq('id', user.id)
@@ -48,27 +50,36 @@ const NavBar = () => {
     useEffect(() => {
         fetchProfileData()
     }, [fetchProfileData])
- //omfg I knew I had to add an Eventlistener with fetch as I did with avatar, AI aint gonna replace me muhahah
+    //omfg I knew I had to add an Eventlistener with fetch as I did with avatar, AI aint gonna replace me muhahah
     useEffect(() => {
-    window.addEventListener("avatar-updated", fetchProfileData)
-    window.addEventListener("studiengang-updated", fetchProfileData) 
-    return () => {
-        window.removeEventListener("avatar-updated", fetchProfileData)
-        window.removeEventListener("studiengang-updated", fetchProfileData) 
-    }
+        window.addEventListener("avatar-updated", fetchProfileData)
+        window.addEventListener("studiengang-updated", fetchProfileData)
+        return () => {
+            window.removeEventListener("avatar-updated", fetchProfileData)
+            window.removeEventListener("studiengang-updated", fetchProfileData)
+        }
     }, [fetchProfileData])
-    
+
+    // scroll Lock
+    useEffect(() => {
+        if (!isMobile) return
+        document.body.style.overflow = mobileOpen ? "hidden" : ""
+        return () => {
+            document.body.style.overflow = ""
+        }
+    }, [mobileOpen, isMobile])
+
     //console.log("CURRENT DB URL IS:", profile?.avatar_url);
     //z-50 works still gotta remove scrollable (add freeze) later
     return (
         <nav
-            className={`z-50 overflow-hidden md:h-screen md:w-72 w-full px-4 p-4 flex flex-col md:border-r-2 fixed justify-between ${mobileOpen ? "h-screen bg-background" : "h-16"}`}>
+            className={`z-50 overflow-hidden md:h-screen md:w-72 w-full px-4 p-4 flex flex-col md:border-r-2 fixed justify-between bg-background transition-[height] duration-1200 ease-in-out ${mobileOpen ? "h-screen" : "h-16"}`}>
             <div className="flex flex-col gap-4 w-full">
                 <div className="w-full flex flex-row justify-between items-center pb-3 border-b-2 md:border-none">
                     <Link className="flex items-center gap-2" href="/protected/planner">
                         <div className="relative md:size-10 size-8">
                             <Image
-                                src="/logo/Kompass.svg"
+                                src="/logo/Compass-dark.svg"
                                 fill
                                 alt="logo-kompass"
                             />
@@ -85,11 +96,15 @@ const NavBar = () => {
                     {isMobile && (mobileOpen ? (<X onClick={() => setMobileOpen(false)}/>) : (
                         <Menu onClick={() => setMobileOpen(true)}/>))}
                 </div>
-                <div className="flex flex-col gap-2">
+
+                {/*Nav Link*/}
+                <div
+                    className="flex flex-col gap-2">
                     {navBarLinks.map((link) => {
-                        const isActive = pathname === link.path
+                        const isActive = pathname === link.path || pathname.startsWith(link.path + "/")
+                        console.log("pathname:", pathname, "| link.path:", link.path)
                         return <Link href={link.path}
-                                     className={`w-full flex flex-row gap-2 px-4 py-3 rounded-2xl ${isActive ? "text-oxblood bg-oxblood/5" : "text-foreground"}`}
+                                     className={`w-full flex flex-row gap-2 px-4 py-3 rounded-2xl ${isActive ? "text-flag-red bg-flag-red/5" : "text-foreground"}`}
                                      key={link.name}
                                      onClick={() => setMobileOpen(false)}
                         >
