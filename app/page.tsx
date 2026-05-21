@@ -10,8 +10,20 @@ export const metadata = {
 export default function Home() {
     return (
         <main
-            className="flex flex-col justify-start min-h-screen bg-background text-zinc-950  ">
+            className="flex flex-col justify-start min-h-screen text-zinc-950  ">
             {/* Background Stuff*/}
+            <div className="-z-10">
+
+                <div className="w-[999px] h-[971px] absolute bg-slate-400 rounded-full blur-[254.50px]"/>
+                <div className="w-[849px] h-[825px] absolute right-0 bg-raspbarry-plum rounded-full blur-[254.50px]"/>
+                <img
+                    src="https://images.unsplash.com/photo-1534593963832-01c3595183bd?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
+                    alt=""
+                    className="absolute w-[1920px] h-[1080px] mix-blend-color-bur opacity-10"
+                />
+            </div>
+
+
             {/*<div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">*/}
             {/*    <div*/}
             {/*        className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-red-900/20 dark:bg-emerald-900/20 blur-[120px] rounded-full"/>*/}
@@ -27,8 +39,8 @@ export default function Home() {
             {/*        />/!*Idk.. I thought it would look cool if it spun on hover*!/*/}
             {/*    </header>*/}
             {/*</div>*/}
-            <section className=" p-15 ">
-                <div className="text-center max-w-3xl space-y-8">
+            <section className="p-15">
+                <div className="text-center max-w-3xl space-y-8 z-50">
                     {/*Title*/}
                     <h1 className="flex flex-row gap-6 w-96 items-center">
                         <div className="relative flex size-24">
