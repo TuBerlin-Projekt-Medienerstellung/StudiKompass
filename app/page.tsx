@@ -14,12 +14,13 @@ export default function Home() {
             {/* Background Stuff*/}
             <div className="-z-10">
 
-                <div className="w-[999px] h-[971px] absolute bg-slate-400 rounded-full blur-[254.50px]"/>
-                <div className="w-[849px] h-[825px] absolute right-0 bg-raspbarry-plum rounded-full blur-[254.50px]"/>
+                <div
+                    className="w-249.75 h-242.75 absolute left-0 -bottom-40 bg-slate-400 rounded-full blur-[254.50px]"/>
+                <div className="w-212.25 h-206.25 absolute -right-10 bg-raspbarry-plum rounded-full blur-[254.50px]"/>
                 <img
                     src="https://images.unsplash.com/photo-1534593963832-01c3595183bd?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
                     alt=""
-                    className="absolute w-[1920px] h-[1080px] mix-blend-color-bur opacity-10"
+                    className="absolute w-screen h-screen mix-blend-color-bur opacity-10"
                 />
             </div>
 
