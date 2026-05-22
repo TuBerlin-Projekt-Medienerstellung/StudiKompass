@@ -167,36 +167,44 @@ Beide Routen waren initial sehr langsam durch das vollständige Laden aller Date
 Die MOSES-API ist stark verschachtelt. Ein Modul ist nicht direkt am Studiengang hängend, sondern über folgende Kette erreichbar:
 
 ### `/api/module`
+
+```
 Studiengang
-└── StuPO (neueste = höchste ID)
-└── Studiengangsabbildung (via ?stupoId)
-└── modullisteList → Modulliste (neueste = höchste ID)
-└── Studiengangszuordnung
-├── Bolivamodulversion
-│     ├── Bolivamodul (für MOSES-URL via .number)
-│     └── Bolivamodulbeschreibung (Lernergebnisse, Lehrinhalte, Voraussetzungen)
-└── Studiengangsbereich (rekursiv via parent.id → bereichPfad)
+  └── StuPO (neueste = höchste ID)
+        └── Studiengangsabbildung (via ?stupoId)
+              └── modullisteList → Modulliste (neueste = höchste ID)
+                    └── Studiengangszuordnung
+                          ├── Bolivamodulversion
+                          │     ├── Bolivamodul (für MOSES-URL via .number)
+                          │     └── Bolivamodulbeschreibung (Lernergebnisse, Lehrinhalte, Voraussetzungen)
+                          └── Studiengangsbereich (rekursiv via parent.id → bereichPfad)
+```
 
 ### `/api/bereichregel`
+
+```
 Studiengang
-└── StuPO (neueste = höchste ID)
-└── Studiengangsabbildung (via ?stupoId)
-└── studiengangsbereichList (alle Bereich-IDs direkt)
-└── Studiengangsbereich (parallel geladen)
-└── studiengangswahlregelList → IDs
-└── lokal aus GET /studiengangsbereichwahlregel?pageSize=1000 gefiltert
+  └── StuPO (neueste = höchste ID)
+        └── Studiengangsabbildung (via ?stupoId)
+              └── studiengangsbereichList (alle Bereich-IDs direkt)
+                    └── Studiengangsbereich (parallel geladen)
+                          └── studiengangswahlregelList → IDs
+                                └── lokal aus GET /studiengangsbereichwahlregel?pageSize=1000 gefiltert
+```
 
 ---
 
 ## Dateipfade
+
+```
 app/
 └── api/
-├── module/
-│   └── route.ts       ← /api/module
-├── bereichregel/
-│   └── route.ts       ← /api/bereichregel
-├── studiengaenge/
-│   └── route.ts       ← /api/studiengaenge
-└── semester/
-└── route.ts       ← /api/semester
-
+    ├── module/
+    │   └── route.ts       ← /api/module
+    ├── bereichregel/
+    │   └── route.ts       ← /api/bereichregel
+    ├── studiengaenge/
+    │   └── route.ts       ← /api/studiengaenge
+    └── semester/
+        └── route.ts       ← /api/semester
+```
