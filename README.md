@@ -37,9 +37,7 @@ Die Anwendung läuft dann auf `http://localhost:3000`.
 Gibt alle Module eines Studiengangs mit ihren vollständigen Informationen zurück, inklusive Bereichszuordnung, ECTS, Prüfungsform, Turnus, Lernergebnissen, Lehrinhalten, Voraussetzungen und einem direkten Link zur MOSES-Modulseite.
 
 **Aufruf:**
-```
 GET http://localhost:3000/api/module?studiengangId=37
-```
 
 | Parameter | Beschreibung |
 |---|---|
@@ -57,7 +55,7 @@ GET http://localhost:3000/api/module?studiengangId=37
   "lernergebnisse": "Die Studierenden sollen...",
   "lehrinhalte": "Folgende Themen werden behandelt...",
   "voraussetzungen": "a) obligatorisch: ...",
-  "mosesUrl": "https://moseskonto.tu-berlin.de/moses/modultransfersystem/bolognamodule/beschreibung/anzeigen.html?nummer=50592"
+  "mosesUrl": "https://moseskonto.tu-berlin.de/moses/modultransfersystem/bolivamodule/beschreibung/anzeigen.html?nummer=50592"
 }
 ```
 
@@ -77,9 +75,7 @@ GET http://localhost:3000/api/module?studiengangId=37
 Gibt den vollständigen Bereichsbaum eines Studiengangs zurück, inklusive aller Wahlregeln pro Bereich. Diese Informationen beschreiben, wie viele ECTS oder Module ein Studierender aus einem bestimmten Bereich bestehen muss oder darf.
 
 **Aufruf:**
-```
 GET http://localhost:3000/api/bereichregel?studiengangId=37
-```
 
 | Parameter | Beschreibung |
 |---|---|
@@ -139,7 +135,30 @@ Die Demo-API der TU Berlin ist eine abgespeckte Testumgebung. Folgende Einschrä
 
 - Vollständige Modullisten sind nur für **Maschinenbau B.Sc. (ID: 37)** und **Maschinenbau M.Sc. (ID: 83)** vorhanden.
 - Andere Studiengänge sind zwar in der API gelistet, haben aber keine Moduldaten hinterlegt.
+- `/studiengangsbereichwahlregel/{id}` funktioniert nicht in der Demo-API — Wahlregeln können nur über den List-Endpunkt (`?pageSize=1000`) geladen werden.
 - Für den produktiven Einsatz mit allen TU-Studiengängen wird der Zugriff auf die vollständige MOSES-Produktiv-API benötigt.
+
+---
+
+## Performance
+
+Beide Routen waren initial sehr langsam durch das vollständige Laden aller Daten aller Studiengänge und lokales Filtern. Folgende Optimierungen wurden durchgeführt:
+
+### `/api/module`
+
+| Problem | Lösung | Ergebnis |
+|---|---|---|
+| `GET /modulliste` (4MB, alle Studiengänge) → lokal filtern | `GET /studiengangsabbildung/{id}` enthält `modullisteList` → direkt `GET /modulliste/{id}` | ~23s → ~1ms |
+| Sequenzielles Laden der Module (253 Module × 5 Calls) | Parallelisierung mit `Promise.all` in 30er-Batches + interne Parallelisierung pro Modul | ~40s → ~600ms |
+| Wiederholte Requests bei jedem Seitenaufruf | `export const revalidate = 86400` (24h Route-Cache) | <10ms nach erstem Load |
+
+### `/api/bereichregel`
+
+| Problem | Lösung | Ergebnis |
+|---|---|---|
+| `GET /studiengangsbereich` (alle Bereiche) über mehrere Seiten → lokal filtern | `GET /studiengangsabbildung/{id}` enthält `studiengangsbereichList` → nur relevante Bereiche parallel laden | Schritt eliminiert |
+| `GET /studiengangsbereichwahlregel` (alle Wahlregeln) über mehrere Seiten → lokal filtern | Nur 1 Seite bei `pageSize=1000` → einmalig laden, lokal nach `bereichId` filtern | Schritt von ~20s auf ~50ms |
+| Gesamt | Kombination beider Optimierungen + `revalidate = 86400` | ~28s → ~1s (danach <10ms) |
 
 ---
 
@@ -147,16 +166,30 @@ Die Demo-API der TU Berlin ist eine abgespeckte Testumgebung. Folgende Einschrä
 
 Die MOSES-API ist stark verschachtelt. Ein Modul ist nicht direkt am Studiengang hängend, sondern über folgende Kette erreichbar:
 
+### `/api/module`
+
 ```
 Studiengang
   └── StuPO (neueste = höchste ID)
-        └── Studiengangsabbildung
-              └── Modulliste (neueste)
+        └── Studiengangsabbildung (via ?stupoId)
+              └── modullisteList → Modulliste (neueste = höchste ID)
                     └── Studiengangszuordnung
                           ├── Bolivamodulversion
-                          │     ├── Bolognamodul (für MOSES-URL)
-                          │     └── Bolognamodulbeschreibung (für Lernergebnisse etc.)
-                          └── Studiengangsbereich (rekursiv → Bereichspfad)
+                          │     ├── Bolivamodul (für MOSES-URL via .number)
+                          │     └── Bolivamodulbeschreibung (Lernergebnisse, Lehrinhalte, Voraussetzungen)
+                          └── Studiengangsbereich (rekursiv via parent.id → bereichPfad)
+```
+
+### `/api/bereichregel`
+
+```
+Studiengang
+  └── StuPO (neueste = höchste ID)
+        └── Studiengangsabbildung (via ?stupoId)
+              └── studiengangsbereichList (alle Bereich-IDs direkt)
+                    └── Studiengangsbereich (parallel geladen)
+                          └── studiengangswahlregelList → IDs
+                                └── lokal aus GET /studiengangsbereichwahlregel?pageSize=1000 gefiltert
 ```
 
 ---
