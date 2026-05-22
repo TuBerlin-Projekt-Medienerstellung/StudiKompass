@@ -1,136 +1,239 @@
-// Basis-URL der MOSES Demo-API
-const BASE_URL = "https://demo.moses.tu-berlin.de/moses/api/v1";
+/**
+ * MOSES API Route — /api/bereichregel
+ *
+ * Lädt den vollständigen Bereichsbaum mit Wahlregeln eines Studiengangs
+ * von der MOSES Demo-API der TU Berlin.
+ *
+ * @endpoint GET /api/bereichregel?studiengangId={id}
+ * @param studiengangId - Die MOSES-ID des Studiengangs (z.B. 37 = Maschinenbau B.Sc., 83 = Maschinenbau M.Sc.)
+ *
+ * @returns {Object} JSON mit folgendem Shape:
+ * {
+ *   studiengang: string,       // Name des Studiengangs
+ *   stupo: string,             // Name der neuesten Studienprüfungsordnung
+ *   bereiche: Bereich[]        // Verschachtelter Bereichsbaum (siehe Bereich-Shape unten)
+ * }
+ *
+ * @example
+ * fetch('/api/bereichregel?studiengangId=37')
+ *
+ * Bereich-Shape (rekursiv verschachtelt):
+ * {
+ *   id: number,
+ *   name: string,              // z.B. "Pflichtbereich", "Wahlpflichtbereich"
+ *   wahlregeln: Wahlregel[],   // Regeln die für diesen Bereich gelten
+ *   kinder: Bereich[]          // Untergeordnete Bereiche (rekursiv)
+ * }
+ *
+ * Wahlregel-Shape:
+ * {
+ *   typ: string,               // z.B. "BESTEHE_ALLE", "MIN_LP", "MAX_LP"
+ *   wert?: number              // Nur bei MIN_LP / MAX_LP vorhanden
+ * }
+ *
+ * DEMO-API LIMITATION:
+ * Nur Maschinenbau B.Sc. (ID: 37) und M.Sc. (ID: 83) haben vollständige
+ * Daten in der Demo-API.
+ *
+ * PERFORMANCE-OPTIMIERUNGEN (Entwicklungshistorie):
+ *
+ * Problem — Alles laden + lokal filtern (28 Sekunden):
+ *   Ursprünglich wurden GET /studiengangsbereich (alle Bereiche aller Studiengänge)
+ *   und GET /studiengangsbereichwahlregel (alle Wahlregeln aller Studiengänge)
+ *   vollständig über alle Seiten geladen und dann lokal gefiltert.
+ *
+ *   Lösung:
+ *   - Bereiche: GET /studiengangsabbildung/{id} enthält studiengangsbereichList
+ *     mit allen IDs → nur relevante Bereiche parallel laden
+ *   - Wahlregeln: GET /studiengangsbereichwahlregel?pageSize=1000 hat nur 1 Seite
+ *     → einmalig laden, lokal nach bereichId filtern
+ *   - /studiengangsbereichwahlregel/{id} funktioniert nicht in der Demo-API,
+ *     daher kein einzelner Call pro Wahlregel möglich
+ *
+ *   Ergebnis: 28s → ~200ms
+ */
 
-// Standard-Header für alle API-Anfragen (Authentifizierung über API-Key aus .env.local)
+const BASE_URL = "https://demo.moses.tu-berlin.de/moses/api/v1";
 const HEADERS = {
     "accept": "application/json",
     "x-api-key": process.env.MOSES_API_KEY || ""
 };
 
-// Hilfsfunktion: Sendet eine GET-Anfrage an die MOSES-API und gibt das JSON-Ergebnis zurück
+/** Next.js Route Cache — 24 Stunden. Verhindert wiederholte API-Calls */
+export const revalidate = 86400;
+
+/**
+ * Generische Hilfsfunktion für GET-Requests an die MOSES API.
+ * Gibt null zurück statt einen Fehler zu werfen (Fallback-Verhalten).
+ * Alle Responses werden 24h von Next.js gecacht.
+ *
+ * @param path - API-Pfad relativ zur BASE_URL, z.B. "/studiengangsbereich/868"
+ * @returns Geparste JSON-Antwort oder null bei Fehler
+ */
 async function fetchMoses(path: string) {
-    const res = await fetch(`${BASE_URL}${path}`, { headers: HEADERS });
-    return res.json();
+    try {
+        const res = await fetch(`${BASE_URL}${path}`, {
+            headers: HEADERS,
+            next: { revalidate: 86400 }
+        });
+        if (!res.ok) {
+            console.error(`MOSES API Fehler: ${res.status} für ${path}`);
+            return null;
+        }
+        return res.json();
+    } catch (e) {
+        console.error(`MOSES API crashed für ${path}:`, e);
+        return null;
+    }
 }
 
-// Hilfsfunktion: Baut einen verschachtelten Bereichsbaum aus einer flachen Liste von Bereichen
-// und ordnet jedem Bereich seine zugehörigen Wahlregeln zu.
-//
-// Beispiel-Output:
-// {
-//   id: 868, name: "Pflichtbereich",
-//   wahlregeln: [{ typ: "BESTEHE_ALLE" }],
-//   kinder: [
-//     { id: 870, name: "Naturwissenschaftliche Grundlagen", wahlregeln: [...], kinder: [] }
-//   ]
-// }
-//
-// Die Funktion arbeitet rekursiv: Für jeden Bereich sucht sie alle Kinder (Bereiche deren
-// parent.id mit der aktuellen id übereinstimmt) und ruft sich selbst für diese auf.
-function buildBereichBaum(bereiche: any[], wahlregeln: any[], parentId: number | null = null): any[] {
+/**
+ * Lädt einen einzelnen Studiengangsbereich.
+ * Wahlregeln werden NICHT hier geladen — sie werden einmalig
+ * für alle Bereiche geladen und in buildBereichBaum zugeordnet.
+ *
+ * @param bereichId - ID des Studiengangsbereichs
+ * @returns Bereich-Objekt mit parentId und wahlregelIds, oder null bei Fehler
+ */
+async function ladeBereichDetails(bereichId: number): Promise<any | null> {
+    const bereichRaw = await fetchMoses(`/studiengangsbereich/${bereichId}`);
+    const bereich = bereichRaw?.data?.[0];
+    if (!bereich) return null;
+
+    return {
+        id: bereich.id,
+        name: bereich.name,
+        // parentId wird für buildBereichBaum benötigt um die Hierarchie aufzubauen
+        parentId: bereich.parent?.id ?? null,
+        // IDs merken für späteren lokalen Abgleich mit alleWahlregeln
+        wahlregelIds: (bereich.studiengangswahlregelList ?? []).map((r: any) => r.id)
+    };
+}
+
+/**
+ * Baut einen verschachtelten Bereichsbaum aus einer flachen Liste von Bereichen
+ * und ordnet jedem Bereich seine Wahlregeln aus der globalen Liste zu.
+ *
+ * @example
+ * // Input (flach):
+ * bereiche = [
+ *   { id: 1, name: "Pflichtbereich", parentId: null, wahlregelIds: [5846] },
+ *   { id: 2, name: "Mathematik", parentId: 1, wahlregelIds: [5842] }
+ * ]
+ * alleWahlregeln = [
+ *   { id: 5846, studiengangsbereich: {...}, wahlregeltyp: "BESTEHE_ALLE" },
+ *   { id: 5842, studiengangsbereich: {...}, wahlregeltyp: "MIN_LP", wert: 18 }
+ * ]
+ * // Output (verschachtelt):
+ * [
+ *   { id: 1, name: "Pflichtbereich", wahlregeln: [{ typ: "BESTEHE_ALLE" }], kinder: [
+ *     { id: 2, name: "Mathematik", wahlregeln: [{ typ: "MIN_LP", wert: 18 }], kinder: [] }
+ *   ]}
+ * ]
+ *
+ * @param bereiche - Flache Liste aller Bereiche mit parentId und wahlregelIds
+ * @param alleWahlregeln - Alle Wahlregeln (einmalig geladen)
+ * @param parentId - ID des Elternbereichs (null = Root-Ebene)
+ * @returns Verschachtelter Bereichsbaum
+ */
+function buildBereichBaum(bereiche: any[], alleWahlregeln: any[], parentId: number | null = null): any[] {
     return bereiche
-        // Nur Bereiche nehmen, deren Elternteil der aktuelle parentId ist
-        // null = Root-Bereiche (oberste Ebene, kein Elternteil)
-        .filter((b: any) => (b.parent?.id ?? null) === parentId)
-        .map((b: any) => ({
+        .filter((b) => b.parentId === parentId)
+        .map((b) => ({
             id: b.id,
             name: b.name,
-            // Alle Wahlregeln die zu diesem Bereich gehören herausfiltern und vereinfachen
-            wahlregeln: wahlregeln
-                .filter((r: any) => r.studiengangsbereich?.id === b.id)
+            wahlregeln: alleWahlregeln
+                .filter((r: any) => b.wahlregelIds.includes(r.id))
                 .map((r: any) => ({
                     typ: r.wahlregeltyp,
-                    // "wert" nur hinzufügen wenn vorhanden (z.B. bei MIN_LP oder MAX_LP)
                     ...(r.wert !== undefined && { wert: r.wert })
                 })),
-            // Rekursiv alle Kinder dieses Bereichs ermitteln
-            kinder: buildBereichBaum(bereiche, wahlregeln, b.id)
+            kinder: buildBereichBaum(bereiche, alleWahlregeln, b.id)
         }));
 }
 
-// Haupt-Handler: Wird aufgerufen wenn jemand GET /api/bereichregel?studiengangId=... aufruft
+/**
+ * GET /api/bereichregel?studiengangId={id}
+ *
+ * Haupthandler. Lädt den Bereichsbaum eines Studiengangs in 6 Schritten:
+ *
+ * 1. Studiengang laden → neueste StuPO ermitteln
+ * 2. Studiengangsabbildung-Referenz laden (via stupoId)
+ * 3. Studiengangsabbildung-Detail laden (enthält studiengangsbereichList)
+ * 4. Wahlregeln einmalig laden (1 Seite, pageSize=1000)
+ * 5. Alle Bereiche parallel laden
+ * 6. Flache Liste in verschachtelten Baum umwandeln
+ */
 export async function GET(request: Request) {
     try {
-        // studiengangId aus den URL-Parametern lesen
         const { searchParams } = new URL(request.url);
         const studiengangId = searchParams.get("studiengangId");
 
-        // Fehler wenn kein studiengangId angegeben wurde
         if (!studiengangId) {
             return Response.json({ error: "studiengangId fehlt" }, { status: 400 });
         }
 
         // Schritt 1: Studiengang laden
+        console.time("Studiengang laden");
         const studiengangDaten = await fetchMoses(`/studiengang/${studiengangId}`);
-        const studiengang = studiengangDaten.data?.[0];
-
+        console.timeEnd("Studiengang laden");
+        const studiengang = studiengangDaten?.data?.[0];
         if (!studiengang) {
             return Response.json({ error: "Studiengang nicht gefunden" }, { status: 404 });
         }
 
-        // Schritt 2: Neueste StuPO (Studien- und Prüfungsordnung) ermitteln
-        // Die neueste StuPO hat die höchste ID
+        // Schritt 2: Neueste StuPO ermitteln (höchste ID)
         const neuesteStupo = studiengang.stupoList.reduce((max: any, s: any) =>
             s.id > max.id ? s : max
         );
 
-        // Schritt 3: Studiengangsabbildung laden (verknüpft StuPO mit Bereichen und Modulen)
-        const abbildungDaten = await fetchMoses(`/studiengangsabbildung?stupoId=${neuesteStupo.id}`);
-        const abbildung = abbildungDaten.data?.[0];
-
-        if (!abbildung) {
+        // Schritt 3: Studiengangsabbildung-Referenz laden
+        console.time("Abbildung laden");
+        const abbildungListeDaten = await fetchMoses(`/studiengangsabbildung?stupoId=${neuesteStupo.id}`);
+        console.timeEnd("Abbildung laden");
+        const abbildungRef = abbildungListeDaten?.data?.[0];
+        if (!abbildungRef) {
             return Response.json({ error: "Keine Studiengangsabbildung gefunden" }, { status: 404 });
         }
 
-        // Schritt 4: Alle Studiengangsbereiche über alle Seiten hinweg laden
-        // (Die API gibt Daten seitenweise zurück, daher müssen alle Seiten einzeln abgerufen werden)
-        const ersteBereichSeite = await fetchMoses(`/studiengangsbereich?pageSize=1000`);
-        const bereichTotalPages = ersteBereichSeite.totalPages ?? 1;
-        let alleBereiche = Array.isArray(ersteBereichSeite.data) ? [...ersteBereichSeite.data] : [];
-
-        for (let page = 2; page <= bereichTotalPages; page++) {
-            const seite = await fetchMoses(`/studiengangsbereich?pageSize=1000&page=${page}`);
-            if (Array.isArray(seite.data)) {
-                alleBereiche = [...alleBereiche, ...seite.data];
-            }
+        // Schritt 4: Studiengangsabbildung Detail laden
+        // Enthält studiengangsbereichList mit allen zugehörigen Bereich-IDs
+        console.time("Abbildung Detail laden");
+        const abbildungDetailDaten = await fetchMoses(`/studiengangsabbildung/${abbildungRef.id}`);
+        console.timeEnd("Abbildung Detail laden");
+        const abbildungDetail = abbildungDetailDaten?.data?.[0];
+        if (!abbildungDetail) {
+            return Response.json({ error: "Abbildung Detail nicht gefunden" }, { status: 404 });
         }
 
-        // Schritt 5: Nur Bereiche filtern, die zur aktuellen Studiengangsabbildung gehören
-        const gefilterteBereiche = alleBereiche.filter((b: any) =>
-            b.studiengangsabbildung?.id === abbildung.id
-        );
-
-        if (gefilterteBereiche.length === 0) {
+        const bereichIds: { id: number }[] = abbildungDetail.studiengangsbereichList ?? [];
+        if (bereichIds.length === 0) {
             return Response.json({
                 error: "Keine Bereiche gefunden — dieser Studiengang ist in der Demo-API nicht vollständig hinterlegt."
             }, { status: 404 });
         }
 
-        // Schritt 6: Alle Wahlregeln über alle Seiten hinweg laden
-        // Hinweis: Der korrekte Endpunkt heißt "/studiengangsbereichwahlregel" (nicht "/studiengangswahlregel")
-        const ersteRegelSeite = await fetchMoses(`/studiengangsbereichwahlregel?pageSize=1000`);
-        const regelTotalPages = ersteRegelSeite.totalPages ?? 1;
-        let alleWahlregeln = Array.isArray(ersteRegelSeite.data) ? [...ersteRegelSeite.data] : [];
+        // Schritt 5: Wahlregeln einmalig laden (pageSize=1000, nur 1 Seite)
+        // Einzelne Calls via /studiengangsbereichwahlregel/{id} funktionieren
+        // in der Demo-API nicht → einmalig alles laden und lokal filtern
+        console.time("Wahlregeln laden");
+        const wahlregelDaten = await fetchMoses(`/studiengangsbereichwahlregel?pageSize=1000`);
+        const alleWahlregeln = wahlregelDaten?.data ?? [];
+        console.timeEnd("Wahlregeln laden");
 
-        for (let page = 2; page <= regelTotalPages; page++) {
-            const seite = await fetchMoses(`/studiengangsbereichwahlregel?pageSize=1000&page=${page}`);
-            if (Array.isArray(seite.data)) {
-                alleWahlregeln = [...alleWahlregeln, ...seite.data];
-            }
-        }
-
-        // Schritt 7: Nur Wahlregeln behalten, deren Bereich zum aktuellen Studiengang gehört
-        // (Die API gibt alle Wahlregeln aller Studiengänge zurück, daher muss gefiltert werden)
-        const bereichIds = new Set(gefilterteBereiche.map((b: any) => b.id));
-        const gefilterteWahlregeln = alleWahlregeln.filter((r: any) =>
-            bereichIds.has(r.studiengangsbereich?.id)
+        // Schritt 6: Alle Bereiche parallel laden
+        console.time("Bereiche laden");
+        const bereiche = await Promise.all(
+            bereichIds.map((b) => ladeBereichDetails(b.id))
         );
+        console.timeEnd("Bereiche laden");
 
-        // Schritt 8: Aus der flachen Bereichsliste einen verschachtelten Baum bauen
-        // und die Wahlregeln jedem Bereich zuordnen
-        const baum = buildBereichBaum(gefilterteBereiche, gefilterteWahlregeln);
+        const gueltigeBereiche = bereiche.filter(Boolean);
 
-        // Schritt 9: Ergebnis zurückgeben
+        // Schritt 7: Flache Liste in verschachtelten Baum umwandeln
+        // Wahlregeln werden dabei lokal aus alleWahlregeln zugeordnet
+        const baum = buildBereichBaum(gueltigeBereiche, alleWahlregeln);
+
         return Response.json({
             studiengang: studiengang.name,
             stupo: neuesteStupo.name,
@@ -138,7 +241,6 @@ export async function GET(request: Request) {
         });
 
     } catch (error: any) {
-        // Unerwartete Fehler abfangen und als JSON zurückgeben
         return Response.json({
             error: "Interner Fehler",
             details: error.message
