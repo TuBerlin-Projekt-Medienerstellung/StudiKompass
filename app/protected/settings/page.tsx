@@ -2,6 +2,7 @@ import SettingsClient from "@/components/settings-client"
 import Studiengang from "@/components/studiengangwahl"
 import { UpdatePasswordForm } from "@/components/update-password-form"
 import DeleteAccount from "@/components/delete-acc-button"
+import { UpdateEmailForm } from "@/components/update-email-form"
 
 export default function SettingsPage() {
     return (
@@ -10,6 +11,7 @@ export default function SettingsPage() {
             <p>Verwalte dein Profil und Präferenzen</p>
             <SettingsClient />
             <Studiengang />
+            <UpdateEmailForm />
             <UpdatePasswordForm />
             <DeleteAccount />
         </div>
