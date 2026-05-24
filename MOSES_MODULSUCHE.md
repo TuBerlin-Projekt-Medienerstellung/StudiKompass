@@ -70,7 +70,7 @@ Jedes Modul hat einen `bereichPfad` — ein Array das die Hierarchie des Studien
 
 Die MOSES API ist stark verschachtelt:
 
-``
+```
 Studiengang
   └── StuPO (neueste = höchste ID)
         └── Studiengangsabbildung (via ?stupoId)
