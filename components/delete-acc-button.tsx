@@ -18,11 +18,11 @@ export default function DeleteAccount() {
   };
 
   return (
-    <div className="bg-zinc-200 dark:bg-zinc-900 border border-red-900/20 p-6 rounded-xl mt-8">
-      <h2 className="text-xl font-semibold text-black dark:text-white mb-2">
+    <div className="bg-white dark:bg-zinc-900 border border-zinc-600 dark:border-zinc-800 p-6 rounded-xl">
+      <h2 className="text-base font-semibold text-black dark:text-white mb-2">
         Warnung, diese Aktion ist permanent
       </h2>
-      <p className="text-sm text-zinc-400 mb-6">
+      <p className="text-sm text-zinc-500 mb-6">
         Das Löschen deines Kontos ist endgültig. Alle deine Daten werden sofort und unwiderruflich entfernt.
       </p> 
       <form action={deleteUserAction}>
