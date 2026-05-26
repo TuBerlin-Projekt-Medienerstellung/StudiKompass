@@ -10,7 +10,6 @@ export default async function DashboardPage() {
     <div>
       <h1 className="text-2xl font-bold">Dashboard</h1>
       <p>This is the dashboard tab</p>
-      <Studiengangwahl/>
     </div>
   );
 }
