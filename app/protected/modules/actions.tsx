@@ -1,5 +1,5 @@
 // app/protected/modules/actions.ts
-"use server";
+"use server"; //sagt next.js, dass alles in diesem Code auf dem Server und nicht im Browser des Users stattfindet
 
 /**
  * Server Actions für die Modulsuche
@@ -9,7 +9,7 @@
  * Aufgerufen wird die Action vom Client (moses-modulsuche.tsx) bei Knopfdruck.
  */
 
-const BASE_URL = "https://demo.moses.tu-berlin.de/moses/api/v1";
+const BASE_URL = "https://demo.moses.tu-berlin.de/moses/api/v1"; //Grundadresse der DEMO_MOSES_API
 
 /**
  * Generische Hilfsfunktion für GET-Requests an die MOSES API.
@@ -18,19 +18,19 @@ const BASE_URL = "https://demo.moses.tu-berlin.de/moses/api/v1";
  * @param path - API-Pfad relativ zur BASE_URL, z.B. "/studiengang/37"
  * @returns Geparste JSON-Antwort oder null bei Fehler
  */
-async function fetchMoses(path: string) {
+async function fetchMoses(path: string) {  //hängt den eingegebenen Path an  die feste URL für den gewünschten API-Call
     try {
-        const res = await fetch(`${BASE_URL}${path}`, {
-            headers: {
+        const res = await fetch(`${BASE_URL}${path}`, { //fetched die URL und arbeitet dann, wenn die Seite geladen ist (await)
+            headers: {    //Übergabe Zusatzinfos, der API-Key, um die Erlaubniss des Zugriffs zu bestätigen
                 "accept": "application/json",
                 "x-api-key": process.env.MOSES_API_KEY || ""
             },
             // Next.js cached jeden einzelnen API-Call für 24 Stunden
             // dadurch wird es beim zweiten Knopfdruck deutlich schneller
-            next: { revalidate: 86400 }
+            next: { revalidate: 86400 } //Cache Befehl
         });
         if (!res.ok) return null;
-        return res.json();
+        return res.json();  //Umwandlung Antwort von Text zu JavaScript-Objekt
     } catch (e) {
         console.error(`MOSES Fehler für ${path}:`, e);
         return null;
@@ -50,10 +50,10 @@ async function fetchMoses(path: string) {
  */
 async function getBereichPfad(bereichId: number): Promise<string[]> {
     const data = await fetchMoses(`/studiengangsbereich/${bereichId}`);
-    const bereich = data?.data?.[0];
+    const bereich = data?.data?.[0]; // ? für die Sicherheit einer Absturzverhinderung bei data = null
     if (!bereich) return [];
     if (bereich.parent?.id) {
-        const elternPfad = await getBereichPfad(bereich.parent.id);
+        const elternPfad = await getBereichPfad(bereich.parent.id); //Rekursion zum Parent-Bereich (Also Analysis 1 hat parent Mathematische Grundlagen, dieser hat parent Pflichtmodul)
         return [...elternPfad, bereich.name];
     }
     return [bereich.name];

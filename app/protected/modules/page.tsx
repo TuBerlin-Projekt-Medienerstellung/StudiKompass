@@ -14,13 +14,13 @@
  * statt hardcoded 37 (Maschinenbau B.Sc.)
  */
 
-import MosesModulsuche from "@/components/moses-modulsuche";
-import { Plus } from 'lucide-react';
+import MosesModulsuche from "@/components/moses-modulsuche"; //Importiert die Function MosesModulsuche aus moses-modulsuche
+import { Plus } from 'lucide-react';                         //Importiert ein Plus-Icon
 
-export default function ModulesPage() {
+export default function ModulesPage() {         //export default gibt die Funktion, die auf der Seite angezeigt wird.
     // Hardcoded für Demo-Zwecke — wird später aus Supabase-Profil geholt
     // Verfügbare IDs in der Demo-API: 37 (Maschinenbau B.Sc.), 83 (Maschinenbau M.Sc.)
-    const studiengangId = 37;
+    const studiengangId = 37;  //const = konstante variable, lässt sich nicht mehr ändern
 
     return (
         <section className="flex flex-col gap-3">
