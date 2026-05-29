@@ -22,7 +22,7 @@ const ModulCard = (props: modulInfo) => {
         beschreibung,
         examform,
         arbeitsaufwand,
-        link
+        link,
     } = props;
 
     return (
@@ -72,7 +72,7 @@ const ModulCard = (props: modulInfo) => {
                             {/** Hier fetchen für die Details, gerade werden dummy daten von constants gefetchtet **/}
                             {details.map((detail, index) => (
                                 <div key={index}
-                                     className='bg-[#E3E6EA] flex border-2 rounded-xl w-full items-center p-4 flex-col'>
+                                     className='bg-stone-grey flex border-2 rounded-xl w-full items-center p-4 flex-col'>
                         <span>
                             {detail.name}
                         </span>
