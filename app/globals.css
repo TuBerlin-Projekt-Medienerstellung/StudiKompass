@@ -15,6 +15,7 @@
     --color-mint-leaf: var(--mint-leaf);
     --color-violet-ray: var(--violet-ray);
     --color-raspbarry-plum: var(--raspbarry-plum);
+    --color-stone-grey: var(--stone-grey);
 
     --color-card: hsl(var(--card));
     --color-card-foreground: hsl(var(--card-foreground));
@@ -85,6 +86,7 @@
         --mint-leaf: #35AE80;
         --violet-ray: #8F13FD;
         --raspbarry-plum: #B00F7F;
+        --stone-grey: #E3E6EA;
         --card: 0 0% 100%;
         --card-foreground: 0 0% 3.9%;
         --popover: 0 0% 100%;
