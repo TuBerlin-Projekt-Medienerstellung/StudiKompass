@@ -46,7 +46,8 @@ export default function ModulesPage() {
             <div className="w-full flex flex-col gap-4">
                 {modulInfo.map((info, index) =>
                     <ModulCard key={index} {...info}/>
-                )}
+                    )}
+                
             </div>
 
         </section>
