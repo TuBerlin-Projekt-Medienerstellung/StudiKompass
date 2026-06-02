@@ -5,7 +5,7 @@ const headers: HeadersInit = process.env.moses_API_KEY
     ? { 'x-api-key': process.env.moses_API_KEY }
     : {};
 
-export async function GET(req: NextRequest, { params }: { params: { modul_id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ modul_id: string }> }) {
     const { modul_id } = await params;
     // console.log("BASE_URL:", BASE_URL)
     // console.log("API_KEY vorhanden:", !!process.env.moses_API_KEY)
