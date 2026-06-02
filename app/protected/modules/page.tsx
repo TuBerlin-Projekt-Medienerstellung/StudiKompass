@@ -25,14 +25,14 @@ export default function ModulesPage() {
                     <input className="w-full focus:outline-none" type="text" id="search"
                            placeholder="Module durchsuchen"/>
                 </div>
-                <div className="border-2 rounded-2xl py-3 px-5 flex">
-                    <label htmlFor="types"> <Funnel/></label>
-                    <select className="focus:outline-none" name="types" id="types">
-                        <option value="Elektronik">Elektronik</option>
-                        <option value="Informatik">Informatik</option>
-                        <option value="Mathematik">Mathematik</option>
-                    </select>
-                </div>
+                {/*<div className="border-2 rounded-2xl py-3 px-5 flex">*/}
+                {/*    <label htmlFor="types"> <Funnel/></label>*/}
+                {/*    <select className="focus:outline-none" name="types" id="types">*/}
+                {/*        <option value="Elektronik">Elektronik</option>*/}
+                {/*        <option value="Informatik">Informatik</option>*/}
+                {/*        <option value="Mathematik">Mathematik</option>*/}
+                {/*    </select>*/}
+                {/*</div>*/}
                 <div className="border-2 rounded-2xl py-3 px-5 flex">
                     <label htmlFor="kindOfModul"> <Funnel/></label>
                     <select className="focus:outline-none" name="kindOfModul" id="kindOfModul">
