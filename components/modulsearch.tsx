@@ -1,6 +1,5 @@
 "use client" ;
 import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
 import { ModulBasis } from '@/app/protected/modules/actions';
 
 interface Props {
