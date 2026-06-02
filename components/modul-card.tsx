@@ -17,7 +17,7 @@ interface modulInfo {
     voraussetzungen?: string;
     pruefungsform?: string;
     pruefungselemente?: string[];
-    benotet?: boolean;
+    benotet?: boolean | null;
     pruefungsBeschreibung?: string;
     lehrlernformen?: string;
 }
@@ -50,7 +50,7 @@ const ModulCard = (props: modulInfo) => {
             setLoadingDetails(true);
             const data = await ladeDetailedModulAction(modul_id);
             if (data){
-            setDetails(data);}
+                setDetails(data);}
             setLoadingDetails(false);
         }
     }
