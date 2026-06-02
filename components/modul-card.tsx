@@ -28,24 +28,24 @@ const ModulCard = (props: modulInfo) => {
     return (
         <div
             className={`w-full flex flex-col border-y-2 border-x-4 rounded-xl px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
-            <header className='w-full flex justify-between items-center'>
-                <div className='flex w-fit gap-2.5 '>
+            <header className='w-full flex justify-between items-center '>
+                <div className='flex w-fit gap-2.5 md:flex-row flex-col '>
                     {/**Button Modul erledigt oder nicht*/}
 
-                    <button onClick={() => setLiked(!liked)}>
-                        {liked ? <CircleCheckBig className="text-mint-leaf"/> : <Circle/>}
-                    </button>
-
-                    <div className='flex gap-6 items-center md:flex-row flex-col'>
-                        {/** Hier fetchen für den Titel **/}
+                    <div className='flex gap-2'>
+                        <button onClick={() => setLiked(!liked)}>
+                            {liked ? <CircleCheckBig className="text-mint-leaf"/> : <Circle/>}
+                        </button>
                         <h1 className='font-bold md:text-2xl text-xl'>{name}</h1>
-                        <div className='flex gap-2'>
-                            {/** Hier fetchen für Infos **/}
-                            <div>{leistungspunkte} ECTS</div>
-                            <span className=''>• {semester} •</span>
-                            {/** Color angepasst auf Pflicht/Wahlpflicht/wahlt **/}
-                            <p className='text-blue-bell'>{modulArt}</p>
-                        </div>
+                    </div>
+
+                    <div className='flex gap-2 items-center md:flex-row flex-row'>
+                        {/** Hier fetchen für den Titel **/}
+                        {/** Hier fetchen für Infos **/}
+                        <div>{leistungspunkte} ECTS</div>
+                        <span className=''>• {semester} •</span>
+                        {/** Color angepasst auf Pflicht/Wahlpflicht/wahlt **/}
+                        <p className='text-blue-bell'>{modulArt}</p>
                     </div>
 
                 </div>
@@ -85,12 +85,13 @@ const ModulCard = (props: modulInfo) => {
 
                         </div>
                         <div className='flex rounded-lg gap-2'>
-                            <button className='bg-violet-ray text-white px-4 py-2 rounded-lg w-5/6'>
+                            <button
+                                className='bg-violet-ray text-white md:px-4 md:py-2 px-2  rounded-lg md:w-5/6 w-4/6'>
                                 Zum Planer hinzufügen
                             </button>
                             {/** Hier Link von Moses einfügen */}
                             <Link href={link}
-                                  className='bg-flag-red text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2'>
+                                  className='bg-flag-red text-white text-sm md:w-1/6 w-2/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2'>
                                 zu Moses
                                 <SquareArrowOutUpRight className='justify-self-end'/>
                             </Link>

@@ -44,7 +44,7 @@ export default function Home() {
                     {/*Title*/}
                     <h1 className="flex flex-row gap-4 md:gap-6 w-full items-center">
                         <div className="relative flex size-16 md:size-24 shrink-0">
-                            <Image alt="logo" fill src="/logo/Compass-dark.svg" className="animate-spin-slow"/>
+                            <Image alt="logo" fill src="/logo/Compass-dark.svg" className=""/>
                         </div>
                         <div className="flex flex-col gap-2">
                             <div className="relative w-24 md:w-32 h-8">
