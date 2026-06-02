@@ -1,6 +1,7 @@
 "use client";
 
 import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight} from 'lucide-react';
+import { ladeDetailedModulAction } from '@/app/protected/modules/actions';
 import Link from "next/link";
 import {useState} from 'react';
 
@@ -8,7 +9,7 @@ interface modulInfo {
     modul_id: number;
     name: string;
     leistungspunkte: number;
-    semester: string;
+    semester?: string | number;
     modulArt: string;
     link: string;
     beschreibung?: string;
@@ -47,9 +48,9 @@ const ModulCard = (props: modulInfo) => {
         setOpen(!open);
         if (!open && !details) {
             setLoadingDetails(true);
-            const res = await fetch(`/api/modul/${modul_id}`);
-            const data = await res.json();
-            setDetails(data);
+            const data = await ladeDetailedModulAction(modul_id);
+            if (data){
+            setDetails(data);}
             setLoadingDetails(false);
         }
     }
