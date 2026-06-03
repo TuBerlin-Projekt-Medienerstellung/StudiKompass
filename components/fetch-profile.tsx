@@ -4,13 +4,20 @@ import { useState, useEffect } from "react"
 import Image from "next/image"
 import { createClient } from "@/lib/supabase/client"
 
+type ProfileData = {
+    username: string | null
+    studiengang: string | null
+    avatar_url: string | null
+}
+
 export default function Settings({ refreshKey }: { refreshKey: number }) {
     const [email, setEmail] = useState<string | null>(null)
-    const [profile, setProfile] = useState<any>(null)
+    const [profile, setProfile] = useState<ProfileData | null>(null)
     const [userId, setUserId] = useState<string | null>(null)
-    const supabase = createClient() // single instance
 
     useEffect(() => {
+        const supabase = createClient()
+
         const fetchData = async () => {
             const { data: { user } } = await supabase.auth.getUser()
             if (!user) return
@@ -30,6 +37,7 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
     }, [refreshKey])
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const supabase = createClient()
         const file = e.target.files?.[0]
         if (!file || !userId) return
 
@@ -54,7 +62,7 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
             .update({ avatar_url: freshUrl })
             .eq("id", userId)
 
-        setProfile((prev: any) => ({ ...prev, avatar_url: freshUrl }))
+        setProfile((prev) => prev ? { ...prev, avatar_url: freshUrl } : prev)
         window.dispatchEvent(new CustomEvent("avatar-updated"));
     }
 
@@ -82,7 +90,7 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
                 </div>
 
                 {/* Upload */}
-                <label className="mt-3 cursor-pointer text-sm text-blue-500 hover:underline w-fit">
+                <label className="mt-3 cursor-pointer text-sm text-blue-bell dark:text-violet-ray hover:underline w-fit">
                     Change avatar
                     <input
                         type="file"

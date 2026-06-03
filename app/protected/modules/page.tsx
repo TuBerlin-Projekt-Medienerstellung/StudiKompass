@@ -11,7 +11,7 @@ export default function ModulesPage() {
                     <p>Durchsuche und Verwalte verfügbare Module</p>
                 </div>
                 <button
-                    className="flex bg-flag-red text-white justify-center items-center px-3 rounded-2xl w-64 h-11">
+                    className="flex bg-flag-red text-white justify-center items-center px-3 rounded-2xl w-64 h-11 transition-colors hover:bg-dark-khaki">
                     <Plus/>
                     Costum-Modul erstellen
                 </button>
@@ -20,22 +20,22 @@ export default function ModulesPage() {
 
             <div className="flex flex-row gap-4">
                 <div
-                    className="focus-within:border-blue-bell transition-colors border-2 rounded-2xl flex flex-2 py-3 px-5 gap-3 pointer-events-auto">
+                    className="focus-within:border-violet-ray transition-colors border-2 border-border bg-background dark:bg-card rounded-2xl flex flex-2 py-3 px-5 gap-3 pointer-events-auto">
                     <label htmlFor="search"> <Search/></label>
-                    <input className="w-full focus:outline-none" type="text" id="search"
+                    <input className="w-full bg-transparent focus:outline-none placeholder:text-muted-foreground" type="text" id="search"
                            placeholder="Module durchsuchen"/>
                 </div>
-                <div className="border-2 rounded-2xl py-3 px-5 flex">
+                <div className="border-2 border-border bg-background dark:bg-card rounded-2xl py-3 px-5 flex">
                     <label htmlFor="types"> <Funnel/></label>
-                    <select className="focus:outline-none" name="types" id="types">
+                    <select className="bg-transparent focus:outline-none" name="types" id="types">
                         <option value="Elektronik">Elektronik</option>
                         <option value="Informatik">Informatik</option>
                         <option value="Mathematik">Mathematik</option>
                     </select>
                 </div>
-                <div className="border-2 rounded-2xl py-3 px-5 flex">
+                <div className="border-2 border-border bg-background dark:bg-card rounded-2xl py-3 px-5 flex">
                     <label htmlFor="kindOfModul"> <Funnel/></label>
-                    <select className="focus:outline-none" name="kindOfModul" id="kindOfModul">
+                    <select className="bg-transparent focus:outline-none" name="kindOfModul" id="kindOfModul">
                         <option value="Pflichtmodul">Pflichtmodul</option>
                         <option value="Wahlpflichtmodul">Wahlpflichtmodul</option>
                         <option value="Wahlmodul">Wahlmodul</option>

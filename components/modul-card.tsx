@@ -20,14 +20,12 @@ const ModulCard = (props: modulInfo) => {
         semester,
         modulArt,
         beschreibung,
-        examform,
-        arbeitsaufwand,
         link
     } = props;
 
     return (
         <div
-            className={`w-full flex flex-col border-y-2 border-x-4 rounded-xl px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
+            className={`w-full flex flex-col border-y-2 border-x-4 border-border dark:border-l-flag-red dark:border-r-flag-red bg-background dark:bg-card rounded-xl px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
             <header className='w-full flex justify-between items-center'>
                 <div className='flex w-fit gap-2.5 '>
                     {/**Button Modul erledigt oder nicht*/}
@@ -44,7 +42,7 @@ const ModulCard = (props: modulInfo) => {
                             <div>{leistungspunkte} ECTS</div>
                             <span className=''>• {semester} •</span>
                             {/** Color angepasst auf Pflicht/Wahlpflicht/wahlt **/}
-                            <p className='text-blue-bell'>{modulArt}</p>
+                            <p className='text-blue-bell dark:text-violet-ray'>{modulArt}</p>
                         </div>
                     </div>
 
@@ -72,7 +70,7 @@ const ModulCard = (props: modulInfo) => {
                             {/** Hier fetchen für die Details, gerade werden dummy daten von constants gefetchtet **/}
                             {details.map((detail, index) => (
                                 <div key={index}
-                                     className='bg-[#E3E6EA] flex border-2 rounded-xl w-full items-center p-4 flex-col'>
+                                     className='bg-[#E3E6EA] dark:bg-[#16081f] flex border-2 border-border rounded-xl w-full items-center p-4 flex-col'>
                         <span>
                             {detail.name}
                         </span>
@@ -85,7 +83,7 @@ const ModulCard = (props: modulInfo) => {
 
                         </div>
                         <div className='flex rounded-lg gap-2'>
-                            <button className='bg-violet-ray text-white px-4 py-2 rounded-lg w-5/6'>
+                            <button className='bg-violet-ray hover:bg-blue-bell text-white px-4 py-2 rounded-lg w-5/6 transition-colors'>
                                 Zum Planer hinzufügen
                             </button>
                             {/** Hier Link von Moses einfügen */}
