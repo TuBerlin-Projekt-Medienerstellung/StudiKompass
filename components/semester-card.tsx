@@ -4,7 +4,7 @@ import {Plus} from 'lucide-react';
 
 const SemesterCard = () => {
     return (
-        <div className="border-2 rounded-2xl p-4 gap-4 flex flex-col">
+        <div className="border-2 border-border bg-background dark:bg-card rounded-2xl p-4 gap-4 flex flex-col">
             <header className="flex justify-between">
                 <div>
                     <h2 className="font-bold text-xl">1. Semester
@@ -12,14 +12,14 @@ const SemesterCard = () => {
                     <p className="opacity-70 text-sm">2 Module</p>
                 </div>
                 <div className="text-right">
-                    <h2 className="font-bold text-xl text-oxblood">20</h2>
+                    <h2 className="font-bold text-xl text-flag-red">20</h2>
                     <p>ECTS</p>
                 </div>
             </header>
 
             <SemesterModulCard/>
 
-            <button className="border-2 border-dashed rounded-2xl flex items-center justify-center px-6 py-4">
+            <button className="border-2 border-dashed border-border rounded-2xl flex items-center justify-center px-6 py-4 text-muted-foreground transition-colors hover:border-violet-ray hover:text-foreground">
                 <Plus/> Modul hinzufügen
             </button>
         </div>

@@ -8,7 +8,7 @@ export default function SettingsPage() {
     return (
         <div className="p-6 flex flex-col gap-4">
             <h1 className="text-2xl font-bold">Einstellungen</h1>
-            <p>Verwalte dein Profil und Präferenzen</p>
+            <p className="text-muted-foreground">Verwalte dein Profil und Präferenzen</p>
             <SettingsClient />
             <Studiengang />
             <UpdateEmailForm />
