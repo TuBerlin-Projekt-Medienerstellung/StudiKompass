@@ -1,7 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import StudiengangForm from "./studiengangwahl-form"
 
-{/*Need to connect to TU VPN to access?*/}
 export default async function Studiengangwahl() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -10,12 +9,12 @@ export default async function Studiengangwahl() {
     let officialDegrees: any[] = [];
     try {
         {/* Only fetch if the URL actually exists in your .env*/}
-        if (process.env.studiengaenge_API_URL) {
+        if (process.env.moses_API_URL) {
             const degreeResponse = await fetch(
-        `${process.env.studiengaenge_API_URL}?pageSize=500`,
+        `${process.env.moses_API_URL}/studiengang?pageSize=500`,
         {
-            headers: process.env.Studiengaenge_API_KEY
-                ? { 'x-api-key': process.env.Studiengaenge_API_KEY }  //used bearer before, email says form apikey required
+            headers: process.env.moses_API_KEY
+                ? { 'x-api-key': process.env.moses_API_KEY }  //used bearer before, email says form apikey required
                 : {},
             next: { revalidate: 86400 } //still the same caching to reduce unwanted traffic and prevent slow flow
         }
@@ -29,7 +28,7 @@ export default async function Studiengangwahl() {
 
         for (let page = 2; page <= totalPages; page++) {
             const res = await fetch(
-                `${process.env.studiengaenge_API_URL}?pageSize=500&pageNumber=${page}`,
+                `${process.env.moses_API_URL}/studiengang?pageSize=500&pageNumber=${page}`,
                 {
                     headers: { 'x-api-key': process.env.Studiengaenge_API_KEY || "" },
                     next: { revalidate: 86400 }

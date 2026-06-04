@@ -17,6 +17,7 @@ declare global {
     }
 
     interface modulInfo {
+        modul_id: number,
         name: string,
         leistungspunkte: number,
         semester: string,
