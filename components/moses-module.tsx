@@ -152,7 +152,8 @@ export default function MosesModulsuche({ studiengangId }: Props) {
                                 modul_id={modul.id}
                                 name={modul.name}
                                 leistungspunkte={modul.lp}
-                                modulArt={modul.bereichPfad[0] ?? "—"} link={''} semester={''}                                
+                                modulArt={modul.bereichPfad[0] ?? "—"} link={''} 
+                                semester={modul.semester}                             
                             />
                         ))
                     )}
