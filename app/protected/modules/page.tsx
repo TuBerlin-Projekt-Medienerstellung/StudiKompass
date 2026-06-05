@@ -20,7 +20,7 @@ export default function ModulesPage() {
 
             <div className="flex flex-row gap-4">
                 <div
-                    className="focus-within:border-blue-bell transition-colors border-2 rounded-2xl flex flex-2 py-3 px-5 gap-3 pointer-events-auto">
+                    className="focus-within:border-blue-bell transition-colors border-2 rounded-2xl flex md:flex-2 flex-2/3 py-3 px-5 gap-3 pointer-events-auto">
                     <label htmlFor="search"> <Search/></label>
                     <input className="w-full focus:outline-none" type="text" id="search"
                            placeholder="Module durchsuchen"/>
@@ -33,7 +33,7 @@ export default function ModulesPage() {
                 {/*        <option value="Mathematik">Mathematik</option>*/}
                 {/*    </select>*/}
                 {/*</div>*/}
-                <div className="border-2 rounded-2xl py-3 px-5 flex">
+                <div className="border-2 rounded-2xl py-3 px-5 flex  ">
                     <label htmlFor="kindOfModul"> <Funnel/></label>
                     <select className="focus:outline-none" name="kindOfModul" id="kindOfModul">
                         <option value="Pflichtmodul">Pflichtmodul</option>
