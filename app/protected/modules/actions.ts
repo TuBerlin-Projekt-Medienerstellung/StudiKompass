@@ -51,6 +51,10 @@ export interface ModulBasis {
     lp: number;
     bereichPfad: string[]; 
 }
+// Funktion, welches mit der number und versionsnummer die moses-modul-url aufbaut
+function baueMosesLink(nummer: number | string, version: number | string): string {
+    return `https://moseskonto.tu-berlin.de/moses/modultransfersystem/bolognamodule/beschreibung/anzeigen.html?nummer=${nummer}&version=${version}`;
+}
 
 export async function ladeModulBasisAction(studiengangId: number): Promise<ModulBasis[]> {
     const studiengangDaten = await fetchMoses(`/studiengang/${studiengangId}`);
@@ -141,20 +145,40 @@ export async function ladeDetailedModulAction(modul_id: number) {
         pruefungsBeschreibung: "",
         pruefungselemente: [] as string[],
         anmeldeformalitaetenDE: "",
+        link: "",
     }
 
     try {
         if (baseUrl) {
-            const [beschreibungResponse, pruefungResponse] = await Promise.all([
-                fetch(`${baseUrl}/bolognamodulbeschreibung?bolognamodulId=${modul_id}`, { headers, next: { revalidate: 86400 } }),
-                fetch(`${baseUrl}/bolognamodulpruefung?bolognamodulId=${modul_id}`,     { headers, next: { revalidate: 86400 } }),
+            // Schritt 1 (sequenziell): zuordnung → version
+            // Die Version liefert uns sowohl die bolognamodul-ID (für die Nummer)
+            // als auch die Beschreibungs-ID (für den direkten, schnellen Fetch)
+            const zuordnungRaw = await fetch(`${baseUrl}/studiengangszuordnung/${modul_id}`, { headers, next: { revalidate: 86400 } });
+            const zuordnung = (await zuordnungRaw.json())?.data?.[0];
+            const versionId = zuordnung?.bolognamodulVersion?.id;
+
+            let version: any = null;
+            if (versionId) {
+                const versionRaw = await fetch(`${baseUrl}/bolognamodulversion/${versionId}`, { headers, next: { revalidate: 86400 } });
+                version = (await versionRaw.json())?.data?.[0];
+            }
+
+            const bolognamodulId = version?.bolognamodul?.id;
+            const beschreibungId = version?.bolognamodulBeschreibung?.id;
+            const versionsnummer = version?.versionsnummer;
+
+            // Schritt 2 (parallel): Nummer, Beschreibung (direkt!) und Prüfung gleichzeitig
+            const [bolognamodulData, beschreibungData, pruefungData] = await Promise.all([
+                bolognamodulId
+                    ? fetch(`${baseUrl}/bolognamodul/${bolognamodulId}`, { headers, next: { revalidate: 86400 } }).then(r => r.json())
+                    : Promise.resolve(null),
+                beschreibungId
+                    ? fetch(`${baseUrl}/bolognamodulbeschreibung/${beschreibungId}`, { headers, next: { revalidate: 86400 } }).then(r => r.json())
+                    : Promise.resolve(null),
+                fetch(`${baseUrl}/bolognamodulpruefung?bolognamodulId=${modul_id}`, { headers, next: { revalidate: 86400 } }).then(r => r.json()),
             ]);
 
-            const [beschreibungData, pruefungData] = await Promise.all([
-                beschreibungResponse.json(),
-                pruefungResponse.json(),
-            ]);
-
+            const nummer = bolognamodulData?.data?.[0]?.number;
             const beschreibung = beschreibungData?.data?.[0];
             const pruefung = pruefungData?.data?.[0];
 
@@ -168,6 +192,7 @@ export async function ladeDetailedModulAction(modul_id: number) {
                 pruefungsBeschreibung: pruefung?.beschreibungDE,
                 pruefungselemente: pruefung?.pruefungselementList?.map((p: {name:string}) => p.name) ?? [],
                 anmeldeformalitaetenDE: pruefung?.anmeldeformalitaetenDE,
+                link: nummer != null ? baueMosesLink(nummer, versionsnummer) : "",
             }
         }
     } catch (e) {
