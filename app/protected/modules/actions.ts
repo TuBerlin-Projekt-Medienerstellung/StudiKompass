@@ -50,6 +50,7 @@ export interface ModulBasis {
     name: string;
     lp: number;
     bereichPfad: string[]; 
+    semester: string;
 }
 
 export async function ladeModulBasisAction(studiengangId: number): Promise<ModulBasis[]> {
@@ -101,11 +102,13 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
                     const actualModulId = zuordnung?.bolognamodul?.id || 
                           zuordnung?.bolognamodulVersion?.bolognamodul?.id || 
                           z.id;
+                    const semester = zuordnung?.makroturnus.name;
                     return {
                         id: actualModulId,
                         name: zuordnung?.name,
                         lp: zuordnung?.modullp,
-                        bereichPfad
+                        bereichPfad,
+                        semester
                     } as ModulBasis;
                 } catch {
                     return null;
