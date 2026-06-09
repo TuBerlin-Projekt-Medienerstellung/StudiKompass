@@ -3,18 +3,24 @@
 import Link from "next/link";
 import {useState, useEffect} from 'react';
 import { X , SquareArrowOutUpRight, Circle, CircleCheckBig,} from 'lucide-react';
+import { link } from "fs";
+import { details } from "@/constants";
 
-
-type ModulInfo = {
+interface ModulInfo {
+    modul_id: number;
     name: string;
     leistungspunkte: number;
-    semester: string;
+    semester?: string | number;
     modulArt: string;
-    beschreibung: string;
-    examform: string;
-    arbeitsaufwand: string;
     link: string;
-    dozent: string;
+    beschreibung?: string;
+    lernergebnisse?: string;
+    voraussetzungen?: string;
+    pruefungsform?: string;
+    pruefungselemente?: string[];
+    benotet?: boolean | null;
+    pruefungsBeschreibung?: string;
+    lehrlernformen?: string;
 }
 
 type Props = {
@@ -24,18 +30,37 @@ type Props = {
 };
 
 const ModulCardModal = ({
-  isOpen, //geöffnet oder nicht
+  isOpen,
   onClose,
   modul,
 }: Props) => {
-    
-    const [checked, setChecked] = useState(false); //Modul abgeschlossen oder nicht
-    
-    {/**damit setChecked für jedes Modul einzeln aufgerufen wird*/}
-    useEffect(() => {
+
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
     setChecked(false);
-    }, [modul]);
-    
+  }, [modul]);
+
+  if (!modul || !isOpen) return null;
+
+  const {
+    modul_id,
+    name,
+    leistungspunkte,
+    semester,
+    modulArt,
+    link,
+    beschreibung,
+    lernergebnisse,
+    voraussetzungen,
+    pruefungsform,
+    pruefungselemente,
+    benotet,
+    pruefungsBeschreibung,
+  } = modul;
+
+
+
     return (
 
         <div>
@@ -49,7 +74,7 @@ const ModulCardModal = ({
                 <header className="flex flex-col gap-y-2">
                     <div className="flex flex-row items-center justify-between">
                         <div className="flex justifycenter bg-flag-red/50 text-flag-red rounded-xl py-1 px-2 w-fit items-center justify-center">
-                        {modul.modulArt}
+                        {modulArt}
                         </div>
                         
                         <button type="button" onClick={onClose}>
@@ -59,11 +84,11 @@ const ModulCardModal = ({
                     </div>
                     
                     <h1 className="font-bold md:text-2xl text-xl">
-                        {modul.name}
+                        {name}
                     </h1>
                     <div className="flex flex-row justify-items-start gap-4">
                         <p className="text-flag-red">
-                            {modul.leistungspunkte} ECTS
+                            {leistungspunkte} ECTS
                         </p>
                         <div>•</div>
                         <p>
@@ -71,7 +96,7 @@ const ModulCardModal = ({
                         </p>
                         <div>•</div>
                         <p>
-                            {modul.dozent}
+                            {modul.lehrlernformen}
                         </p>
                     </div>
                 </header>
@@ -89,7 +114,7 @@ const ModulCardModal = ({
                         Arbeitsaufwand 
                         </p>
                         <p className="font-semibold">
-                            {modul.arbeitsaufwand}
+                            {modul.modulArt}
                         </p>
                     </div>
                     <div className="bg-stone-grey flex border-2 rounded-xl w-full items-center p-4 flex-col">
@@ -106,7 +131,7 @@ const ModulCardModal = ({
                             Prüfungsform
                         </p>
                         <p className="font-semibold">
-                            {modul.examform}
+                            {modul.pruefungsform}
                         </p>
                     </div>
                 </div>
