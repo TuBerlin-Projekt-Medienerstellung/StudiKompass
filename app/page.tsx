@@ -11,18 +11,18 @@ export default function Home() {
     return (
         <main className="flex flex-col justify-start min-h-screen text-zinc-950 w-full overflow-x-hidden">
             {/* Background */}
-            <div className="-z-10">
-                <div
-                    className="md:size-245 size-20 absolute left-0 -bottom-40 bg-slate-400 rounded-full blur-[254.50px]"/>
+            {/*<div className="-z-10">*/}
+            {/*    <div*/}
+            {/*        className="md:size-245 size-20 absolute left-0 -bottom-40 bg-slate-400 rounded-full blur-[254.50px]"/>*/}
 
-                <div
-                    className="w-full h-80 md:w-212 md:h-206 absolute right-0 bg-raspbarry-plum rounded-full blur-[254.50px]"/>
-                <img
-                    src="https://images.unsplash.com/photo-1534593963832-01c3595183bd?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                    alt=""
-                    className="absolute w-screen h-screen mix-blend-color-bur opacity-10 object-cover"
-                />
-            </div>
+            {/*    <div*/}
+            {/*        className="w-full h-80 md:w-212 md:h-206 absolute right-0 bg-raspbarry-plum rounded-full blur-[254.50px]"/>*/}
+            {/*    <img*/}
+            {/*        src="https://images.unsplash.com/photo-1534593963832-01c3595183bd?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"*/}
+            {/*        alt=""*/}
+            {/*        className="absolute w-screen h-screen mix-blend-color-bur opacity-10 object-cover"*/}
+            {/*    />*/}
+            {/*</div>*/}
 
             {/*<div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">*/}
             {/*    <div*/}
