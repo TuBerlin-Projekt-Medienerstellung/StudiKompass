@@ -53,7 +53,7 @@ export function LoginForm({
       });
 
       if (signInError) throw signInError;    
-      router.push("/protected/dashboard");
+      router.push("/protected/settings");
       {/*Update this route to redirect to an authenticated route. The user already has an active session.*/}
 
     } catch (error: unknown) {
