@@ -1,29 +1,73 @@
 "use client";
 
 import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight} from 'lucide-react';
-import {details} from "@/constants";
+import { ladeDetailedModulAction } from '@/app/protected/modules/actions';
 import Link from "next/link";
 import {useState} from 'react';
+
+interface modulInfo {
+    modul_id: number;
+    name: string;
+    leistungspunkte: number;
+    semester?: string | number;
+    modulArt: string;
+    link: string;
+    beschreibung?: string;
+    lernergebnisse?: string;
+    voraussetzungen?: string;
+    pruefungsform?: string;
+    pruefungselemente?: string[];
+    benotet?: boolean | null;
+    pruefungsBeschreibung?: string;
+    lehrlernformen?: string;
+}
 
 const ModulCard = (props: modulInfo) => {
 
     const [liked, setLiked] = useState(true);
     const [open, setOpen] = useState(false);
-    //
-    // function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    //     setLiked(e.target.checked);
-    // }
+    const [details, setDetails] = useState<Partial<modulInfo> | null>(null);
+    const [loadingDetails, setLoadingDetails] = useState(false);
+    
+
+    async function handleAusklappen() {
+        setOpen(!open);
+        if (!open && !details) {
+            setLoadingDetails(true);
+            const data = await ladeDetailedModulAction(modul_id);
+            if (data){
+                setDetails(data);}
+            setLoadingDetails(false);
+        }
+    }
 
     const {
+        modul_id,
         name,
         leistungspunkte,
         semester,
         modulArt,
-        beschreibung,
-        examform,
-        arbeitsaufwand,
         link,
+        beschreibung,
+        lernergebnisse,
+        voraussetzungen,
+        pruefungsform,
+        pruefungselemente,
+        benotet,
+        pruefungsBeschreibung,
     } = props;
+
+    const detailBoxen = [
+        { name: "Prüfungsform", value: details?.pruefungsform ?? "—" },
+        
+        { name: "Arbeitsaufwand", value: details?.leistungspunkte ?? "—" },
+        //{ name: "benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—" },
+        { name: "Leistungnspunkte", value: details?.leistungspunkte ?? "—"},
+        //{ name: "Voraussetzungen", value: details?.voraussetzungen ?? "—" },
+        { name: "Angebot", value: details?.semester ?? "—" },
+    ];
+
+    
 
     return (
         <div
@@ -50,7 +94,7 @@ const ModulCard = (props: modulInfo) => {
 
                 </div>
                 {/** Hier wird die Modulkarte ausgeklappt */}
-                <div className="cursor-pointer" onClick={() => setOpen(!open)}>
+                <div className="cursor-pointer" onClick={handleAusklappen}>
                     {open ? <ChevronUp/> : <ChevronDown/>}
                 </div>
             </header>
@@ -70,7 +114,7 @@ const ModulCard = (props: modulInfo) => {
                         </div>
                         <div className='flex justify-between gap-2 md:flex-row flex-col'>
                             {/** Hier fetchen für die Details, gerade werden dummy daten von constants gefetchtet **/}
-                            {details.map((detail, index) => (
+                            {detailBoxen.map((detail, index) => (
                                 <div key={index}
                                      className='bg-stone-grey flex border-2 rounded-xl w-full items-center p-4 flex-col'>
                         <span>
