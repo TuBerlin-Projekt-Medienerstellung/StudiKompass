@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight } from 'lucide-react';
+import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight} from 'lucide-react';
 import { ladeDetailedModulAction } from '@/app/protected/modules/actions';
 import Link from "next/link";
 import { useState } from 'react';
@@ -23,12 +23,31 @@ interface modulInfo {
 }
 
 const ModulCard = (props: modulInfo) => {
+
+    const [liked, setLiked] = useState(true);
+    const [open, setOpen] = useState(false);
+    const [details, setDetails] = useState<Partial<modulInfo> | null>(null);
+    const [loadingDetails, setLoadingDetails] = useState(false);
+    
+
+    async function handleAusklappen() {
+        setOpen(!open);
+        if (!open && !details) {
+            setLoadingDetails(true);
+            const data = await ladeDetailedModulAction(modul_id);
+            if (data){
+                setDetails(data);}
+            setLoadingDetails(false);
+        }
+    }
+
     const {
         modul_id,
         name,
         leistungspunkte,
         semester,
         modulArt,
+        link,
         link,
         beschreibung,
         lernergebnisse,
@@ -37,30 +56,25 @@ const ModulCard = (props: modulInfo) => {
         pruefungselemente,
         benotet,
         pruefungsBeschreibung,
+        lernergebnisse,
+        voraussetzungen,
+        pruefungsform,
+        pruefungselemente,
+        benotet,
+        pruefungsBeschreibung,
     } = props;
-
-    const [liked, setLiked] = useState(true);
-    const [open, setOpen] = useState(false);
-    const [details, setDetails] = useState<Partial<modulInfo> | null>(null);
-    const [loadingDetails, setLoadingDetails] = useState(false);
-
-    async function handleAusklappen() {
-        setOpen(!open);
-        if (!open && !details) {
-            setLoadingDetails(true);
-            const data = await ladeDetailedModulAction(modul_id);
-            if (data) {
-                setDetails(data);
-            }
-            setLoadingDetails(false);
-        }
-    }
 
     const detailBoxen = [
         { name: "Prüfungsform", value: details?.pruefungsform ?? "—" },
-        { name: "Benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—" },
-        { name: "Voraussetzungen", value: details?.voraussetzungen ?? "—" },
+        
+        { name: "Arbeitsaufwand", value: details?.leistungspunkte ?? "—" },
+        //{ name: "benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—" },
+        { name: "Leistungnspunkte", value: details?.leistungspunkte ?? "—"},
+        //{ name: "Voraussetzungen", value: details?.voraussetzungen ?? "—" },
+        { name: "Angebot", value: details?.semester ?? "—" },
     ];
+
+    
 
     return (
         <div className={`w-full flex flex-col border-y-2 border-x-4 rounded-xl px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
@@ -106,10 +120,16 @@ const ModulCard = (props: modulInfo) => {
 
                         {/* Detail Boxen */}
                         <div className='flex justify-between gap-2 md:flex-row flex-col'>
+                            {/** Hier fetchen für die Details, gerade werden dummy daten von constants gefetchtet **/}
                             {detailBoxen.map((detail, index) => (
-                                <div key={index} className='bg-[#E3E6EA] flex border-2 rounded-xl w-full items-center p-4 flex-col'>
-                                    <span>{detail.name}</span>
-                                    <p className='font-bold'>{detail.value}</p>
+                                <div key={index}
+                                     className='bg-stone-grey flex border-2 rounded-xl w-full items-center p-4 flex-col'>
+                        <span>
+                            {detail.name}
+                        </span>
+                                    <p className='font-bold'>
+                                        {detail.value}
+                                    </p>
                                 </div>
                             ))}
                         </div>
