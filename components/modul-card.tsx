@@ -21,7 +21,8 @@ interface modulInfo {
     pruefungsBeschreibung?: string;
     lehrlernformen?: string;
 }
-
+//Type error: Type '{ key: string; modul_id: number; name: string; leistungspunkte: number; modulArt: string; link: string; semester: string; }' 
+// is missing the following properties from type 'modulInfo': beschreibung, examform, arbeitsaufwand
 const ModulCard = (props: modulInfo) => {
     const {
         modul_id,
