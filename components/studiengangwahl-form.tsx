@@ -1,6 +1,10 @@
 "use client" ;
-import { useState } from "react"
+import React, { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
+import {GraduationCap, Pencil} from "lucide-react"
+import {CardHeader, CardTitle} from "@/components/ui/card";
+import {Button} from "@/components/ui/button";
+import {Label} from "@/components/ui/label";
 
 export default function StudiengangForm({degrees, current}: {
     degrees: any[]
@@ -27,14 +31,17 @@ export default function StudiengangForm({degrees, current}: {
     return(
         <div className="w-full">
             <section className="w-full space-y-8">
-                <div className="bg-white dark:bg-zinc-900 border border-zinc-600 dark:border-zinc-800 p-6 rounded-xl">
+                <div className="rounded-xl border-2 bg-white shadow-sm p-6 gap 4">
                     <div className="space-y-4">
-                        <label className="block text-base font-semibold text-black dark:text-white mb-2">
-                            Studiengangwahl
-                        </label>
+                            <div className="flex flex-row gap-4 pb-1 md:justify-start items-center">
+                            <GraduationCap className="text-flag-red w-9 h-9 stroke-1.5"></GraduationCap>
+                            <h1 className="text-xl font-bold">Studiengang</h1>
+                        </div>
+
+                        <Label htmlFor="password"> Studiengang: </Label>
 
                         {/* Das alte <select> ist weg, stattdessen Input + Liste */}
-                        <div className="relative">
+                        <div className="relative pt-1 pb-2">
                             <input
                                 type="text"
                                 value={query}
@@ -43,12 +50,12 @@ export default function StudiengangForm({degrees, current}: {
                                     setSelected(null) // wenn der User wieder tippt, Auswahl zurücksetzen
                                 }}
                                 placeholder="Studiengang wählen..."
-                                className="w-full bg-zinc-200 dark:bg-zinc-800 border border-zinc-700 text-black dark:text-white rounded-lg px-4 py-2 outline-hidden"
+                                className="w-full border text-black rounded-md px-3 py-1.5 shadow-xs"
                             />
 
                             {/* Liste nur sichtbar wenn: etwas getippt wurde UND noch nichts ausgewählt */}
                             {query.length > 0 && !selected && (
-                                <ul className="absolute z-10 w-full mt-1 max-h-60 overflow-y-auto bg-white dark:bg-zinc-800 border border-zinc-700 rounded-lg">
+                                <ul className="absolute z-10 w-full mt-1 max-h-60 overflow-y-auto bg-white border rounded-lg">
                                     {filtered.map((deg, index) => {
                                         const typeName = deg?.studiengangart?.name ?? ""
                                         const displayName = typeName
@@ -63,7 +70,7 @@ export default function StudiengangForm({degrees, current}: {
                                                     setQuery(displayName)    // Input zeigt den Namen
                                                     setSelected({id: deg.id ,name : displayName}) // merkt sich die Auswahl für handleSave
                                                 }}
-                                                className="px-4 py-2 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700"
+                                                className="px-4 py-2 cursor-pointer hover:bg-secondary"
                                             >
                                                 {displayName}
                                             </li>
@@ -74,14 +81,10 @@ export default function StudiengangForm({degrees, current}: {
                         </div>
 
                         {/* Speichern-Button bleibt gleich, nur disabled wenn nichts ausgewählt */}
-                        <button
-                            type="button"
-                            onClick={handleSave}
-                            disabled={!selected}
-                            className="text-base bg-zinc-400 hover:bg-zinc-200 dark:bg-emerald-600 dark:hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed px-6 py-2 rounded-lg font-bold transition-all"
-                        >
-                            Studiengang speichern
-                        </button>
+                        <Button type="button" className="w-full text-primary-foreground bg-flag-red"  onClick={handleSave} disabled={!selected}>
+                                Speichere Studiengang
+                        </Button>
+
                     </div>
                 </div>
             </section>
