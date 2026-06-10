@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import {Pencil, User} from 'lucide-react';
 
 export function UpdateEmailForm({
   className,
@@ -37,7 +38,7 @@ export function UpdateEmailForm({
       // Update this route to redirect to an authenticated route. The user already has an active session.
       setIsSuccess(true);
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : "Es ist ein Fehler aufgetreten.");
     } finally {
       setIsLoading(false);
     }
@@ -53,28 +54,29 @@ export function UpdateEmailForm({
         // type: 'email_change',
         // email: email,
     if (error) throw error;
-      alert("Confirmation email resent!");}
+      alert("Bestätigungsmail wurde erneut gesendet!");}
     catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred while resending");
+      setError(error instanceof Error ? error.message : "Konnte nicht gesendet werden.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className={cn("bg-white dark:bg-zinc-900 border border-zinc-600 dark:border-zinc-800 p-6 rounded-xl", className)} {...props}>
+    <div className={cn(className)} {...props}>
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold text-black mb-2">Reset Your E-Mail</CardTitle>
-          <CardDescription className="text-zinc-500">
-            Please enter your new email below.
-          </CardDescription>
+        <CardHeader className="flex flex-row gap-4 pb-4 md:justify-start items-center">
+          <Pencil className="text-flag-red w-7 h-7 stroke-2"></Pencil>
+          <CardTitle className="text-xl font-bold">E-Mail zurücksetzen</CardTitle>
         </CardHeader>  
         <CardContent>
+        <CardDescription className="text-zinc-500 pb-5">
+          Bitte gib die neue E-Mail Adresse ein.
+        </CardDescription>
         {isSuccess ? (
           <div className="flex flex-col gap-4">
-            <p className="text-sm text-green-500">
-              Check your new email to confirm the change.
+            <p className="text-sm text-mint-leaf">
+              Prüfe dein Postfach, um die Änderung zu bestätigen.
             </p>
             <Button 
               type="button" 
@@ -82,27 +84,27 @@ export function UpdateEmailForm({
               onClick={handleResendEmail} 
               disabled={isLoading}
             >
-              {isLoading ? "Sending..." : "Resend confirmation email"}
+              {isLoading ? "Senden..." : "Bestätigungsmail erneut senden"}
             </Button>
-            {error && <p className="text-sm text-red-500">{error}</p>}
+            {error && <p className="text-sm text-flag-red">{error}</p>}
           </div>
         ) :(
           <form onSubmit={handleUpdateEmail}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="password">New E-mail</Label>
+                <Label htmlFor="password">Neue E-Mail:</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="New email"
+                  placeholder="E-Mail eingeben..."
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Saving..." : "Save new email"}
+              {error && <p className="text-sm text-flag-red">{error}</p>}
+              <Button type="submit" className="w-full bg-flag-red" disabled={isLoading}>
+                {isLoading ? "Speichern..." : "Speichere neue E-Mail"}
               </Button>
               
             </div>

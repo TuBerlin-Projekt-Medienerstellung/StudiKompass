@@ -77,10 +77,10 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
 
     return (
         <div className="w-full flex flex-col gap-7">
-            <div className="bg-white border-2 p-6 gap-4 rounded-2xl">
+            <div className="rounded-xl border-2 bg-card text-card-foreground shadow-sm  p-6 gap-4">
 
             {/* Profil */}
-            <div className="flex flex-row gap-4 pb-4 md:justify-start justify-center items-center">
+            <div className="flex flex-row gap-4 pb-4 md:justify-start items-center">
             <User className="text-flag-red w-9 h-9 stroke-2"/>
             <h1 className="text-xl font-bold">Profil</h1>
             </div>
