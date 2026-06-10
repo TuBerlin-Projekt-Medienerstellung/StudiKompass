@@ -7,7 +7,7 @@ export default function StudiengangForm({degrees, current}: {
     current: string
     }){
         const [query, setQuery] = useState(current)
-        const [selected, setSelected] = useState(current)
+        const [selected, setSelected] = useState<{id:number, name:string} | null>(null)
         const filtered = degrees.filter(deg =>
         deg.name?.toLowerCase().includes(query.toLowerCase())
         )
@@ -20,7 +20,8 @@ export default function StudiengangForm({degrees, current}: {
         const supabase = createClient()
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) return
-        await supabase.from("profiles").update({ studiengang: selected }).eq("id", user.id)
+        if (!user || !selected) return
+        await supabase.from("profiles").update({ studiengang: selected.name, studiengang_id: selected.id }).eq("id", user.id)
         window.dispatchEvent(new CustomEvent("studiengang-updated")) 
     }
     return(
@@ -39,7 +40,7 @@ export default function StudiengangForm({degrees, current}: {
                                 value={query}
                                 onChange={e => {
                                     setQuery(e.target.value)
-                                    setSelected("") // wenn der User wieder tippt, Auswahl zurücksetzen
+                                    setSelected(null) // wenn der User wieder tippt, Auswahl zurücksetzen
                                 }}
                                 placeholder="Studiengang wählen..."
                                 className="w-full bg-zinc-200 dark:bg-zinc-800 border border-zinc-700 text-black dark:text-white rounded-lg px-4 py-2 outline-hidden"
@@ -53,13 +54,14 @@ export default function StudiengangForm({degrees, current}: {
                                         const displayName = typeName
                                             ? `${deg.name} (${formatType(typeName)})`
                                             : deg.name
+                                        
                                             
                                         return (
                                             <li
                                                 key={deg?.id?.toString() || index}
                                                 onClick={() => {
                                                     setQuery(displayName)    // Input zeigt den Namen
-                                                    setSelected(displayName) // merkt sich die Auswahl für handleSave
+                                                    setSelected({id: deg.id ,name : displayName}) // merkt sich die Auswahl für handleSave
                                                 }}
                                                 className="px-4 py-2 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700"
                                             >

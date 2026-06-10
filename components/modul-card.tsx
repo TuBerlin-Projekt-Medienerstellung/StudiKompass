@@ -27,7 +27,7 @@ const ModulCard = (props: modulInfo) => {
 
     return (
         <div
-            className={`w-full  flex flex-col border-y-2 border-x-4 rounded-xl px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
+            className={`w-full flex flex-col border-y-2 border-x-4 rounded-xl px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
             <header className='w-full flex justify-between items-center '>
                 <div className='flex w-fit gap-2.5 md:flex-row flex-col '>
                     {/**Button Modul erledigt oder nicht*/}
@@ -45,10 +45,7 @@ const ModulCard = (props: modulInfo) => {
                         <div>{leistungspunkte} ECTS</div>
                         <span className=''>• {semester} •</span>
                         {/** Color angepasst auf Pflicht/Wahlpflicht/wahlt **/}
-                        <div className='bg-blue-bell/10 px-2 py-1 rounded-3xl'>
-                            <p className='text-blue-bell'>{modulArt}</p>
-
-                        </div>
+                        <p className='text-blue-bell'>{modulArt}</p>
                     </div>
 
                 </div>
