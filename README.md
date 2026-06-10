@@ -71,12 +71,6 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=dein_supabase_key
 npm run dev
 ```
 
-**Entwicklung**
-
-```bash
-npm run dev
-```
-
 Öffne http://localhost:3000 in deinem Browser um das Projekt zu sehen
 
 ---

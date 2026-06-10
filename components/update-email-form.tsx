@@ -13,7 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import React, { useState } from "react";
 
 export function UpdateEmailForm({
   className,
@@ -42,6 +42,24 @@ export function UpdateEmailForm({
       setIsLoading(false);
     }
   };
+  const handleResendEmail = async () => {
+    if (!email) return;
+    const supabase = createClient();
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const { error } = await supabase.auth.updateUser({ email });
+        // type: 'email_change',
+        // email: email,
+    if (error) throw error;
+      alert("Confirmation email resent!");}
+    catch (error: unknown) {
+      setError(error instanceof Error ? error.message : "An error occurred while resending");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <div className={cn("bg-white dark:bg-zinc-900 border border-zinc-600 dark:border-zinc-800 p-6 rounded-xl", className)} {...props}>
@@ -54,8 +72,20 @@ export function UpdateEmailForm({
         </CardHeader>  
         <CardContent>
         {isSuccess ? (
+          <div className="flex flex-col gap-4">
             <p className="text-sm text-green-500">
-            Check your new email to confirm the change.</p>
+              Check your new email to confirm the change.
+            </p>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleResendEmail} 
+              disabled={isLoading}
+            >
+              {isLoading ? "Sending..." : "Resend confirmation email"}
+            </Button>
+            {error && <p className="text-sm text-red-500">{error}</p>}
+          </div>
         ) :(
           <form onSubmit={handleUpdateEmail}>
             <div className="flex flex-col gap-6">
@@ -74,6 +104,7 @@ export function UpdateEmailForm({
               <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading ? "Saving..." : "Save new email"}
               </Button>
+              
             </div>
           </form>
         )}
