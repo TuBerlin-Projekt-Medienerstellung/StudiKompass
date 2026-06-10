@@ -13,7 +13,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import React, { useState } from "react";
+import {Pencil} from "lucide-react";
 
 export function UpdatePasswordForm({
   className,
@@ -36,38 +37,39 @@ export function UpdatePasswordForm({
       // Update this route to redirect to an authenticated route. The user already has an active session.
       router.push("/protected");
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      setError(error instanceof Error ? error.message : "Es ist ein Fehler aufgetreten.");
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className={cn("bg-white dark:bg-zinc-900 border border-zinc-600 dark:border-zinc-800 p-6 rounded-xl", className)} {...props}>
+    <div className={cn(className)} {...props}>
       <Card>
-        <CardHeader>
-          <CardTitle className="text-base font-semibold text-black mb-2">Reset Your Password</CardTitle>
-          <CardDescription className="text-zinc-500">
-            Please enter your new password below.
+          <CardHeader className="flex flex-row gap-4 pb-4 md:justify-start items-center">
+            <Pencil className="text-flag-red w-7 h-7 stroke-2"></Pencil>
+            <CardTitle className="text-xl font-bold">Passwort zurücksetzen</CardTitle>
+          </CardHeader>
+          <CardContent>
+          <CardDescription className="text-zinc-500 pb-5">
+            Bitte gib das neue Passwort ein.
           </CardDescription>
-        </CardHeader>
-        <CardContent>
           <form onSubmit={handleForgotPassword}>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
-                <Label htmlFor="password">New password</Label>
+                <Label htmlFor="password">Neues Passwort:</Label>
                 <Input
                   id="password"
                   type="password"
-                  placeholder="New password"
+                  placeholder="Passwort eingeben..."
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Saving..." : "Save new password"}
+              {error && <p className="text-sm text-flag-red">{error}</p>}
+              <Button type="submit" className="w-full bg-flag-red" disabled={isLoading}>
+                {isLoading ? "Speichern..." : "Speichere neues Passwort"}
               </Button>
             </div>
           </form>
