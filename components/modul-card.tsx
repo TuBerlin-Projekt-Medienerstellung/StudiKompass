@@ -126,7 +126,7 @@ const ModulCard = (props: modulInfo) => {
                         </div>
                     </div>
                 </div>
-            </div>
+            </div> 
         </div>
     )
 }
