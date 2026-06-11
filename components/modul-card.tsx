@@ -23,9 +23,14 @@ const ModulCard = (props: modulInfo) => {
         link
     } = props;
 
+    const isWahlpflicht = modulArt.toLowerCase().includes("wahlpflicht");
+    const moduleBorderClass = isWahlpflicht
+        ? "border-l-flag-red border-r-flag-red dark:border-l-emerald-400 dark:border-r-emerald-400"
+        : "border-l-flag-red border-r-flag-red dark:border-l-flag-red dark:border-r-flag-red";
+
     return (
         <div
-            className={`w-full flex flex-col border-y-2 border-x-4 border-border dark:border-l-flag-red dark:border-r-flag-red bg-background dark:bg-card rounded-xl px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
+            className={`w-full flex flex-col border-y-2 border-x-4 border-border ${moduleBorderClass} bg-background dark:bg-card rounded-xl px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
             <header className='w-full flex justify-between items-center'>
                 <div className='flex w-fit gap-2.5 '>
                     {/**Button Modul erledigt oder nicht*/}

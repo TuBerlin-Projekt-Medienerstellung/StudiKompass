@@ -40,8 +40,11 @@ export default function Home() {
             {/*        />/!*Idk.. I thought it would look cool if it spun on hover*!/*/}
             {/*    </header>*/}
             {/*</div>*/}
-            <section className="p-4 md:p-15 w-full">
-                    <ThemeSwitcher />
+            <section className="relative p-4 md:p-15 w-full">
+                    <div className="absolute right-4 top-4 z-50 md:right-8 md:top-8">
+                        <ThemeSwitcher />
+                    </div>
+                    <div className="h-8 md:h-11" />
                     <div className="text-center max-w-3xl space-y-8 z-50"></div>
                 <div className="text-center max-w-3xl space-y-8 z-50">
                     {/*Title*/}
