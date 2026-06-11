@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { User } from 'lucide-react';
+import Image from "next/image";
 
 
 export default function Settings({ refreshKey }: { refreshKey: number }) {
@@ -88,10 +89,22 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
             <div className="flex flex-col">
                 <div className="flex flex-row gap-4 md:justify-start justify-center items-center">
 
-                    {/* Initialien Avatar */}
-                    <div className="relative size-30 bg-flag-red rounded-full flex items-center justify-center text-white text-4xl">
-                        {getInitialsFromEmail(email)}
-                    </div>
+                    {/* Initialien Avatar / Profilbild */}
+                    {profile?.avatar_url ? (
+                        <div className="relative w-29 h-29 rounded-full overflow-hidden">
+                            <Image
+                                src={profile.avatar_url}
+                                alt="Profile"
+                                fill
+                                className="object-cover"
+                            />
+                        </div>
+                    ) : (
+                        <div className="relative size-30 bg-flag-red rounded-full flex items-center justify-center text-white text-4xl">
+                            {getInitialsFromEmail(email)}
+                        </div>
+                    )}
+
 
                     {/* Info */}
                     <div className="flex flex-col gap-1">

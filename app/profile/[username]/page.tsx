@@ -21,7 +21,6 @@ export default async function PublicProfilePage({
 
     if (!profile) notFound()
 
-    {/*
     const {
         data: { user }
     } = await supabase.auth.getUser()
@@ -43,31 +42,28 @@ export default async function PublicProfilePage({
         }
     };
 
-    */}
 
     return (
         <div className="flex flex-col items-center gap-4 p-8">
-            <div className="relative size-24">
-                {/*
-                <div className="relative size-30 bg-flag-red rounded-full flex items-center justify-center text-white text-4xl">
-                    {getInitialsFromEmail(email)}
+
+            {/* Initialien Avatar / Profilbild */}
+            {profile?.avatar_url ? (
+                <div className="relative w-29 h-29 rounded-full overflow-hidden">
+                    <Image
+                        src={profile.avatar_url}
+                        alt="Profile"
+                        fill
+                        className="object-cover"
+                    />
                 </div>
-                */}
-            </div>
+            ) : (
+                <div className="relative size-30 bg-flag-red rounded-full flex items-center justify-center text-white text-4xl">
+                    EW
+                </div>
+            )}
+
             <h1 className="text-2xl font-bold">@{profile.username}</h1>
             <p className="opacity-60">{profile.studiengang}</p>
         </div>
     )
 }
-
-
-{/*
-
-<Image
-    src={profile.avatar_url ?? 'https://picsum.photos/200'} //default avatar from Lennart
-    alt={profile.username ?? 'Profile'}
-    fill
-    className="rounded-full object-cover"
-/>
-
-*/}

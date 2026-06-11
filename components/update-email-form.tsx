@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import {Pencil, User} from 'lucide-react';
+import {Pencil, User, MailOpen} from 'lucide-react';
 
 export function UpdateEmailForm({
   className,
@@ -66,7 +66,7 @@ export function UpdateEmailForm({
     <div className={cn(className)} {...props}>
       <Card>
         <CardHeader className="flex flex-row gap-4 pb-4 md:justify-start items-center">
-          <Pencil className="text-flag-red w-7 h-7 stroke-2"></Pencil>
+          <MailOpen className="text-flag-red w-7 h-7 stroke-2"></MailOpen>
           <CardTitle className="text-xl font-bold">E-Mail zurücksetzen</CardTitle>
         </CardHeader>  
         <CardContent>
