@@ -3,6 +3,7 @@ import Studiengang from "@/components/studiengangwahl"
 import { UpdatePasswordForm } from "@/components/update-password-form"
 import DeleteAccount from "@/components/delete-acc-button"
 import { UpdateEmailForm } from "@/components/update-email-form"
+import { UpdateSemesterForm } from "@/components/update-semester-form";
 import Link from "next/link";
 
 
@@ -14,6 +15,7 @@ export default function SettingsPage() {
                 <p>Verwalte dein Profil und Präferenzen</p>
                 <SettingsClient />
                 <Studiengang />
+                <UpdateSemesterForm />
                 <UpdateEmailForm />
                 <UpdatePasswordForm />
                 <DeleteAccount />
