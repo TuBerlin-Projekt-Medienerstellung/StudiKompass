@@ -77,7 +77,7 @@ const NavBar = () => {
     ${mobileOpen ? "h-screen overflow-y-auto pb-8" : "h-16 overflow-hidden"}`}>
             <div className={`flex flex-col flex-1 min-h-0 ${mobileOpen ? "overflow-y-auto" : ""}`}>
                 <div
-                    className="flex-shrink-0 w-full flex flex-row justify-between items-center pb-3 border-b-2 md:border-none">
+                    className="shrink-0 w-full flex flex-row justify-between items-center pb-3 border-b-2 md:border-none">
                     <Link className="flex items-center gap-2" href="/protected/planner">
                         <div className="relative md:size-10 size-8">
                             <Image
