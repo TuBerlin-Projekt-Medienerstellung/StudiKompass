@@ -1,8 +1,8 @@
 import Studiengangwahl from "@/components/studiengangwahl";
 import { createClient } from "@/lib/supabase/server";
-import { Shell, Award, Calendar, Clock, TrendingUp, CircleCheckBig, Circle } from "lucide-react"; //Importieren von Lucide-Icons
+import { Shell, Award, Calendar, Clock, TrendingUp, CircleCheckBig, Circle } from "lucide-react";
 
-// Werte und Daten für Module (bitte nachträglich richtige Werte einsetzen)
+// Platzhalterdaten fuer aktuelle Module, bis echte Studiendaten angebunden werden koennen.
 const aktuelleModule = [
   {
     name: "Lineare Algebra",
@@ -24,7 +24,7 @@ const aktuelleModule = [
   },
 ];
 
-//Werte für "Meilensteine"
+// Platzhalterdaten fuer Meilensteine und Fortschrittsanzeigen.
 const meilensteine = [
   {
     titel: "Pflichtmodule abgeschlossen",
@@ -44,6 +44,7 @@ const meilensteine = [
 export default async function DashboardPage() {
   const supabase = await createClient();
 
+  // Server-seitiger Auth-Aufruf, damit spaeter nutzerspezifische Dashboarddaten geladen werden koennen.
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -136,6 +137,7 @@ export default async function DashboardPage() {
 
               <span
                 className={`rounded-full px-4 py-1 text-sm ${
+                  // Hier steuert der Modulstatus Farbe und Beschriftung des Badges.
                   modul.laufend
                     ? "bg-blue-100 text-blue-600"
                     : "bg-red-100 text-red-600"
@@ -183,6 +185,7 @@ export default async function DashboardPage() {
               <div className="h-2 rounded-full bg-gray-200">
                 <div
                   className={`h-2 rounded-full ${
+                    // Die Meilensteine, die abgeschlossen sind, werden visuell von offenen Schritten getrennt.
                     meilenstein.fortschritt >= 100
                       ? "bg-green-500"
                       : "bg-[#C40D1F]"
