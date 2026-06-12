@@ -10,7 +10,7 @@ export const metadata = {
 };
 export default function Home() {
     return (
-        <main className="flex flex-col justify-start min-h-screen text-zinc-950 dark:text-zinc-50 w-full overflow-x-hidden">
+        <main className="flex flex-col justify-start text-zinc-950 dark:text-zinc-50 w-full overflow-x-hidden">
             {/* Background */}
             <div className="-z-10">
                 <div
