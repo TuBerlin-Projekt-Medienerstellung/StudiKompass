@@ -10,7 +10,6 @@ import {usePathname} from "next/navigation";
 import {useState, useEffect, useCallback} from "react";
 import {createClient} from '@/lib/supabase/client'
 
-import {isAccessor} from "@babel/types";
 //Things to fix:
 
 // 1) bug with navbar in mobile mode (profile + studiengangwahl shouldn't cover content or be interactive -> dowpdown should disable current page functions) 
