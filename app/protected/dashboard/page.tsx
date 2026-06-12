@@ -60,9 +60,9 @@ export default async function DashboardPage() {
 
 
 
-      <section className="grid grid-cols-4 gap-4">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
         <div className="rounded-2xl bg-[#C40D1F] p-4 text-white">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <Award className="h-6 w-6" />
             <h2 className="text-3xl font-bold">57%</h2>
           </div>
@@ -75,7 +75,7 @@ export default async function DashboardPage() {
         </div>
 
         <div className="rounded-2xl border bg-white p-5 flex flex-col justify-center">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <Shell className="h-6 w-6 text-[#C40D1F]" />
             <div>
               <h2 className="text-xl font-bold">103/180</h2>
@@ -85,7 +85,7 @@ export default async function DashboardPage() {
         </div>
 
         <div className="rounded-2xl border bg-white p-5 flex flex-col justify-center">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <Calendar className="h-6 w-6 text-[#C40D1F]" />
             <div>
               <h2 className="text-xl font-bold">4</h2>
@@ -95,7 +95,7 @@ export default async function DashboardPage() {
         </div>
 
         <div className="rounded-2xl border bg-white p-5 flex flex-col justify-center">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-4">
             <Clock className="h-6 w-6 text-[#C40D1F]" />
             <div>
               <h2 className="text-xl font-bold">SS 2027</h2>
@@ -115,11 +115,11 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
         {aktuelleModule.map((modul) => (
           <div
             key={modul.name}
-            className="flex items-center justify-between rounded-2xl border bg-white p-4"
+            className="flex flex-col gap-4 rounded-2xl border bg-white p-4 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-start"
           >
             <div>
               <h3 className="text-base font-medium text-gray-900">
@@ -130,7 +130,7 @@ export default async function DashboardPage() {
               </p>
             </div>
 
-            <div className="flex items-center gap-5">
+            <div className="flex flex-wrap items-center gap-3 sm:justify-end lg:justify-start">
               <p className="text-sm text-gray-500">
                 {modul.ects} ECTS
               </p>
@@ -166,12 +166,12 @@ export default async function DashboardPage() {
               key={meilenstein.titel}
               className="rounded-2xl border bg-white p-4"
             >
-              <div className="mb-2 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+              <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-3">
                   {meilenstein.fortschritt >= 100 ? (
-                    <CircleCheckBig className="h-5 w-5 text-green-500" />
+                    <CircleCheckBig className="h-5 w-5 shrink-0 text-green-500" />
                   ) : (
-                    <Circle className="h-5 w-5 text-gray-400" />
+                    <Circle className="h-5 w-5 shrink-0 text-gray-400" />
                   )}
 
                   <h3 className="font-medium">
@@ -179,7 +179,7 @@ export default async function DashboardPage() {
                   </h3>
                 </div>
 
-                <span>{meilenstein.fortschritt}%</span>
+                <span className="shrink-0">{meilenstein.fortschritt}%</span>
               </div>
 
               <div className="h-2 rounded-full bg-gray-200">
