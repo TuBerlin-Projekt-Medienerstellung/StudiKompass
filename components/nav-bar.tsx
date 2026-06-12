@@ -63,19 +63,21 @@ const NavBar = () => {
     // scroll Lock
     useEffect(() => {
         if (!isMobile) return
-        document.body.style.overflow = mobileOpen ? "hidden" : ""
+        document.body.style.overflow = mobileOpen ? "hidden" : "unset"
         return () => {
-            document.body.style.overflow = ""
+            document.body.style.overflow = "unset"
         }
     }, [mobileOpen, isMobile])
 
     //console.log("CURRENT DB URL IS:", profile?.avatar_url);
     //z-50 works still gotta remove scrollable (add freeze) later
     return (
-        <nav
-            className={`z-50 overflow-hidden md:h-screen md:w-72 w-full px-4 p-4 flex flex-col md:border-r-2 fixed justify-between bg-background transition-[height] duration-1200 ease-in-out ${mobileOpen ? "h-screen" : "h-16"}`}>
-            <div className="flex flex-col gap-4 w-full">
-                <div className="w-full flex flex-row justify-between items-center pb-3 border-b-2 md:border-none">
+        <nav className={`z-50 md:h-screen md:w-72 w-full px-4 p-4 flex flex-col md:border-r-2 fixed bg-background 
+    transition-[height] duration-300 ease-in-out 
+    ${mobileOpen ? "h-screen overflow-y-auto pb-8" : "h-16 overflow-hidden"}`}>
+            <div className={`flex flex-col flex-1 min-h-0 ${mobileOpen ? "overflow-y-auto" : ""}`}>
+                <div
+                    className="flex-shrink-0 w-full flex flex-row justify-between items-center pb-3 border-b-2 md:border-none">
                     <Link className="flex items-center gap-2" href="/protected/planner">
                         <div className="relative md:size-10 size-8">
                             <Image
@@ -98,43 +100,45 @@ const NavBar = () => {
                 </div>
 
                 {/*Nav Link*/}
-                <div
-                    className="flex flex-col gap-2">
-                    {navBarLinks.map((link) => {
-                        const isActive = pathname === link.path || pathname.startsWith(link.path + "/")
-                        console.log("pathname:", pathname, "| link.path:", link.path)
-                        return <Link href={link.path}
-                                     className={`w-full flex flex-row gap-2 px-4 py-3 rounded-2xl ${isActive ? "text-flag-red bg-flag-red/5" : "text-foreground"}`}
-                                     key={link.name}
-                                     onClick={() => setMobileOpen(false)}
-                        >
-                            <link.icon/>
-                            {link.name}
-                        </Link>
-                    })}
-                </div>
-            </div>
-            <div className="w-full flex flex-col gap-3">
-                <div className="flex flex-col">
-                    <div className="flex flex-row gap-4 md:justify-start justify-center items-center">
-                        <div className="relative size-10">
-                            <Image
-                                src={profile?.avatar_url || "/default-avatar.png"}
-                                alt="placeholder"
-                                fill
-                                className="rounded-4xl"
-                            />
-                        </div>
+                <div className="flex flex-col justify-between flex-1 py-4">
+                    <div
+                        className="flex flex-col gap-2">
+                        {navBarLinks.map((link) => {
+                            const isActive = pathname === link.path || pathname.startsWith(link.path + "/")
+                            console.log("pathname:", pathname, "| link.path:", link.path)
+                            return <Link href={link.path}
+                                         className={`w-full flex flex-row gap-2 px-4 py-3 rounded-2xl ${isActive ? "text-flag-red bg-flag-red/5" : "text-foreground"}`}
+                                         key={link.name}
+                                         onClick={() => setMobileOpen(false)}
+                            >
+                                <link.icon/>
+                                {link.name}
+                            </Link>
+                        })}
+                    </div>
+                    <div className="w-full flex flex-col gap-3 pt-4">
                         <div className="flex flex-col">
-                            <h3 className="text-sm font-semibold text-black">{profile?.username ?? '...'}</h3>
-                            <p className="text-sm opacity-60">{profile?.studiengang ?? '...'}</p>
-                        </div>
-                    </div>
-                    <div>
+                            <div className="flex flex-row gap-4 md:justify-start justify-center items-center">
+                                <div className="relative size-10">
+                                    <Image
+                                        src={profile?.avatar_url || "/default-avatar.png"}
+                                        alt="placeholder"
+                                        fill
+                                        className="rounded-4xl"
+                                    />
+                                </div>
+                                <div className="flex flex-col">
+                                    <h3 className="text-sm font-semibold text-black">{profile?.username ?? '...'}</h3>
+                                    <p className="text-sm opacity-60">{profile?.studiengang ?? '...'}</p>
+                                </div>
+                            </div>
+                            <div>
 
+                            </div>
+                        </div>
+                        <LogoutButton/>
                     </div>
                 </div>
-                <LogoutButton/>
             </div>
         </nav>
     )
