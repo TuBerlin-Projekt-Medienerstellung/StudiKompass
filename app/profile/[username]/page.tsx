@@ -25,24 +25,6 @@ export default async function PublicProfilePage({
         data: { user }
     } = await supabase.auth.getUser()
 
-    const email = user?.email ?? null
-
-    const getInitialsFromEmail = (email) => {
-        if (!email) return "-"; // Fallback, falls keine E-Mail vorhanden ist
-
-        try {
-            const namePart = email.split('@')[0];
-            const parts = namePart.split('.');
-            const firstInitial = parts[0] ? parts[0][0] : '';
-            const secondInitial = parts[1] ? parts[1][0] : '';
-
-            return (firstInitial + secondInitial).toUpperCase();
-        } catch (error) {
-            return "-";
-        }
-    };
-
-
     return (
         <div className="flex flex-col items-center gap-4 p-8">
 
@@ -58,7 +40,7 @@ export default async function PublicProfilePage({
                 </div>
             ) : (
                 <div className="relative size-30 bg-flag-red rounded-full flex items-center justify-center text-white text-4xl">
-                    EW
+                    hier sollen Initialien stehen
                 </div>
             )}
 
