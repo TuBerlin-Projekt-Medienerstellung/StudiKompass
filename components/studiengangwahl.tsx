@@ -66,7 +66,7 @@ export default async function Studiengangwahl() {
     return (
          <StudiengangForm
             degrees={officialDegrees}
-            current={profile?.studiengang ?? ""} 
+            current={profile?.studiengang ?? ""}
                 />
             )
         }
