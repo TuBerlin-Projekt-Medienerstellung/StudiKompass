@@ -78,20 +78,20 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
 
     return (
         <div className="w-full flex flex-col gap-7">
-            <div className="rounded-xl border-2 bg-card text-card-foreground shadow-sm  p-6 gap-4">
+            <div className="rounded-xl border-2 bg-card text-card-foreground shadow-sm p-6 gap-4 w-full">
 
             {/* Profil */}
-            <div className="flex flex-row gap-4 pb-4 md:justify-start items-center">
+            <div className="flex flex-row gap-4 pb-4 md:justify-start items-center w-full">
             <User className="text-flag-red w-9 h-9 stroke-2"/>
             <h1 className="text-xl font-bold">Profil</h1>
             </div>
 
             <div className="flex flex-col">
-                <div className="flex flex-row gap-4 md:justify-start justify-center items-center">
+                <div className="flex flex-row gap-4 justify-start items-center">
 
                     {/* Initialien Avatar / Profilbild */}
                     {profile?.avatar_url ? (
-                        <div className="relative w-29 h-29 rounded-full overflow-hidden">
+                        <div className="relative w-30 h-30 flex-shrink-0 rounded-full overflow-hidden">
                             <Image
                                 src={profile.avatar_url}
                                 alt="Profile"
@@ -100,17 +100,17 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
                             />
                         </div>
                     ) : (
-                        <div className="relative size-30 bg-flag-red rounded-full flex items-center justify-center text-white text-4xl">
+                        <div className="relative size-30 flex-shrink-0 bg-flag-red rounded-full flex items-center justify-center text-white text-4xl font-bold">
                             {getInitialsFromEmail(email)}
                         </div>
                     )}
 
 
                     {/* Info */}
-                    <div className="flex flex-col gap-1">
-                        <span className="pl-5 font-semibold text-xl">{profile?.username ?? "—"}</span>
-                        <span className="pl-5 text-base text-muted-foreground">{profile?.studiengang ?? "—"}</span>
-                        <span className="pl-5 text-base text-muted-foreground">{email ?? "—"}</span>
+                    <div className="flex flex-col gap-1 flex-1 min-w-0 pl-5">
+                        <span className="font-semibold text-xl break-words">{profile?.username ?? "—"}</span>
+                        <span className="text-base text-muted-foreground break-words">{profile?.studiengang ?? "—"}</span>
+                        <span className="text-base text-muted-foreground break-all">{email ?? "—"}</span>
                     </div>
                 </div>
 

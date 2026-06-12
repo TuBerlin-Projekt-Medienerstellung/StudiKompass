@@ -10,8 +10,12 @@ export default function StudiengangForm({degrees, current}: {
     degrees: any[]
     current: string
     }){
-        const [query, setQuery] = useState(current)
-        const [selected, setSelected] = useState<{id:number, name:string} | null>(null)
+        //const [query, setQuery] = useState(current)
+        //const [selected, setSelected] = useState<{id:number, name:string} | null>(null)
+        const initialSelected = degrees?.find(deg => deg.id.toString() === current?.toString()) || null;
+        const [query, setQuery] = useState(initialSelected ? initialSelected.name : "")
+        const [selected, setSelected] = useState<{id:number, name:string} | null>(initialSelected)
+
         const filtered = degrees.filter(deg =>
         deg.name?.toLowerCase().includes(query.toLowerCase())
         )
@@ -69,6 +73,9 @@ export default function StudiengangForm({degrees, current}: {
                                                 onClick={() => {
                                                     setQuery(displayName)    // Input zeigt den Namen
                                                     setSelected({id: deg.id ,name : displayName}) // merkt sich die Auswahl für handleSave
+                                                    if (document.activeElement instanceof HTMLElement) {  // nimmt den Cursor aus dem Textfeld, damit die Liste schließt
+                                                        document.activeElement.blur();
+                                                    }
                                                 }}
                                                 className="px-4 py-2 cursor-pointer hover:bg-secondary"
                                             >
