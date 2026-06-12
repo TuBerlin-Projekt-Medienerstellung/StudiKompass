@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
-import { User } from 'lucide-react';
+import {Trash2, User} from 'lucide-react';
 import Image from "next/image";
 
 
@@ -60,6 +60,36 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
         window.dispatchEvent(new CustomEvent("avatar-updated"));
     }
 
+    const handleDelete = async () => {
+
+        try {
+            // Datei aus dem Storage löschen
+            const { error: storageError } = await supabase.storage
+                .from("avatars")
+                .remove([`${userId}/avatar.png`]);
+
+            if (storageError) throw storageError;
+
+            // Datenbank-Eintrag auf NULL setzen
+            const { error: dbError } = await supabase
+                .from("profiles")
+                .update({ avatar_url: null })
+                .eq("id", userId);
+
+            if (dbError) throw dbError;
+
+            // UI aktualisieren
+            setProfile((prev: any) => ({ ...prev, avatar_url: null }));
+
+            window.dispatchEvent(new CustomEvent("avatar-updated"));
+
+            console.log("Bild erfolgreich gelöscht");
+        } catch (error) {
+            console.error("Fehler beim Löschen des Bildes:", error);
+            alert("Das Bild konnte nicht gelöscht werden.");
+        }
+    };
+
     const getInitialsFromEmail = (email) => {
         if (!email) return "-"; // Fallback, falls keine E-Mail vorhanden ist
 
@@ -114,9 +144,9 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
                     </div>
                 </div>
 
-                {/* Upload */}
-                <div className="pt-6">
-                <label className="border-2 border-flag-red rounded-lg p-2 pl-5 pr-5 mt-3 cursor-pointer text-sm text-flag-red hover:underline w-fit">
+                {/* Upload / Change Picture */}
+                <div className=" mt-4 flex flex-row gap-1 md:justify-start items-center w-full">
+                <label className="border-2 border-flag-red rounded-lg p-2 pl-5 pr-5  cursor-pointer text-sm text-flag-red hover:underline w-fit">
                     Bild ändern
                     <input
                         type="file"
@@ -125,6 +155,15 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
                         className="hidden"
                     />
                 </label>
+                {/* Delete Picture */}
+                <button
+                    onClick={handleDelete}
+                    className="group p-2 hover:bg-accent-foreground rounded-lg transition-colors duration-200"
+                    title="Profilbild entfernen"
+                    aria-label="Profilbild entfernen">
+
+                    <Trash2 className="text-flag-red w-5 h-5 stroke-2 group-hover:text-card transition-colors duration-200"></Trash2>
+                </button>
             </div>
             </div>
         </div>
