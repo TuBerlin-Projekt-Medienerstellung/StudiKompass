@@ -50,10 +50,10 @@ export default async function DashboardPage() {
   } = await supabase.auth.getUser();
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 px-4 py-4 sm:px-6 lg:px-8">
       <div>
         <h1 className="text-2xl font-bold">Dein Fortschritt</h1>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           Verfolge deinen Weg zum Abschluss.
         </p>
       </div>
@@ -74,32 +74,32 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border bg-white p-5 flex flex-col justify-center">
+        <div className="rounded-2xl border border-border bg-white dark:bg-card p-5 flex flex-col justify-center">
           <div className="flex items-center justify-between gap-4">
             <Shell className="h-6 w-6 text-[#C40D1F]" />
             <div>
               <h2 className="text-xl font-bold">103/180</h2>
-              <p className="text-sm text-gray-500">ECTS</p>
+              <p className="text-sm text-muted-foreground">ECTS</p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border bg-white p-5 flex flex-col justify-center">
+        <div className="rounded-2xl border border-border bg-white dark:bg-card p-5 flex flex-col justify-center">
           <div className="flex items-center justify-between gap-4">
             <Calendar className="h-6 w-6 text-[#C40D1F]" />
             <div>
               <h2 className="text-xl font-bold">4</h2>
-              <p className="text-sm text-gray-500">Semester</p>
+              <p className="text-sm text-muted-foreground">Semester</p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border bg-white p-5 flex flex-col justify-center">
+        <div className="rounded-2xl border border-border bg-white dark:bg-card p-5 flex flex-col justify-center">
           <div className="flex items-center justify-between gap-4">
             <Clock className="h-6 w-6 text-[#C40D1F]" />
             <div>
               <h2 className="text-xl font-bold">SS 2027</h2>
-              <p className="text-sm text-gray-500">Voraussichtlich</p>
+              <p className="text-sm text-muted-foreground">Voraussichtlich</p>
             </div>
           </div>
         </div>
@@ -107,10 +107,10 @@ export default async function DashboardPage() {
 
 
 
-    <section className="rounded-2xl border bg-white p-5">
+    <section className="rounded-2xl border border-border bg-white dark:bg-card p-4 sm:p-5">
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-xl font-bold">Aktuelles Semester</h2>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-muted-foreground">
           {aktuelleModule.length} Module
         </p>
       </div>
@@ -119,19 +119,19 @@ export default async function DashboardPage() {
         {aktuelleModule.map((modul) => (
           <div
             key={modul.name}
-            className="flex flex-col gap-4 rounded-2xl border bg-white p-4 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-start"
+            className="flex flex-col gap-4 rounded-2xl border border-border bg-white dark:bg-[#16081f] p-4 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-start"
           >
             <div>
-              <h3 className="text-base font-medium text-gray-900">
+              <h3 className="text-base font-medium text-gray-900 dark:text-white">
                 {modul.name}
               </h3>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 {modul.prof}
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-3 sm:justify-end lg:justify-start">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-muted-foreground">
                 {modul.ects} ECTS
               </p>
 
@@ -139,8 +139,8 @@ export default async function DashboardPage() {
                 className={`rounded-full px-4 py-1 text-sm ${
                   // Hier steuert der Modulstatus Farbe und Beschriftung des Badges.
                   modul.laufend
-                    ? "bg-blue-100 text-blue-600"
-                    : "bg-red-100 text-red-600"
+                    ? "bg-blue-100 text-blue-600 dark:bg-blue-500/15 dark:text-blue-300"
+                    : "bg-red-100 text-red-600 dark:bg-flag-red/15 dark:text-red-300"
                 }`}
               >
                 {modul.laufend ? "Laufend" : "Nicht laufend"}
@@ -153,7 +153,7 @@ export default async function DashboardPage() {
 
 
 
-    <section className="rounded-2xl border bg-white p-5 flex flex-col justify-center">
+    <section className="rounded-2xl border border-border bg-white dark:bg-card p-4 sm:p-5 flex flex-col justify-center">
       <div className="mb-5">
         <div className="flex items-center gap-2">
           <TrendingUp className="h-6 w-6 text-[#C40D1F]" />
@@ -164,14 +164,14 @@ export default async function DashboardPage() {
           {meilensteine.map((meilenstein) => (
             <div
               key={meilenstein.titel}
-              className="rounded-2xl border bg-white p-4"
+              className="rounded-2xl border border-border bg-white dark:bg-[#16081f] p-4"
             >
               <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex min-w-0 items-center gap-3">
                   {meilenstein.fortschritt >= 100 ? (
                     <CircleCheckBig className="h-5 w-5 shrink-0 text-green-500" />
                   ) : (
-                    <Circle className="h-5 w-5 shrink-0 text-gray-400" />
+                    <Circle className="h-5 w-5 shrink-0 text-gray-400 dark:text-muted-foreground" />
                   )}
 
                   <h3 className="font-medium">
@@ -182,7 +182,7 @@ export default async function DashboardPage() {
                 <span className="shrink-0">{meilenstein.fortschritt}%</span>
               </div>
 
-              <div className="h-2 rounded-full bg-gray-200">
+              <div className="h-2 rounded-full bg-gray-200 dark:bg-muted">
                 <div
                   className={`h-2 rounded-full ${
                     // Die Meilensteine, die abgeschlossen sind, werden visuell von offenen Schritten getrennt.
