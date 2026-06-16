@@ -1,12 +1,13 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { createClient } from "@/lib/supabase/client"
+import React, {useState, useEffect} from "react"
+import {createClient} from "@/lib/supabase/client"
 import {Trash2, User} from 'lucide-react';
 import Image from "next/image";
+import InitialsAvatar from "@/components/initials-avatar";
 
 
-export default function Settings({ refreshKey }: { refreshKey: number }) {
+export default function Settings({refreshKey}: { refreshKey: number }) {
     const [email, setEmail] = useState<string | null>(null)
     const [profile, setProfile] = useState<any>(null)
     const [userId, setUserId] = useState<string | null>(null)
@@ -14,12 +15,12 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
 
     useEffect(() => {
         const fetchData = async () => {
-            const { data: { user } } = await supabase.auth.getUser()
+            const {data: {user}} = await supabase.auth.getUser()
             if (!user) return
 
             setUserId(user.id)
 
-            const { data } = await supabase
+            const {data} = await supabase
                 .from('profiles')
                 .select('username, studiengang, avatar_url')
                 .eq('id', user.id)
@@ -35,16 +36,16 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
         const file = e.target.files?.[0]
         if (!file || !userId) return
 
-        const { error } = await supabase.storage
+        const {error} = await supabase.storage
             .from("avatars")
-            .upload(`${userId}/avatar.png`, file, { upsert: true })
+            .upload(`${userId}/avatar.png`, file, {upsert: true})
 
         if (error) {
             console.error("Upload error:", error.message)
             return
         }
 
-        const { data: { publicUrl } } = supabase.storage
+        const {data: {publicUrl}} = supabase.storage
             .from("avatars")
             .getPublicUrl(`${userId}/avatar.png`)
 
@@ -53,10 +54,10 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
 
         await supabase
             .from("profiles")
-            .update({ avatar_url: freshUrl })
+            .update({avatar_url: freshUrl})
             .eq("id", userId)
 
-        setProfile((prev: any) => ({ ...prev, avatar_url: freshUrl }))
+        setProfile((prev: any) => ({...prev, avatar_url: freshUrl}))
         window.dispatchEvent(new CustomEvent("avatar-updated"));
     }
 
@@ -64,22 +65,22 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
 
         try {
             // Datei aus dem Storage löschen
-            const { error: storageError } = await supabase.storage
+            const {error: storageError} = await supabase.storage
                 .from("avatars")
                 .remove([`${userId}/avatar.png`]);
 
             if (storageError) throw storageError;
 
             // Datenbank-Eintrag auf NULL setzen
-            const { error: dbError } = await supabase
+            const {error: dbError} = await supabase
                 .from("profiles")
-                .update({ avatar_url: null })
+                .update({avatar_url: null})
                 .eq("id", userId);
 
             if (dbError) throw dbError;
 
             // UI aktualisieren
-            setProfile((prev: any) => ({ ...prev, avatar_url: null }));
+            setProfile((prev: any) => ({...prev, avatar_url: null}));
 
             window.dispatchEvent(new CustomEvent("avatar-updated"));
 
@@ -90,83 +91,72 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
         }
     };
 
-    const getInitialsFromEmail = (email) => {
-        if (!email) return "-"; // Fallback, falls keine E-Mail vorhanden ist
-
-        try {
-            const namePart = email.split('@')[0];
-            const parts = namePart.split('.');
-            const firstInitial = parts[0] ? parts[0][0] : '';
-            const secondInitial = parts[1] ? parts[1][0] : '';
-
-            return (firstInitial + secondInitial).toUpperCase();
-        } catch (error) {
-            return "-";
-        }
-    };
-
-
     return (
         <div className="w-full flex flex-col gap-7">
             <div className="rounded-xl border-2 bg-card text-card-foreground shadow-sm p-6 gap-4 w-full">
 
-            {/* Profil */}
-            <div className="flex flex-row gap-4 pb-4 md:justify-start items-center w-full">
-            <User className="text-flag-red w-9 h-9 stroke-2"/>
-            <h1 className="text-xl font-bold">Profil</h1>
-            </div>
-
-            <div className="flex flex-col">
-                <div className="flex flex-row gap-4 justify-start items-center">
-
-                    {/* Initialien Avatar / Profilbild */}
-                    {profile?.avatar_url ? (
-                        <div className="relative w-30 h-30 flex-shrink-0 rounded-full overflow-hidden">
-                            <Image
-                                src={profile.avatar_url}
-                                alt="Profile"
-                                fill
-                                className="object-cover"
-                            />
-                        </div>
-                    ) : (
-                        <div className="relative size-30 flex-shrink-0 bg-flag-red rounded-full flex items-center justify-center text-white text-4xl font-bold">
-                            {getInitialsFromEmail(email)}
-                        </div>
-                    )}
-
-
-                    {/* Info */}
-                    <div className="flex flex-col gap-1 flex-1 min-w-0 pl-5">
-                        <span className="font-semibold text-xl break-words">{profile?.username ?? "—"}</span>
-                        <span className="text-base text-muted-foreground break-words">{profile?.studiengang ?? "—"}</span>
-                        <span className="text-base text-muted-foreground break-all">{email ?? "—"}</span>
-                    </div>
+                {/* Profil */}
+                <div className="flex flex-row gap-4 pb-4 md:justify-start items-center w-full">
+                    <User className="text-flag-red w-8 h-8 stroke-2"/>
+                    <h1 className="text-xl font-bold">Profil</h1>
                 </div>
 
-                {/* Upload / Change Picture */}
-                <div className=" mt-4 flex flex-row gap-1 md:justify-start items-center w-full">
-                <label className="border-2 border-flag-red rounded-lg p-2 pl-5 pr-5  cursor-pointer text-sm text-flag-red hover:underline w-fit">
-                    Bild ändern
-                    <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleUpload}
-                        className="hidden"
-                    />
-                </label>
-                {/* Delete Picture */}
-                <button
-                    onClick={handleDelete}
-                    className="group p-2 hover:bg-accent-foreground rounded-lg transition-colors duration-200"
-                    title="Profilbild entfernen"
-                    aria-label="Profilbild entfernen">
+                <div className="flex flex-col">
+                    <div className="flex flex-row gap-4 justify-start items-center">
 
-                    <Trash2 className="text-flag-red w-5 h-5 stroke-2 group-hover:text-card transition-colors duration-200"></Trash2>
-                </button>
+                        {/* Initialien Avatar / Profilbild */}
+                        {profile?.avatar_url ? (
+                            <div className="relative w-32 h-32 flex-shrink-0 rounded-full overflow-hidden">
+                                <Image
+                                    src={profile.avatar_url}
+                                    alt="Profile"
+                                    fill
+                                    className="object-cover"
+                                />
+                            </div>
+                        ) : (
+                            <div
+                                className="relative size-32 flex-shrink-0 bg-flag-red rounded-full flex items-center justify-center text-white text-4xl font-bold">
+                                <InitialsAvatar email={email}/>
+                            </div>
+                        )}
+
+
+                        {/* Info */}
+                        <div className="flex flex-col gap-1 flex-1 min-w-0 pl-5">
+                            <span className="font-semibold text-xl break-words">{profile?.username ?? "—"}</span>
+                            <span
+                                className="text-base text-muted-foreground break-words">{profile?.studiengang ?? "—"}</span>
+                            <span className="text-base text-muted-foreground break-all">{email ?? "—"}</span>
+                        </div>
+                    </div>
+
+                    {/* Upload / Change Picture */}
+                    <div className=" mt-4 flex flex-row gap-1 md:justify-start items-center w-full">
+                        <label
+                            className="border-2 border-flag-red rounded-lg p-2 pl-5 pr-5  cursor-pointer text-sm text-flag-red hover:underline w-fit">
+                            Bild ändern
+                            <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleUpload}
+                                className="hidden"
+                            />
+                        </label>
+                        {/* Delete Picture */}
+                        <button
+                            onClick={handleDelete}
+                            className="group p-2 hover:bg-accent-foreground rounded-lg transition-colors duration-200"
+                            title="Profilbild entfernen"
+                            aria-label="Profilbild entfernen">
+
+                            <Trash2
+                                className="text-flag-red w-6 h-6 stroke-2 group-hover:text-card transition-colors duration-200">
+                            </Trash2>
+                        </button>
+                    </div>
+                </div>
             </div>
-            </div>
-        </div>
         </div>
     )
 }
