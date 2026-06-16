@@ -1,19 +1,19 @@
-import { unstable_noStore as noStore } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
-import { notFound } from 'next/navigation'
+import {unstable_noStore as noStore} from 'next/cache'
+import {createClient} from '@/lib/supabase/server'
+import {notFound} from 'next/navigation'
 import Image from 'next/image'
 
 export default async function PublicProfilePage({
-    params,
-}: {
+                                                    params,
+                                                }: {
     params: Promise<{ username: string }>
 }) {
     noStore()
-    const { username } = await params
+    const {username} = await params
 
     const supabase = await createClient()
 
-    const { data: profile } = await supabase
+    const {data: profile} = await supabase
         .from('profiles')
         .select('username, studiengang, avatar_url')
         .eq('username', username)
@@ -22,7 +22,7 @@ export default async function PublicProfilePage({
     if (!profile) notFound()
 
     const {
-        data: { user }
+        data: {user}
     } = await supabase.auth.getUser()
 
     return (
@@ -30,7 +30,7 @@ export default async function PublicProfilePage({
 
             {/* Initialien Avatar / Profilbild */}
             {profile?.avatar_url ? (
-                <div className="relative w-29 h-29 rounded-full overflow-hidden">
+                <div className="relative w-32 h-32 rounded-full overflow-hidden">
                     <Image
                         src={profile.avatar_url}
                         alt="Profile"
@@ -39,8 +39,10 @@ export default async function PublicProfilePage({
                     />
                 </div>
             ) : (
-                <div className="relative size-30 bg-flag-red rounded-full flex items-center justify-center text-white text-4xl">
-                    hier sollen Initialien stehen
+                <div
+                    className="relative size-32 bg-flag-red rounded-full flex items-center justify-center text-white text-4xl">
+                    hier sollen Initialien stehen, funktion wird aber in der
+                    Nav-bar aufgerufen und nicht hier
                 </div>
             )}
 
