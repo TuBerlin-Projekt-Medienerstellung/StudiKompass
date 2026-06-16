@@ -124,10 +124,10 @@ export default function Settings({refreshKey}: { refreshKey: number }) {
 
                         {/* Info */}
                         <div className="flex flex-col gap-1 flex-1 min-w-0 pl-5">
-                            <span className="font-semibold text-xl break-words">{profile?.username ?? "—"}</span>
+                            <span className="font-semibold text-md md:text-2xl break-words">{profile?.username ?? "—"}</span>
                             <span
-                                className="text-base text-muted-foreground break-words">{profile?.studiengang ?? "—"}</span>
-                            <span className="text-base text-muted-foreground break-all">{email ?? "—"}</span>
+                                className="text-sm md:text-xl text-muted-foreground break-words">{profile?.studiengang ?? "—"}</span>
+                            <span className="text-sm md:text-xl  text-muted-foreground break-all">{email ?? "—"}</span>
                         </div>
                     </div>
 
