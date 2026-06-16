@@ -134,7 +134,7 @@ export default function Settings({refreshKey}: { refreshKey: number }) {
                     {/* Upload / Change Picture */}
                     <div className=" mt-4 flex flex-row gap-1 md:justify-start items-center w-full">
                         <label
-                            className="border-2 border-flag-red rounded-lg p-2 pl-5 pr-5  cursor-pointer text-sm text-flag-red hover:underline w-fit">
+                            className="border-2 border-flag-red rounded-lg p-2 pl-6 pr-6  cursor-pointer text-sm text-flag-red hover:underline w-fit">
                             Bild ändern
                             <input
                                 type="file"
