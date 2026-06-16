@@ -106,7 +106,7 @@ export default function Settings({refreshKey}: { refreshKey: number }) {
 
                         {/* Initialien Avatar / Profilbild */}
                         {profile?.avatar_url ? (
-                            <div className="relative w-18 md:w-32 h-32 shrink-0 rounded-2xl md:rounded-full overflow-hidden">
+                            <div className="relative w-18 md:w-32 h-32 shrink-0 rounded-3xl md:rounded-full overflow-hidden">
                                 <Image
                                     src={profile.avatar_url}
                                     alt="Profile"
@@ -116,7 +116,7 @@ export default function Settings({refreshKey}: { refreshKey: number }) {
                             </div>
                         ) : (
                             <div
-                                className="relative w-18 md:w-32 h-32 shrink-0 bg-flag-red rounded-2xl md:rounded-full flex items-center justify-center text-white text-4xl font-bold">
+                                className="relative w-18 md:w-32 h-32 shrink-0 bg-flag-red rounded-3xl md:rounded-full flex items-center justify-center text-white text-4xl font-bold">
                                 <InitialsAvatar email={email}/>
                             </div>
                         )}
@@ -132,9 +132,9 @@ export default function Settings({refreshKey}: { refreshKey: number }) {
                     </div>
 
                     {/* Upload / Change Picture */}
-                    <div className=" mt-4 flex flex-row gap-1 md:justify-start items-center w-full">
+                    <div className=" mt-4 flex flex-row gap-1 justify-center md:justify-start items-center w-full">
                         <label
-                            className="border-2 border-flag-red rounded-lg p-2 pl-6 pr-6  cursor-pointer text-sm text-flag-red hover:underline w-fit">
+                            className="border-2 border-flag-red rounded-lg p-2 pl-6 pr-6 text-center cursor-pointer text-sm text-flag-red hover:underline w-full md:w-fit">
                             Bild ändern
                             <input
                                 type="file"
