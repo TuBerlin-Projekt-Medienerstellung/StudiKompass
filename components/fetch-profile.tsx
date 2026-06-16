@@ -102,11 +102,11 @@ export default function Settings({refreshKey}: { refreshKey: number }) {
                 </div>
 
                 <div className="flex flex-col">
-                    <div className="flex flex-row gap-4 justify-start items-center">
+                    <div className="flex flex-row gap-1 md:gap-4 pb-1 justify-start items-center">
 
                         {/* Initialien Avatar / Profilbild */}
                         {profile?.avatar_url ? (
-                            <div className="relative w-32 h-32 flex-shrink-0 rounded-full overflow-hidden">
+                            <div className="relative w-18 md:w-32 h-32 shrink-0 rounded-2xl md:rounded-full overflow-hidden">
                                 <Image
                                     src={profile.avatar_url}
                                     alt="Profile"
@@ -116,7 +116,7 @@ export default function Settings({refreshKey}: { refreshKey: number }) {
                             </div>
                         ) : (
                             <div
-                                className="relative size-32 flex-shrink-0 bg-flag-red rounded-full flex items-center justify-center text-white text-4xl font-bold">
+                                className="relative w-18 md:w-32 h-32 shrink-0 bg-flag-red rounded-2xl md:rounded-full flex items-center justify-center text-white text-4xl font-bold">
                                 <InitialsAvatar email={email}/>
                             </div>
                         )}
