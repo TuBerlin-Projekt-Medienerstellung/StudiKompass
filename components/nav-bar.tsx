@@ -9,16 +9,15 @@ import {X, Menu} from "lucide-react"
 import {usePathname} from "next/navigation";
 import React, {useState, useEffect, useCallback} from "react";
 import {createClient} from '@/lib/supabase/client'
-
-import {isAccessor} from "@babel/types";
+import InitialsAvatar from "@/components/initials-avatar";
 //Things to fix:
 
-// 1) bug with navbar in mobile mode (profile + studiengangwahl shouldn't cover content or be interactive -> dowpdown should disable current page functions) 
+// 1) bug with navbar in mobile mode (profile + Studiengangwahl shouldn't cover content or be interactive -> dropdown should disable current page functions)
 // 2) bug with navbar in mobile mode, can't be transparent 
 
 // Possible approaches:
 // >If it's component client/server side caused -> check div wrappers
-// >maybe freeze the page so it isnt interactive while dropdown menue is open
+// >maybe freeze the page so it isn't interactive while dropdown menu is open
 // -> can be solved to adding an absolute z coordinate?
 // >add another event listener to check whether it is mobile to lock scroll?
 // -> but mobile event listener exists, maybe incorp?
@@ -26,7 +25,6 @@ type Profile = {
     username: string | null
     studiengang: string | null
     avatar_url: string | null
-    email: string | null
 }
 
 const NavBar = () => {
@@ -34,7 +32,7 @@ const NavBar = () => {
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [profile, setProfile] = useState<Profile | null>(null);
-    const [email, setEmail] = useState<string>("")
+    const [email, setEmail] = useState<string | null>("")
 
     const fetchProfileData = useCallback(async () => {
         const supabase = createClient()
@@ -48,12 +46,14 @@ const NavBar = () => {
             .single()
 
         setProfile(data)
-        setEmail(user?.email)
+        setEmail(user?.email ?? null)
     }, [])
+
     useEffect(() => {
-        fetchProfileData()
+        void fetchProfileData()
     }, [fetchProfileData])
-    //omfg I knew I had to add an Eventlistener with fetch as I did with avatar, AI aint gonna replace me muhahah
+
+    //omfg I knew I had to add an Eventlistener with fetch as I did with avatar, AI ain't gonna replace me muhahah
     useEffect(() => {
         window.addEventListener("avatar-updated", fetchProfileData)
         window.addEventListener("studiengang-updated", fetchProfileData)
@@ -71,21 +71,6 @@ const NavBar = () => {
             document.body.style.overflow = ""
         }
     }, [mobileOpen, isMobile])
-
-    const getInitialsFromEmail = (email: string) => {
-        if (!email) return "-"; // Fallback, falls keine E-Mail vorhanden ist
-
-        try {
-            const namePart = email.split('@')[0];
-            const parts = namePart.split('.');
-            const firstInitial = parts[0] ? parts[0][0] : '';
-            const secondInitial = parts[1] ? parts[1][0] : '';
-
-            return (firstInitial + secondInitial).toUpperCase();
-        } catch (error) {
-            return "-";
-        }
-    };
 
     //console.log("CURRENT DB URL IS:", profile?.avatar_url);
     //z-50 works still gotta remove scrollable (add freeze) later
@@ -135,10 +120,10 @@ const NavBar = () => {
             <div className="w-full flex flex-col gap-3">
                 <div className="flex flex-col">
                     <div className="flex flex-row gap-4 md:justify-start justify-center items-center">
-                        <div className="relative size-10">
+                        <div className="relative">
                             {/* Initialien Avatar / Profilbild */}
                             {profile?.avatar_url ? (
-                                <div className="relative size-11 flex-shrink-0 rounded-full overflow-hidden">
+                                <div className="relative size-12 shrink-0 rounded-full overflow-hidden">
                                     <Image
                                         src={profile.avatar_url}
                                         alt="Profile"
@@ -147,8 +132,9 @@ const NavBar = () => {
                                     />
                                 </div>
                             ) : (
-                                <div className="relative size-11 flex-shrink-0 bg-flag-red rounded-full flex items-center justify-center text-white text-sm font-bold">
-                                    {getInitialsFromEmail(email)}
+                                <div
+                                    className="size-12 bg-flag-red rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                    <InitialsAvatar email={email}/>
                                 </div>
                             )}
                         </div>
