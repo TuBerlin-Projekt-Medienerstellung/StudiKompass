@@ -34,8 +34,8 @@ export default function StudiengangForm({degrees, current}: {
             <section className="w-full space-y-8">
                 <div className="rounded-xl border-2 bg-white shadow-sm p-6 gap 4">
                     <div className="space-y-4">
-                            <div className="flex flex-row gap-4 pb-1 md:justify-start items-center">
-                            <GraduationCap className="text-flag-red w-9 h-9 stroke-1.5"></GraduationCap>
+                        <div className="flex flex-row gap-4 pb-1 md:justify-start items-center">
+                            <GraduationCap className="text-flag-red w-8 h-8 stroke-1.5"></GraduationCap>
                             <h1 className="text-xl font-bold">Studiengang</h1>
                         </div>
 
@@ -56,7 +56,7 @@ export default function StudiengangForm({degrees, current}: {
 
                             {/* Liste nur sichtbar wenn: etwas getippt wurde UND noch nichts ausgewählt */}
                             {query.length > 0 && !selected && (
-                                <ul className="absolute z-10 w-full mt-1 max-h-60 overflow-y-auto bg-white border rounded-lg">
+                                <ul className="absolute z-16 w-full mt-1 max-h-60 overflow-y-auto bg-white border rounded-lg">
                                     {filtered.map((deg, index) => {
                                         const typeName = deg?.studiengangart?.name ?? ""
                                         const displayName = typeName
