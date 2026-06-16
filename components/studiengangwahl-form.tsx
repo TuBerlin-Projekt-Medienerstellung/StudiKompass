@@ -1,8 +1,7 @@
 "use client" ;
-import React, { useState } from "react"
+import { useState } from "react"
 import { createClient } from "@/lib/supabase/client"
-import {GraduationCap, Pencil} from "lucide-react"
-import {CardHeader, CardTitle} from "@/components/ui/card";
+import {GraduationCap} from "lucide-react"
 import {Button} from "@/components/ui/button";
 import {Label} from "@/components/ui/label";
 
@@ -10,11 +9,9 @@ export default function StudiengangForm({degrees, current}: {
     degrees: any[]
     current: string
     }){
-        //const [query, setQuery] = useState(current)
-        //const [selected, setSelected] = useState<{id:number, name:string} | null>(null)
-        const initialSelected = degrees?.find(deg => deg.id.toString() === current?.toString()) || null;
-        const [query, setQuery] = useState(initialSelected ? initialSelected.name : "")
-        const [selected, setSelected] = useState<{id:number, name:string} | null>(initialSelected)
+
+        const [query, setQuery] = useState(current)
+        const [selected, setSelected] = useState<{id:number, name:string} | null>(null)
 
         const filtered = degrees.filter(deg =>
         deg.name?.toLowerCase().includes(query.toLowerCase())
@@ -72,11 +69,9 @@ export default function StudiengangForm({degrees, current}: {
                                                 key={deg?.id?.toString() || index}
                                                 onClick={() => {
                                                     setQuery(displayName)    // Input zeigt den Namen
-                                                    setSelected({id: deg.id ,name : displayName}) // merkt sich die Auswahl für handleSave
-                                                    if (document.activeElement instanceof HTMLElement) {  // nimmt den Cursor aus dem Textfeld, damit die Liste schließt
-                                                        document.activeElement.blur();
-                                                    }
+                                                    setSelected({id: deg.id, name: displayName}) // merkt sich die Auswahl für handleSave
                                                 }}
+
                                                 className="px-4 py-2 cursor-pointer hover:bg-secondary"
                                             >
                                                 {displayName}
@@ -88,8 +83,14 @@ export default function StudiengangForm({degrees, current}: {
                         </div>
 
                         {/* Speichern-Button bleibt gleich, nur disabled wenn nichts ausgewählt */}
-                        <Button type="button" className="w-full text-primary-foreground bg-flag-red"  onClick={handleSave} disabled={!selected}>
-                                Speichere Studiengang
+
+                        <Button
+                            type="button"
+                            onClick={handleSave}
+                            disabled={!selected}
+                            className="w-full text-primary-foreground bg-flag-red hover:bg-foreground disabled:opacity-50 disabled:cursor-not-allowed rounded-md px-6 py-2 transition-all"
+                        >
+                            Studiengang speichern
                         </Button>
 
                     </div>
