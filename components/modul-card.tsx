@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight } from 'lucide-react';
-import { ladeDetailedModulAction } from '@/app/protected/modules/actions';
+import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight} from 'lucide-react';
+import {ladeDetailedModulAction} from '@/app/protected/modules/actions';
 import Link from "next/link";
-import { useState } from 'react';
+import {useState} from 'react';
+import ModulFeedback from "./modul-feedback";
 
 interface modulInfo {
     modul_id: number;
@@ -57,17 +58,18 @@ const ModulCard = (props: modulInfo) => {
     }
 
     const detailBoxen = [
-        { name: "Prüfungsform", value: details?.pruefungsform ?? "—" },
-        { name: "Benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—" },
-        { name: "Voraussetzungen", value: details?.voraussetzungen ?? "—" },
+        {name: "Prüfungsform", value: details?.pruefungsform ?? "—"},
+        {name: "Benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—"},
+        {name: "Voraussetzungen", value: details?.voraussetzungen ?? "—"},
     ];
 
     return (
-        <div className={`w-full flex flex-col border-y-2 border-x-4 rounded-xl px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
+        <div
+            className={`w-full flex flex-col border-y-2 border-x-4 rounded-xl px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
             <header className='w-full flex justify-between items-center'>
                 <div className='flex w-fit gap-2.5'>
                     <button onClick={() => setLiked(!liked)}>
-                        {liked ? <CircleCheckBig className="text-mint-leaf" /> : <Circle />}
+                        {liked ? <CircleCheckBig className="text-mint-leaf"/> : <Circle/>}
                     </button>
                     <div className='flex gap-6 items-center md:flex-row flex-col'>
                         <h1 className='font-bold md:text-2xl text-xl'>{name}</h1>
@@ -79,11 +81,12 @@ const ModulCard = (props: modulInfo) => {
                     </div>
                 </div>
                 <div className="cursor-pointer" onClick={handleAusklappen}>
-                    {open ? <ChevronUp /> : <ChevronDown />}
+                    {open ? <ChevronUp/> : <ChevronDown/>}
                 </div>
             </header>
 
-            <div className={`grid transition-all duration-700 ease-in-expo ${open ? 'grid-rows-[1fr] mt-5' : 'grid-rows-[0fr] mb-0'}`}>
+            <div
+                className={`grid transition-all duration-700 ease-in-expo ${open ? 'grid-rows-[1fr] mt-5' : 'grid-rows-[0fr] mb-0'}`}>
                 <div className='overflow-hidden'>
                     <div className='flex flex-col gap-y-5'>
                         {/* Beschreibung / Lernergebnisse */}
@@ -107,7 +110,8 @@ const ModulCard = (props: modulInfo) => {
                         {/* Detail Boxen */}
                         <div className='flex justify-between gap-2 md:flex-row flex-col'>
                             {detailBoxen.map((detail, index) => (
-                                <div key={index} className='bg-[#E3E6EA] flex border-2 rounded-xl w-full items-center p-4 flex-col'>
+                                <div key={index}
+                                     className='bg-[#E3E6EA] flex border-2 rounded-xl w-full items-center p-4 flex-col'>
                                     <span>{detail.name}</span>
                                     <p className='font-bold'>{detail.value}</p>
                                 </div>
@@ -126,15 +130,17 @@ const ModulCard = (props: modulInfo) => {
                                     className='bg-flag-red text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2'
                                 >
                                     zu Moses
-                                    <SquareArrowOutUpRight className='justify-self-end' />
+                                    <SquareArrowOutUpRight className='justify-self-end'/>
                                 </Link>
                             ) : (
-                                <span className='bg-gray-300 text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed'>
+                                <span
+                                    className='bg-gray-300 text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed'>
                                     zu Moses
-                                    <SquareArrowOutUpRight />
+                                    <SquareArrowOutUpRight/>
                                 </span>
                             )}
                         </div>
+                        <ModulFeedback modulId={modul_id} modulName={name}/>
                     </div>
                 </div>
             </div>
