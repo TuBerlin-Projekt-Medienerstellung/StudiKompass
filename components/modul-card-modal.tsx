@@ -66,7 +66,7 @@ const ModulCardModal = ({
         <div>
             {/**wird nur ausgeführt wenn modul =! NULL */}
             {modul && (
-        <div className={`fixed bottom-0 bottom-0 left-0 md:left-72 right-0 flex justify-center transition-transform transform duration-300 ease-out ${
+        <div className={`fixed bottom-0 left-0 md:left-72 right-0 flex justify-center transition-transform transform duration-300 ease-out ${
         isOpen ? "translate-y-0" : "translate-y-full pointer-events-none"
         }`}>
             <div
