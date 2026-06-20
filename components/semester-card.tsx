@@ -1,17 +1,9 @@
-import React from 'react'
-import SemesterModulCard from "@/components/semester-modul-card";
-import {Plus} from 'lucide-react';
+"use client";
 
-type modulInfo = {
-    name: string;
-    leistungspunkte: number;
-    semester: string;
-    modulArt: string;
-    beschreibung: string;
-    examform: string;
-    arbeitsaufwand: string;
-    link: string;
-}
+import SemesterModulCard from "@/components/semester-modul-card";
+import ModulCardModal from '@/components/modul-card-modal';
+import {Plus} from 'lucide-react';
+import { useState } from "react";
 
 type Props = {
   modul: modulInfo;
@@ -19,6 +11,11 @@ type Props = {
 };
 
 const SemesterCard = ({modul, onClick }: Props) => {
+
+    const [isOpen, setIsOpen] = useState(false);
+    const [selectedModul, setSelectedModul] = useState<modulInfo | null>(null);
+    
+
     return (
         <div onClick={onClick} className="border-2 rounded-2xl p-4 gap-4 flex flex-col cursor-pointer">
             <header className="flex justify-between">
@@ -36,11 +33,16 @@ const SemesterCard = ({modul, onClick }: Props) => {
             <SemesterModulCard 
                 modul={modul}
                 onClick={() => {
-                console.log(modul.name);}}/>
+                console.log(modul.name);setSelectedModul(modul);
+              setIsOpen(true);}}/>
 
             <button className="border-2 border-dashed rounded-2xl flex items-center justify-center px-6 py-4">
                 <Plus/> Modul hinzufügen
             </button>
+            <ModulCardModal
+                isOpen={isOpen}
+                onClose={() => setIsOpen(false)}
+                modul={selectedModul}/>
         </div>
     )
 }
