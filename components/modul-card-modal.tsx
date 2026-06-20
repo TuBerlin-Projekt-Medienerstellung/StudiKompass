@@ -6,6 +6,7 @@ import { X , SquareArrowOutUpRight, Circle, CircleCheckBig,} from 'lucide-react'
 import { link } from "fs";
 import { details } from "@/constants";
 
+{/**wahrscheinlich neuer type notwendig um alle Infos aus Supabase zu holen, momentan noch modulInfo aus types.d.ts */}
 interface ModulInfoSupabase {
     modul_id: number;
     name: string;
@@ -26,7 +27,7 @@ interface ModulInfoSupabase {
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  modul: ModulInfoSupabase | null;
+  modul: modulInfo | null;
 };
 
 const ModulCardModal = ({
@@ -43,6 +44,7 @@ const ModulCardModal = ({
 
   if (!modul || !isOpen) return null;
 
+  {/** Eigentlich noch notwendig: Dozent, pruefungsform (nicht in modulInfo -> neuer type?) */}
   const {
     modul_id,
     name,
@@ -51,12 +53,7 @@ const ModulCardModal = ({
     modulArt,
     link,
     beschreibung,
-    lernergebnisse,
-    voraussetzungen,
-    pruefungsform,
-    pruefungselemente,
-    benotet,
-    pruefungsBeschreibung,
+
   } = modul;
 
 
@@ -66,7 +63,7 @@ const ModulCardModal = ({
         <div>
             {/**wird nur ausgeführt wenn modul =! NULL */}
             {modul && (
-        <div className={`fixed bottom-0 left-0 md:left-72 right-0 flex justify-center transition-transform transform duration-300 ease-out ${
+        <div className={`fixed z-50 bg-black/50 rounded-t-xl bottom-0 left-0 md:left-72 right-0 flex justify-center transition-transform transform duration-300 ease-out ${
         isOpen ? "translate-y-0" : "translate-y-full pointer-events-none"
         }`}>
             <div
@@ -84,7 +81,7 @@ const ModulCardModal = ({
                     </div>
                     
                     <h1 className="font-bold md:text-2xl text-xl">
-                        {name}
+                        {modul.name}
                     </h1>
                     <div className="flex flex-row justify-items-start gap-4">
                         <p className="text-flag-red">
@@ -96,7 +93,7 @@ const ModulCardModal = ({
                         </p>
                         <div>•</div>
                         <p>
-                            {modul.lehrlernformen}
+                            {modul.modulArt}
                         </p>
                     </div>
                 </header>
@@ -131,7 +128,7 @@ const ModulCardModal = ({
                             Prüfungsform
                         </p>
                         <p className="font-semibold">
-                            {modul.pruefungsform}
+                            {/**{modul.pruefungsform} */}
                         </p>
                     </div>
                 </div>
