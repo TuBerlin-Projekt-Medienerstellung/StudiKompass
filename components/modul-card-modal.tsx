@@ -6,7 +6,7 @@ import { X , SquareArrowOutUpRight, Circle, CircleCheckBig,} from 'lucide-react'
 import { link } from "fs";
 import { details } from "@/constants";
 
-interface ModulInfo {
+interface ModulInfoSupabase {
     modul_id: number;
     name: string;
     leistungspunkte: number;
@@ -26,7 +26,7 @@ interface ModulInfo {
 type Props = {
   isOpen: boolean;
   onClose: () => void;
-  modul: ModulInfo | null;
+  modul: ModulInfoSupabase | null;
 };
 
 const ModulCardModal = ({

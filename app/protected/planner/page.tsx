@@ -5,7 +5,8 @@ import SemesterCard from "@/components/semester-card";
 import ModulCardModal from '@/components/modul-card-modal';
 import { useState } from "react";
 
-type ModulInfo = {
+type ModulInfoSupabase = {
+  modul_id: number;
   name: string;
   leistungspunkte: number;
   semester: string;
@@ -17,8 +18,9 @@ type ModulInfo = {
   dozent: string;
 };
 
-const modules : ModulInfo[] = [
+const modules : ModulInfoSupabase[] = [
   {
+    modul_id: 345,
     name: "Mathe 1",
     leistungspunkte: 5,
     semester: "WiSe",
@@ -30,6 +32,7 @@ const modules : ModulInfo[] = [
     dozent: "Prof. Müller",
   },
   {
+    modul_id: 3648,
     name: "Programmierung",
     leistungspunkte: 5,
     semester: "WiSe",
@@ -46,7 +49,7 @@ const Page = () => {
 
     
     const [isOpen, setIsOpen] = useState(false);
-    const [modul, setModul] = useState<ModulInfo | null>(null);
+    const [modul, setModul] = useState<ModulInfoSupabase | null>(null);
 
     return (
         <section className="flex flex-col gap-4">
