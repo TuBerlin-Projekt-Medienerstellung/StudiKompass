@@ -11,7 +11,6 @@ export default function ProtectedLayout({
             <main className="flex-1 md:ml-72 p-6 mt-13 md:mt-0">
                 {children}
             </main>
-
         </div>
     );
 }
