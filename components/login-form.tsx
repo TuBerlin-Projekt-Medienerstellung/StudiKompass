@@ -60,7 +60,7 @@ export function LoginForm({
     return (
         <div className="flex justify-items-start flex-col gap-6">
             <Link href="/" className="text-sm underline-offset-4 underline opacity-60">
-                &larr; Züruck zur Startseite
+                &larr; Zurück zur Startseite
             </Link>
             <div className="flex flex-col shadow-xl/30 p-6 rounded-2xl">
                 <header className="flex flex-col gap-4">
