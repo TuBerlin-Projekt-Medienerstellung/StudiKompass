@@ -71,6 +71,14 @@ export function LoginForm({
                                 fill
                                 alt="logo-navis"
                                 loading="eager"
+                                className="dark:hidden"
+                            />
+                            <Image
+                                src="/logo/Compass-light.svg"
+                                fill
+                                alt="logo-navis"
+                                loading="eager"
+                                className="hidden dark:block"
                             />
                         </div>
                         <div className="relative w-24 h-8">
@@ -79,6 +87,14 @@ export function LoginForm({
                                 fill
                                 alt="logo-navis"
                                 loading="eager"
+                                className="dark:hidden"
+                            />
+                            <Image
+                                src="/logo/Navis-light.svg"
+                                fill
+                                alt="logo-navis"
+                                loading="eager"
+                                className="hidden dark:block"
                             />
                         </div>
                     </div>
