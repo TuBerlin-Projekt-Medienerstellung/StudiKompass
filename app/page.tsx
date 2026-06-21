@@ -18,10 +18,8 @@ export default function Home() {
 
                 <div
                     className="w-full h-80 md:w-212 md:h-206 absolute right-0 bg-raspbarry-plum dark:bg-raspbarry-plum/50 rounded-full blur-[254.50px]"/>
-                <img
-                    src="https://images.unsplash.com/photo-1534593963832-01c3595183bd?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"
-                    alt=""
-                    className="absolute w-screen h-screen mix-blend-color-burn opacity-10 dark:opacity-20 dark:mix-blend-soft-light object-cover"
+                <div
+                    className="absolute inset-0 w-full h-full bg-gradient-to-br from-slate-200/40 via-transparent to-raspbarry-plum/10 dark:from-violet-ray/10 dark:via-transparent dark:to-raspbarry-plum/10"
                 />
             </div>
 
@@ -49,8 +47,8 @@ export default function Home() {
                     {/*Title*/}
                     <h1 className="flex flex-row gap-4 md:gap-6 w-full items-center">
                         <div className="relative flex size-16 md:size-24 shrink-0">
-                            <Image alt="logo" fill src="/logo/Compass-dark.svg" className="animate-spin-slow dark:hidden"/>
-                            <Image alt="logo" fill src="/logo/Compass-light.svg" className="hidden animate-spin-slow dark:block"/>
+                            <Image alt="logo" fill src="/logo/Compass-dark.svg" className="dark:hidden"/>
+                            <Image alt="logo" fill src="/logo/Compass-light.svg" className="hidden dark:block"/>
                         </div>
                         <div className="flex flex-col gap-2">
                             <div className="relative w-24 md:w-32 h-8">

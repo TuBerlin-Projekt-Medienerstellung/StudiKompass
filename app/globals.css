@@ -170,7 +170,7 @@
 .wrapper {
     display: flex;
     flex-direction: column;
-    animation: wordSlider 10s infinite cubic-bezier(0.9, 0.01, 0.3, 0.99);
+    animation: wordSlider 18s infinite cubic-bezier(0.9, 0.01, 0.3, 0.99);
 }
 
 @keyframes wordSlider {
