@@ -3,6 +3,7 @@
 import React from 'react'
 import SemesterCard from "@/components/semester-card";
 import { useState } from "react";
+import {Plus} from 'lucide-react';
 
 {/** Dummy Daten zum testen, nach Semester gruppiert, werden durch Fetches aus Supabase ersetzt
   Wie aus Semester_ID tatsächliche Nummer des Semesters erhalten? */}
@@ -70,10 +71,16 @@ const Page = () => {
         {semesters.map((semester) => (
         <SemesterCard
             key={semester.nummer}
+            semester = {semester.nummer}
             module={semester.modules}
             onClick={() => console.log(semester.nummer)}
           />
         ))}
+
+        {/**Fügt nächste Semesterkarte hinzu -> neue Karte mit semester.length+1 */}
+        <button className='border-2 rounded-2xl border-dashed p-4 flex cursor-pointer flex items-center justify-center px-6 py-4'>
+          <Plus></Plus>Semester hinzufügen
+        </button>
   
         </section>
     )
