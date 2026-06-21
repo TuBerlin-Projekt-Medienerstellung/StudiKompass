@@ -62,8 +62,13 @@ const ModulCard = (props: modulInfo) => {
         { name: "Voraussetzungen", value: details?.voraussetzungen ?? "—" },
     ];
 
+    const isWahlpflicht = modulArt.toLowerCase().includes("wahlpflicht");
+    const moduleBorderClass = isWahlpflicht
+        ? "border-l-flag-red border-r-flag-red dark:border-l-emerald-400 dark:border-r-emerald-400"
+        : "border-l-flag-red border-r-flag-red dark:border-l-flag-red dark:border-r-flag-red";
+
     return (
-        <div className={`w-full flex flex-col border-y-2 border-x-4 rounded-xl px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
+        <div className={`w-full flex flex-col border-y-2 border-x-4 border-border ${moduleBorderClass} bg-background dark:bg-card rounded-xl px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
             <header className='w-full flex justify-between items-center'>
                 <div className='flex w-fit gap-2.5'>
                     <button onClick={() => setLiked(!liked)}>
@@ -74,7 +79,7 @@ const ModulCard = (props: modulInfo) => {
                         <div className='flex gap-2'>
                             <div>{leistungspunkte} ECTS</div>
                             <span>• {semester} •</span>
-                            <p className='text-blue-bell'>{modulArt}</p>
+                            <p className='text-blue-bell dark:text-violet-ray'>{modulArt}</p>
                         </div>
                     </div>
                 </div>
@@ -107,7 +112,7 @@ const ModulCard = (props: modulInfo) => {
                         {/* Detail Boxen */}
                         <div className='flex justify-between gap-2 md:flex-row flex-col'>
                             {detailBoxen.map((detail, index) => (
-                                <div key={index} className='bg-[#E3E6EA] flex border-2 rounded-xl w-full items-center p-4 flex-col'>
+                                <div key={index} className='bg-[#E3E6EA] dark:bg-[#16081f] flex border-2 border-border rounded-xl w-full items-center p-4 flex-col'>
                                     <span>{detail.name}</span>
                                     <p className='font-bold'>{detail.value}</p>
                                 </div>
@@ -115,7 +120,7 @@ const ModulCard = (props: modulInfo) => {
                         </div>
 
                         <div className='flex rounded-lg gap-2'>
-                            <button className='bg-violet-ray text-white px-4 py-2 rounded-lg w-5/6'>
+                            <button className='bg-violet-ray hover:bg-blue-bell text-white px-4 py-2 rounded-lg w-5/6 transition-colors'>
                                 Zum Planer hinzufügen
                             </button>
                             {details?.link ? (

@@ -82,7 +82,7 @@ export default function Settings({ refreshKey }: { refreshKey: number }) {
                 </div>
 
                 {/* Upload */}
-                <label className="mt-3 cursor-pointer text-sm text-blue-500 hover:underline w-fit">
+                <label className="mt-3 cursor-pointer text-sm text-blue-bell dark:text-violet-ray hover:underline w-fit">
                     Change avatar
                     <input
                         type="file"

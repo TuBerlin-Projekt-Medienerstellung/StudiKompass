@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link"
 import {LogoutButton} from "@/components/logout-button";
+import {ThemeSwitcher} from "@/components/theme-switcher";
 import {useMediaQuery} from "react-responsive";
 import {navBarLinks} from "@/constants";
 import {X, Menu} from "lucide-react"
@@ -71,18 +72,25 @@ const NavBar = () => {
     //console.log("CURRENT DB URL IS:", profile?.avatar_url);
     //z-50 works still gotta remove scrollable (add freeze) later
     return (
-        <nav className={`z-50 md:h-screen md:w-72 w-full px-4 p-4 flex flex-col md:border-r-2 fixed bg-background 
+        <nav className={`z-50 md:h-screen md:w-72 w-full px-4 p-4 flex flex-col md:border-r-2 border-border fixed bg-background 
     transition-[height] duration-300 ease-in-out 
     ${mobileOpen ? "h-screen overflow-y-auto pb-8" : "h-16 overflow-hidden"}`}>
             <div className={`flex flex-col flex-1 min-h-0 ${mobileOpen ? "overflow-y-auto" : ""}`}>
                 <div
-                    className="shrink-0 w-full flex flex-row justify-between items-center pb-3 border-b-2 md:border-none">
+                    className="shrink-0 w-full flex flex-row justify-between items-center pb-3 border-b-2 border-border md:border-none">
                     <Link className="flex items-center gap-2" href="/protected/planner">
                         <div className="relative md:size-10 size-8">
                             <Image
                                 src="/logo/Compass-dark.svg"
                                 fill
                                 alt="logo-kompass"
+                                className="dark:hidden"
+                            />
+                            <Image
+                                src="/logo/Compass-light.svg"
+                                fill
+                                alt="logo-kompass"
+                                className="hidden dark:block"
                             />
                         </div>
                         <div className="relative w-24 h-8">
@@ -91,6 +99,14 @@ const NavBar = () => {
                                 fill
                                 alt="logo-navis"
                                 loading="eager"
+                                className="dark:hidden"
+                            />
+                            <Image
+                                src="/logo/Navis-light.svg"
+                                fill
+                                alt="logo-navis"
+                                loading="eager"
+                                className="hidden dark:block"
                             />
                         </div>
                     </Link>
@@ -106,7 +122,7 @@ const NavBar = () => {
                             const isActive = pathname === link.path || pathname.startsWith(link.path + "/")
                             console.log("pathname:", pathname, "| link.path:", link.path)
                             return <Link href={link.path}
-                                         className={`w-full flex flex-row gap-2 px-4 py-3 rounded-2xl ${isActive ? "text-flag-red bg-flag-red/5" : "text-foreground"}`}
+                                         className={`w-full flex flex-row gap-2 px-4 py-3 rounded-2xl transition-colors ${isActive ? "text-flag-red bg-flag-red/5 dark:bg-flag-red/10" : "text-foreground hover:bg-accent"}`}
                                          key={link.name}
                                          onClick={() => setMobileOpen(false)}
                             >
@@ -127,7 +143,7 @@ const NavBar = () => {
                                     />
                                 </div>
                                 <div className="flex flex-col">
-                                    <h3 className="text-sm font-semibold text-black">{profile?.username ?? '...'}</h3>
+                                    <h3 className="text-sm font-semibold text-foreground">{profile?.username ?? '...'}</h3>
                                     <p className="text-sm opacity-60">{profile?.studiengang ?? '...'}</p>
                                 </div>
                             </div>
@@ -135,6 +151,7 @@ const NavBar = () => {
 
                             </div>
                         </div>
+                        <ThemeSwitcher/>
                         <LogoutButton/>
                     </div>
                 </div>
