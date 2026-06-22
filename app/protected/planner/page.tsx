@@ -3,7 +3,8 @@
 import React from 'react'
 import SemesterCard from "@/components/semester-card";
 import { useState } from "react";
-import {Plus} from 'lucide-react';
+import {Plus, Trash2} from 'lucide-react';
+import { createSemester, deleteSemester } from './actions';
 
 {/** Dummy Daten zum testen, nach Semester gruppiert, werden durch Fetches aus Supabase ersetzt
   Wie aus Semester_ID tatsächliche Nummer des Semesters erhalten? */}
@@ -59,6 +60,24 @@ const Page = () => {
     
     const [isOpen, setIsOpen] = useState(false);
     const [modul, setModul] = useState<modulInfo | null>(null);
+    const [semesterList, setSemesterList] = useState(semesters);
+
+    async function handleAddSemester() {
+        const neuesSemester = await createSemester();
+
+        setSemesterList((prev) => [
+            ...prev,
+            neuesSemester,
+        ]);
+    }
+
+    async function handleDeleteSemester(semesterNummer: number) {
+        await deleteSemester();
+
+        setSemesterList((prev) =>
+            prev.filter((sem) => sem.nummer !== semesterNummer)
+        );
+}
 
     return (
         <section className="flex flex-col gap-4">
@@ -68,7 +87,7 @@ const Page = () => {
           </div>
         
 
-        {semesters.map((semester) => (
+        {semesterList.map((semester) => (
         <SemesterCard
             key={semester.nummer}
             semester = {semester.nummer}
@@ -76,11 +95,18 @@ const Page = () => {
             onClick={() => console.log(semester.nummer)}
           />
         ))}
-
-        {/**Fügt nächste Semesterkarte hinzu -> neue Karte mit semester.length+1 */}
-        <button className='border-2 rounded-2xl border-dashed p-4 flex cursor-pointer flex items-center justify-center px-6 py-4'>
-          <Plus></Plus>Semester hinzufügen
-        </button>
+        
+        <div className='flex flex-row gap-4'>
+          <button   onClick={handleAddSemester}
+                    className='border-2 rounded-2xl border-dashed p-4 flex cursor-pointer items-center justify-center px-6 py-4 md:w-5/6 w-full'>
+            <Plus></Plus>Semester hinzufügen
+          </button>
+          <button   onClick={() => handleDeleteSemester(semesterList[semesterList.length - 1].nummer)}
+                    className='flex border-2 rounded-2xl border-flag-red cursor-pointer md:w-1/6 w-full items-center justify-center'>
+            <Trash2></Trash2>
+          </button>
+        </div>
+        
   
         </section>
     )
