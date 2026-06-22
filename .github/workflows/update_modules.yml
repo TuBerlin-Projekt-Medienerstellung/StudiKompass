@@ -1,0 +1,48 @@
+name: Updates Extended Search
+#this is only the skeleton and still needs adaptations
+#also the env details need to be added to the secret vault in github actions, so that the docker will be able to fetch them
+#we need a docker, to make sure the environment of the scripts stays the same (Image)
+#this way I can config all requirements and folder structure, with the libs and packages that require installation, so that build cant fail or only work on specific devices
+#also fixes issue of having to cache and check installation of eg transformers from pytorch
+on:
+  repository_dispatch:
+    types: [trigger-update-extended-search]
+  #triggered on github cli
+  workflow_dispatch:
+
+  # every month at 3am
+  schedule:
+    - cron: '0 3 1 * *'
+
+jobs:
+  build-and-run:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Pulls your repository code into the GitHub runner
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # 2. Builds the isolated Docker environment from your Dockerfile
+      - name: Build Docker Image
+        run: docker build -t extended-search .
+
+      # 3. Runs the container and safely passes secrets from the vault into memory
+      - name: Run Python Script Inside Docker
+        env:
+          # Pulls directly from your GitHub repository secrets vault
+          MOSES_URL: ${{ secrets.moses_API_URL }}
+          MOSES_KEY: ${{ secrets.moses_API_KEY }}
+          STUDIEN_KEY: ${{ secrets.Studiengaenge_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          docker run \
+            -e moses_API_URL="$MOSES_URL" \
+            -e moses_API_KEY="$MOSES_KEY" \
+            -e Studiengaenge_API_KEY="$STUDIEN_KEY" \
+            -e SUPABASE_URL="$SUPABASE_URL" \
+            -e SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" \
+            extended-search
+
+

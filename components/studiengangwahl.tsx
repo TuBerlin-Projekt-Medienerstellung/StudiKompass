@@ -5,44 +5,48 @@ export default async function Studiengangwahl() {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
-    
+    const apiUrl = process.env.moses_API_URL;
+    const apiKey = process.env.moses_API_KEY || "";
     let officialDegrees: any[] = [];
-    try {
-        {/* Only fetch if the URL actually exists in your .env*/}
-        if (process.env.moses_API_URL) {
-            const degreeResponse = await fetch(
-        `${process.env.moses_API_URL}/studiengang?pageSize=500`,
-        {
-            headers: process.env.moses_API_KEY
-                ? { 'x-api-key': process.env.moses_API_KEY }  //used bearer before, email says form apikey required
-                : {},
-            next: { revalidate: 86400 } //still the same caching to reduce unwanted traffic and prevent slow flow
-        }
-    );
+    if (apiUrl) {
+        try {
+            const baseHeaders: Record<string, string> = {};
+            if (process.env.moses_API_KEY) {
+                baseHeaders['x-api-key'] = process.env.moses_API_KEY;
+            }
+            
+            const degreeResponse = await fetch(`${apiUrl}/studiengang?pageSize=500`, {
+                headers: baseHeaders,
+                next: { revalidate: 86400 }
+            });
 
-        if (degreeResponse.ok) {
-        const firstPage = await degreeResponse.json();
-        officialDegrees = firstPage.data ?? [];
+            if (degreeResponse.ok) {
+                const firstPage = await degreeResponse.json();
+                officialDegrees = firstPage.data ?? [];
+                const totalPages = firstPage.totalPages ?? 1;
 
-        const totalPages = firstPage.totalPages ?? 1;
-
-        for (let page = 2; page <= totalPages; page++) {
-            const res = await fetch(
-                `${process.env.moses_API_URL}/studiengang?pageSize=500&pageNumber=${page}`,
-                {
-                    headers: { 'x-api-key': process.env.Studiengaenge_API_KEY || "" },
-                    next: { revalidate: 86400 }
+                if (totalPages > 1) {
+                    const fetchPromises = [];
+                    for (let page = 2; page <= totalPages; page++) {
+                        fetchPromises.push(
+                            fetch(`${apiUrl}/studiengang?pageSize=500&pageNumber=${page}`, {
+                                headers: baseHeaders,
+                                next: { revalidate: 86400 }
+                            }).then(res => res.json())
+                        );
+                    }
+                    
+                    const pagesData = await Promise.all(fetchPromises);
+                    pagesData.forEach(pageData => {
+                        officialDegrees.push(...(pageData.data ?? []));
+                    });
                 }
-            );
-            const pageData = await res.json();
-            officialDegrees = [...officialDegrees, ...(pageData.data ?? [])];
-        }
-    } else {
+            } else {
                 console.error("Fetch failed with status:", degreeResponse.status);
             }
+        } catch (e) {
+            console.error("Fetch crashed:", e);
         }
-    } catch (e) {
-        console.error("Fetch crashed:", e);
     }
 
   // Data for testing
