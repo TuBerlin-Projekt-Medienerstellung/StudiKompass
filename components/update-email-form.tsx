@@ -62,10 +62,10 @@ export function UpdateEmailForm({
   };
 
   return (
-    <div className={cn("bg-white dark:bg-zinc-900 border border-zinc-600 dark:border-zinc-800 p-6 rounded-xl", className)} {...props}>
+    <div className={cn("bg-white dark:bg-card border border-zinc-600 dark:border-border p-6 rounded-xl", className)} {...props}>
       <Card>
         <CardHeader>
-          <CardTitle className="text-base font-semibold text-black mb-2">Reset Your E-Mail</CardTitle>
+          <CardTitle className="text-base font-semibold text-black dark:text-white mb-2">Reset Your E-Mail</CardTitle>
           <CardDescription className="text-zinc-500">
             Please enter your new email below.
           </CardDescription>

@@ -2,7 +2,7 @@
 
 @plugin 'tailwindcss-animate';
 
-@custom-variant dark (&:is(.dark *));
+@custom-variant dark (.dark &);
 
 @theme {
     --color-background: var(--background);
@@ -111,6 +111,40 @@
         --chart-5: 27 87% 67%;
         --radius: 0.5rem;
     }
+
+    .dark {
+        --background: #0D0612;
+        --foreground: #FAFAFA;
+        --flag-red: #C40D1F;
+        --dark-khaki: #B50956;
+        --sandy-brown: #AA0F8D;
+        --blue-bell: #A311B4;
+        --mint-leaf: #8F13FD;
+        --violet-ray: #8F13FD;
+        --raspbarry-plum: #B50956;
+        --card: 280 45% 8%;
+        --card-foreground: 0 0% 98%;
+        --popover: 280 45% 8%;
+        --popover-foreground: 0 0% 98%;
+        --primary: 0 0% 98%;
+        --primary-foreground: 240 5.9% 10%;
+        --secondary: 291 83% 14%;
+        --secondary-foreground: 0 0% 98%;
+        --muted: 286 28% 16%;
+        --muted-foreground: 285 12% 72%;
+        --accent: 290 83% 20%;
+        --accent-foreground: 0 0% 98%;
+        --destructive: 354 88% 41%;
+        --destructive-foreground: 0 0% 98%;
+        --border: 286 28% 20%;
+        --input: 286 28% 20%;
+        --ring: 266 98% 53%;
+        --chart-1: 354 88% 41%;
+        --chart-2: 331 91% 37%;
+        --chart-3: 310 84% 36%;
+        --chart-4: 294 83% 39%;
+        --chart-5: 266 98% 53%;
+    }
 }
 
 @layer base {
@@ -138,7 +172,7 @@
 .wrapper {
     display: flex;
     flex-direction: column;
-    animation: wordSlider 10s infinite cubic-bezier(0.9, 0.01, 0.3, 0.99);
+    animation: wordSlider 18s infinite cubic-bezier(0.9, 0.01, 0.3, 0.99);
 }
 
 @keyframes wordSlider {
