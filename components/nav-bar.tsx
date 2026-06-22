@@ -11,6 +11,7 @@ import {usePathname} from "next/navigation";
 import React, {useState, useEffect, useCallback} from "react";
 import {createClient} from '@/lib/supabase/client'
 import InitialsAvatar from "@/components/initials-avatar";
+
 //Things to fix:
 
 // 1) bug with navbar in mobile mode (profile + Studiengangwahl shouldn't cover content or be interactive -> dropdown should disable current page functions)
@@ -51,7 +52,7 @@ const NavBar = () => {
     }, [])
 
     useEffect(() => {
-        void fetchProfileData()
+        fetchProfileData()
     }, [fetchProfileData])
 
     //omfg I knew I had to add an Eventlistener with fetch as I did with avatar, AI ain't gonna replace me muhahah
