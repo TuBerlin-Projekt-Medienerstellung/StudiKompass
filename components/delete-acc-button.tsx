@@ -18,7 +18,7 @@ export default function DeleteAccount() {
   };
 
   return (
-    <div className="bg-white dark:bg-zinc-900 border border-zinc-600 dark:border-zinc-800 p-6 rounded-xl">
+    <div className="bg-white dark:bg-card border border-zinc-600 dark:border-border p-6 rounded-xl">
       <h2 className="text-base font-semibold text-black dark:text-white mb-2">
         Warnung, diese Aktion ist permanent
       </h2>
@@ -28,7 +28,7 @@ export default function DeleteAccount() {
       <form action={deleteUserAction}>
         <button 
           type="submit" 
-          className="bg-red-700 text-black dark:bg-red-900/20 hover:bg-red-900/40 dark:text-red-500 border border-red-900/50 px-6 py-2 rounded-lg font-bold transition-all"
+          className="bg-flag-red text-white hover:bg-red-900 dark:bg-flag-red/15 dark:hover:bg-flag-red/25 dark:text-red-300 border border-flag-red/50 px-6 py-2 rounded-lg font-bold transition-all"
         >
           Konto löschen
         </button>
