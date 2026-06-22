@@ -2,6 +2,20 @@
 
 import { createClient} from "@/lib/supabase/server";
 
+//leeres Semester hinzufügen
+export async function createSemester() {
+    // Supabase Insert
+    return {
+        nummer: 3,
+        modules: [],
+    };
+}
+
+//Semester löschen
+export async function deleteSemester() {
+    // Supabase Semester löschen
+}
+
 //Holt STudiengangId weil Infos in Supabase mit StudiengangID gespeichert sind
 export async function getUserStudiengangId() {
     const supabase = await createClient();
