@@ -1,9 +1,45 @@
 import Studiengangwahl from "@/components/studiengangwahl";
 import { createClient } from "@/lib/supabase/server";
-import { Shell, Award, Calendar, Clock, TrendingUp, CircleCheckBig, Circle } from "lucide-react";
+import {
+  Shell,
+  Award,
+  Calendar,
+  Clock,
+  TrendingUp,
+  CircleCheckBig,
+  Circle,
+} from "lucide-react";
+
+type AktuellesModul = {
+  name: string;
+  prof: string;
+  ects: number;
+  laufend: boolean;
+};
+
+type Meilenstein = {
+  titel: string;
+  fortschritt: number;
+};
+
+type DashboardStats = {
+  gesamtfortschritt: number;
+  aktuelleEcts: number;
+  gesamtEcts: number;
+  aktuellesSemester: number;
+  abschlussSemester: string;
+};
+
+const dashboardStats: DashboardStats = {
+  gesamtfortschritt: 90,
+  aktuelleEcts: 103,
+  gesamtEcts: 180,
+  aktuellesSemester: 4,
+  abschlussSemester: "SoSe 2027",
+};
 
 // Platzhalterdaten fuer aktuelle Module, bis echte Studiendaten angebunden werden koennen.
-const aktuelleModule = [
+const aktuelleModule: AktuellesModul[] = [
   {
     name: "Lineare Algebra",
     prof: "Prof. Dr. Weber",
@@ -25,7 +61,7 @@ const aktuelleModule = [
 ];
 
 // Platzhalterdaten fuer Meilensteine und Fortschrittsanzeigen.
-const meilensteine = [
+const meilensteine: Meilenstein[] = [
   {
     titel: "Pflichtmodule abgeschlossen",
     fortschritt: 100,
@@ -64,13 +100,17 @@ export default async function DashboardPage() {
         <div className="rounded-2xl bg-[#C40D1F] p-4 text-white">
           <div className="flex items-center justify-between gap-4">
             <Award className="h-6 w-6" />
-            <h2 className="text-3xl font-bold">57%</h2>
+            <h2 className="text-3xl font-bold">
+              {dashboardStats.gesamtfortschritt}%
+            </h2>
           </div>
 
           <p className="text-sm">Gesamtfortschritt</p>
 
           <div className="mt-4 h-2 rounded-full bg-red-300">
-            <div className="h-2 w-[57%] rounded-full bg-white" />
+            <div className="h-2 rounded-full bg-white"
+            style={{ width: `${dashboardStats.gesamtfortschritt}%` }}
+/>
           </div>
         </div>
 
@@ -78,7 +118,7 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between gap-4">
             <Shell className="h-6 w-6 text-[#C40D1F]" />
             <div>
-              <h2 className="text-xl font-bold">103/180</h2>
+              <h2 className="text-xl font-bold"> {dashboardStats.aktuelleEcts}/{dashboardStats.gesamtEcts} </h2>
               <p className="text-sm text-muted-foreground">ECTS</p>
             </div>
           </div>
@@ -88,7 +128,9 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between gap-4">
             <Calendar className="h-6 w-6 text-[#C40D1F]" />
             <div>
-              <h2 className="text-xl font-bold">4</h2>
+              <h2 className="text-xl font-bold">
+                {dashboardStats.aktuellesSemester}
+              </h2>
               <p className="text-sm text-muted-foreground">Semester</p>
             </div>
           </div>
@@ -98,7 +140,9 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between gap-4">
             <Clock className="h-6 w-6 text-[#C40D1F]" />
             <div>
-              <h2 className="text-xl font-bold">SS 2027</h2>
+              <h2 className="text-xl font-bold">
+                {dashboardStats.abschlussSemester}
+              </h2>
               <p className="text-sm text-muted-foreground">Voraussichtlich</p>
             </div>
           </div>
