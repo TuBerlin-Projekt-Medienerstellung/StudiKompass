@@ -1,6 +1,6 @@
-"use client" ;
-import { useState } from "react"
-import { createClient } from "@/lib/supabase/client"
+"use client";
+import {useState} from "react"
+import {createClient} from "@/lib/supabase/client"
 import {GraduationCap} from "lucide-react"
 import {Button} from "@/components/ui/button";
 import {Label} from "@/components/ui/label";
@@ -8,31 +8,34 @@ import {Label} from "@/components/ui/label";
 export default function StudiengangForm({degrees, current}: {
     degrees: any[]
     current: string
-    }){
+}) {
 
-        const [query, setQuery] = useState(current)
-        const [selected, setSelected] = useState<{id:number, name:string} | null>(null)
+    const [query, setQuery] = useState(current)
+    const [selected, setSelected] = useState<{ id: number, name: string } | null>(null)
 
-        const filtered = degrees.filter(deg =>
+    const filtered = degrees.filter(deg =>
         deg.name?.toLowerCase().includes(query.toLowerCase())
-        )
-        const formatType = (typeName: string) => {
-            if (typeName === "Bachelor of Science") return "B.Sc."
-            if (typeName === "Master of Science") return "M.Sc."
-            return typeName  
-        }
-        const handleSave = async () => {
+    )
+    const formatType = (typeName: string) => {
+        if (typeName === "Bachelor of Science") return "B.Sc."
+        if (typeName === "Master of Science") return "M.Sc."
+        return typeName
+    }
+    const handleSave = async () => {
         const supabase = createClient()
-        const { data: { user } } = await supabase.auth.getUser()
+        const {data: {user}} = await supabase.auth.getUser()
         if (!user) return
         if (!user || !selected) return
-        await supabase.from("profiles").update({ studiengang: selected.name, studiengang_id: selected.id }).eq("id", user.id)
-        window.dispatchEvent(new CustomEvent("studiengang-updated")) 
+        await supabase.from("profiles").update({
+            studiengang: selected.name,
+            studiengang_id: selected.id
+        }).eq("id", user.id)
+        window.dispatchEvent(new CustomEvent("studiengang-updated"))
     }
-    return(
+    return (
         <div className="w-full">
             <section className="w-full space-y-8">
-                <div className="rounded-xl border-2 bg-white shadow-sm p-6 gap 4">
+                <div className="rounded-xl border-2 bg-card shadow-sm p-6 gap 4">
                     <div className="space-y-4">
                         <div className="flex flex-row gap-4 pb-1 md:justify-start items-center">
                             <GraduationCap className="text-flag-red w-8 h-8 stroke-1.5"></GraduationCap>
@@ -51,7 +54,7 @@ export default function StudiengangForm({degrees, current}: {
                                     setSelected(null) // wenn der User wieder tippt, Auswahl zurücksetzen
                                 }}
                                 placeholder="Studiengang wählen..."
-                                className="w-full border text-black rounded-md px-3 py-1.5 shadow-xs"
+                                className="w-full border text-black dark:text-white rounded-md px-3 py-1.5 shadow-xs"
                             />
 
                             {/* Liste nur sichtbar wenn: etwas getippt wurde UND noch nichts ausgewählt */}
@@ -62,8 +65,8 @@ export default function StudiengangForm({degrees, current}: {
                                         const displayName = typeName
                                             ? `${deg.name} (${formatType(typeName)})`
                                             : deg.name
-                                        
-                                            
+
+
                                         return (
                                             <li
                                                 key={deg?.id?.toString() || index}
