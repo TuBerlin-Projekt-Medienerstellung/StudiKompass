@@ -1,4 +1,3 @@
-import Studiengangwahl from "@/components/studiengangwahl";
 import { createClient } from "@/lib/supabase/server";
 import {
   Shell,
@@ -23,7 +22,6 @@ type Meilenstein = {
 };
 
 type DashboardStats = {
-  gesamtfortschritt: number;
   aktuelleEcts: number;
   gesamtEcts: number;
   aktuellesSemester: number;
@@ -31,7 +29,6 @@ type DashboardStats = {
 };
 
 const dashboardStats: DashboardStats = {
-  gesamtfortschritt: 90,
   aktuelleEcts: 103,
   gesamtEcts: 180,
   aktuellesSemester: 4,
@@ -85,6 +82,16 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const gesamtfortschritt =
+  dashboardStats.gesamtEcts > 0
+    ? Math.min(
+        100,
+        Math.round(
+          (dashboardStats.aktuelleEcts / dashboardStats.gesamtEcts) * 100
+        )
+      )
+    : 0;
+
   return (
     <div className="space-y-6 px-4 py-4 sm:px-6 lg:px-8">
       <div>
@@ -101,7 +108,7 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between gap-4">
             <Award className="h-6 w-6" />
             <h2 className="text-3xl font-bold">
-              {dashboardStats.gesamtfortschritt}%
+              {gesamtfortschritt}%
             </h2>
           </div>
 
@@ -109,7 +116,7 @@ export default async function DashboardPage() {
 
           <div className="mt-4 h-2 rounded-full bg-red-300">
             <div className="h-2 rounded-full bg-white"
-            style={{ width: `${dashboardStats.gesamtfortschritt}%` }}
+            style={{ width: `${gesamtfortschritt}%` }}
 />
           </div>
         </div>
