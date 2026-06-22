@@ -1,5 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import {
+  getUserStudiengangId,
+  ladeModulBasisAction,
+} from "@/app/protected/modules/actions";
+import {
   Shell,
   Award,
   Calendar,
@@ -82,15 +86,30 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const studiengangId = await getUserStudiengangId();
+
+  const modulBasis = studiengangId
+    ? await ladeModulBasisAction(studiengangId)
+    : [];
+
+  const gesamtEcts = dashboardStats.gesamtEcts;
+
+  const aktuelleEcts = dashboardStats.aktuelleEcts;
+
   const gesamtfortschritt =
-  dashboardStats.gesamtEcts > 0
-    ? Math.min(
-        100,
-        Math.round(
-          (dashboardStats.aktuelleEcts / dashboardStats.gesamtEcts) * 100
-        )
-      )
+  gesamtEcts > 0
+    ? Math.min(100, Math.round((aktuelleEcts / gesamtEcts) * 100))
     : 0;
+
+  const angezeigteModule =
+    modulBasis.length > 0
+      ? modulBasis.slice(0, 3).map((modul) => ({
+          name: modul.name,
+          prof: "MOSES",
+          ects: modul.lp,
+          laufend: false,
+        }))
+      : aktuelleModule;
 
   return (
     <div className="space-y-6 px-4 py-4 sm:px-6 lg:px-8">
@@ -125,7 +144,7 @@ export default async function DashboardPage() {
           <div className="flex items-center justify-between gap-4">
             <Shell className="h-6 w-6 text-[#C40D1F]" />
             <div>
-              <h2 className="text-xl font-bold"> {dashboardStats.aktuelleEcts}/{dashboardStats.gesamtEcts} </h2>
+              <h2 className="text-xl font-bold"> {aktuelleEcts}/{gesamtEcts} </h2>
               <p className="text-sm text-muted-foreground">ECTS</p>
             </div>
           </div>
@@ -162,12 +181,12 @@ export default async function DashboardPage() {
       <div className="mb-5 flex items-center justify-between">
         <h2 className="text-xl font-bold">Aktuelles Semester</h2>
         <p className="text-sm text-muted-foreground">
-          {aktuelleModule.length} Module
+          {angezeigteModule.length} Module
         </p>
       </div>
 
       <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-        {aktuelleModule.map((modul) => (
+        {angezeigteModule.map((modul) => (
           <div
             key={modul.name}
             className="flex flex-col gap-4 rounded-2xl border border-border bg-white dark:bg-[#16081f] p-4 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-start"
