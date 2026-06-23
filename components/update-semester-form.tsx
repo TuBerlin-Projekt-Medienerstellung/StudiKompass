@@ -13,6 +13,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect } from "react";
+import { CalendarDays } from "lucide-react";
 
 export function UpdateSemesterForm({
     className,
@@ -25,7 +26,6 @@ export function UpdateSemesterForm({
     const [isSuccess, setIsSuccess] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(true);
 
-    // Beim Laden: gespeicherte Werte aus Supabase holen
     useEffect(() => {
         async function ladeSemester() {
             try {
@@ -33,18 +33,20 @@ export function UpdateSemesterForm({
                 const { data: { user } } = await supabase.auth.getUser();
                 if (!user) return;
 
-                const { data } = await supabase
+                const { data, error } = await supabase
                     .from("profiles")
                     .select("current_semester, max_semester")
                     .eq("id", user.id)
                     .single();
+
+                if (error) throw error;
 
                 if (data?.current_semester) setCurrentSemester(String(data.current_semester));
                 if (data?.max_semester) setMaxSemester(String(data.max_semester));
             } catch (e) {
                 console.error("Fehler beim Laden der Semesterdaten:", e);
             } finally {
-                setIsLoadingData(false);   // ← läuft IMMER, egal ob Erfolg, kein User, oder Fehler
+                setIsLoadingData(false);
             }
         }
         ladeSemester();
@@ -56,6 +58,10 @@ export function UpdateSemesterForm({
 
         if (!currentSemester || !maxSemester) {
             setError("Bitte beide Felder ausfüllen.");
+            return false;
+        }
+        if (Number.isNaN(current) || Number.isNaN(max)) {
+            setError("Bitte gültige Zahlen eingeben.");
             return false;
         }
         if (!Number.isInteger(current) || !Number.isInteger(max)) {
@@ -108,19 +114,18 @@ export function UpdateSemesterForm({
     }
 
     return (
-        <div className={cn("bg-white dark:bg-zinc-900 border border-zinc-600 dark:border-zinc-800 p-6 rounded-xl", className)} {...props}>
+        <div className={cn(className)} {...props}>
             <Card>
-                <CardHeader>
-                    <CardTitle className="text-base font-semibold text-black mb-2">
-                        Semesterplanung
-                    </CardTitle>
-                    <CardDescription className="text-zinc-500">
-                        Gib dein aktuelles Semester und deine geplante Studiendauer ein.
-                    </CardDescription>
+                <CardHeader className="flex flex-row gap-4 pb-4 md:justify-start items-center">
+                    <CalendarDays className="text-flag-red w-8 h-8 stroke-2" />
+                    <CardTitle className="text-xl font-bold">Semesterplanung</CardTitle>
                 </CardHeader>
                 <CardContent>
+                    <CardDescription className="text-zinc-500 pb-5">
+                        Gib dein aktuelles Semester und deine geplante Studiendauer ein.
+                    </CardDescription>
                     {isLoadingData ? (
-                        <p className="text-sm text-zinc-500">wird geladen ...</p>
+                        <p className="text-sm text-zinc-500">Wird geladen ...</p>
                     ) : (
                         <form onSubmit={handleSpeichern}>
                             <div className="flex flex-col gap-6">
@@ -148,13 +153,13 @@ export function UpdateSemesterForm({
                                         onChange={(e) => setMaxSemester(e.target.value)}
                                     />
                                 </div>
-                                {error && <p className="text-sm text-red-500">{error}</p>}
+                                {error && <p className="text-sm text-flag-red">{error}</p>}
                                 {isSuccess && (
-                                    <p className="text-sm text-green-500">
+                                    <p className="text-sm text-mint-leaf">
                                         Erfolgreich gespeichert! ✓
                                     </p>
                                 )}
-                                <Button type="submit" className="w-full" disabled={isLoading}>
+                                <Button type="submit" className="w-full bg-flag-red" disabled={isLoading}>
                                     {isLoading ? "Wird gespeichert..." : "Speichern"}
                                 </Button>
                             </div>
