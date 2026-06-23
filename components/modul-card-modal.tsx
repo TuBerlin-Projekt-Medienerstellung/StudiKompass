@@ -6,25 +6,7 @@ import {X, SquareArrowOutUpRight, Circle, CircleCheckBig,} from 'lucide-react';
 import {link} from "fs";
 import {details} from "@/constants";
 
-{/**wahrscheinlich neuer type notwendig um alle Infos aus Supabase zu holen, momentan noch modulInfo aus types.d.ts */
-}
-
-interface ModulInfoSupabase {
-    modul_id: number;
-    name: string;
-    leistungspunkte: number;
-    semester?: string | number;
-    modulArt: string;
-    link: string;
-    beschreibung?: string;
-    lernergebnisse?: string;
-    voraussetzungen?: string;
-    pruefungsform?: string;
-    pruefungselemente?: string[];
-    benotet?: boolean | null;
-    pruefungsBeschreibung?: string;
-    lehrlernformen?: string;
-}
+{/**wahrscheinlich neuer type notwendig um alle Infos aus Supabase zu holen, momentan noch modulInfo aus types.d.ts */}
 
 type Props = {
     isOpen: boolean;
