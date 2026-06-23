@@ -3,21 +3,23 @@
 import Image from "next/image";
 import Link from "next/link"
 import {LogoutButton} from "@/components/logout-button";
+import {ThemeSwitcher} from "@/components/theme-switcher";
 import {useMediaQuery} from "react-responsive";
 import {navBarLinks} from "@/constants";
 import {X, Menu} from "lucide-react"
 import {usePathname} from "next/navigation";
 import {useState, useEffect, useCallback} from "react";
 import {createClient} from '@/lib/supabase/client'
+import InitialsAvatar from "@/components/initials-avatar";
 
 //Things to fix:
 
-// 1) bug with navbar in mobile mode (profile + studiengangwahl shouldn't cover content or be interactive -> dowpdown should disable current page functions) 
+// 1) bug with navbar in mobile mode (profile + Studiengangwahl shouldn't cover content or be interactive -> dropdown should disable current page functions)
 // 2) bug with navbar in mobile mode, can't be transparent 
 
 // Possible approaches:
 // >If it's component client/server side caused -> check div wrappers
-// >maybe freeze the page so it isnt interactive while dropdown menue is open
+// >maybe freeze the page so it isn't interactive while dropdown menu is open
 // -> can be solved to adding an absolute z coordinate?
 // >add another event listener to check whether it is mobile to lock scroll?
 // -> but mobile event listener exists, maybe incorp?
@@ -32,6 +34,7 @@ const NavBar = () => {
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [profile, setProfile] = useState<Profile | null>(null);
+    const [email, setEmail] = useState<string | null>("")
 
     const fetchProfileData = useCallback(async () => {
         const supabase = createClient()
@@ -45,11 +48,14 @@ const NavBar = () => {
             .single()
 
         setProfile(data)
+        setEmail(user?.email ?? null)
     }, [])
+
     useEffect(() => {
         fetchProfileData()
     }, [fetchProfileData])
-    //omfg I knew I had to add an Eventlistener with fetch as I did with avatar, AI aint gonna replace me muhahah
+
+    //omfg I knew I had to add an Eventlistener with fetch as I did with avatar, AI ain't gonna replace me muhahah
     useEffect(() => {
         window.addEventListener("avatar-updated", fetchProfileData)
         window.addEventListener("studiengang-updated", fetchProfileData)
@@ -71,18 +77,25 @@ const NavBar = () => {
     //console.log("CURRENT DB URL IS:", profile?.avatar_url);
     //z-50 works still gotta remove scrollable (add freeze) later
     return (
-        <nav className={`z-50 md:h-screen md:w-72 w-full px-4 p-4 flex flex-col md:border-r-2 fixed bg-background 
+        <nav className={`z-50 md:h-screen md:w-72 w-full px-4 p-4 flex flex-col md:border-r-2 border-border fixed bg-background 
     transition-[height] duration-300 ease-in-out 
     ${mobileOpen ? "h-screen overflow-y-auto pb-8" : "h-16 overflow-hidden"}`}>
             <div className={`flex flex-col flex-1 min-h-0 ${mobileOpen ? "overflow-y-auto" : ""}`}>
                 <div
-                    className="shrink-0 w-full flex flex-row justify-between items-center pb-3 border-b-2 md:border-none">
+                    className="shrink-0 w-full flex flex-row justify-between items-center pb-3 border-b-2 border-border md:border-none">
                     <Link className="flex items-center gap-2" href="/protected/planner">
                         <div className="relative md:size-10 size-8">
                             <Image
                                 src="/logo/Compass-dark.svg"
                                 fill
                                 alt="logo-kompass"
+                                className="dark:hidden"
+                            />
+                            <Image
+                                src="/logo/Compass-light.svg"
+                                fill
+                                alt="logo-kompass"
+                                className="hidden dark:block"
                             />
                         </div>
                         <div className="relative w-24 h-8">
@@ -91,6 +104,14 @@ const NavBar = () => {
                                 fill
                                 alt="logo-navis"
                                 loading="eager"
+                                className="dark:hidden"
+                            />
+                            <Image
+                                src="/logo/Navis-light.svg"
+                                fill
+                                alt="logo-navis"
+                                loading="eager"
+                                className="hidden dark:block"
                             />
                         </div>
                     </Link>
@@ -106,7 +127,7 @@ const NavBar = () => {
                             const isActive = pathname === link.path || pathname.startsWith(link.path + "/")
                             console.log("pathname:", pathname, "| link.path:", link.path)
                             return <Link href={link.path}
-                                         className={`w-full flex flex-row gap-2 px-4 py-3 rounded-2xl ${isActive ? "text-flag-red bg-flag-red/5" : "text-foreground"}`}
+                                         className={`w-full flex flex-row gap-2 px-4 py-3 rounded-2xl transition-colors ${isActive ? "text-flag-red bg-flag-red/5 dark:bg-flag-red/10" : "text-foreground hover:bg-accent"}`}
                                          key={link.name}
                                          onClick={() => setMobileOpen(false)}
                             >
@@ -116,18 +137,29 @@ const NavBar = () => {
                         })}
                     </div>
                     <div className="w-full flex flex-col gap-3 pt-4">
-                        <div className="flex flex-col">
+                        <div className="flex flex-col pb-3">
                             <div className="flex flex-row gap-4 md:justify-start justify-center items-center">
                                 <div className="relative size-10">
-                                    <Image
-                                        src={profile?.avatar_url || "/default-avatar.png"}
-                                        alt="placeholder"
-                                        fill
-                                        className="rounded-4xl"
-                                    />
+
+                                    {/* Initialien Avatar / Profilbild */}
+                                    {profile?.avatar_url ? (
+                                        <div className="relative size-12 shrink-0 rounded-full overflow-hidden">
+                                            <Image
+                                                src={profile.avatar_url}
+                                                alt="Profile"
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className="size-12 bg-flag-red rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                            <InitialsAvatar email={email}/>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex flex-col">
-                                    <h3 className="text-sm font-semibold text-black">{profile?.username ?? '...'}</h3>
+                                    <h3 className="text-sm font-semibold text-foreground">{profile?.username ?? '...'}</h3>
                                     <p className="text-sm opacity-60">{profile?.studiengang ?? '...'}</p>
                                 </div>
                             </div>
@@ -135,6 +167,7 @@ const NavBar = () => {
 
                             </div>
                         </div>
+                        <ThemeSwitcher/>
                         <LogoutButton/>
                     </div>
                 </div>
