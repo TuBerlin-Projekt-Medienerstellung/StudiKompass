@@ -21,7 +21,7 @@ const SemesterCard = ({semester, module, onClick }: Props) => {
     
 
     return (
-        <div onClick={onClick} className="border-2 rounded-2xl p-4 gap-4 flex flex-col cursor-pointer">
+        <div onClick={onClick} className="border-2 rounded-2xl p-4 gap-4 flex flex-col cursor-pointer bg-card">
             <header className="flex justify-between">
                 <div>
                     {/** Hier fehlen Funktionen, die die Infos dynamisch füllen:

@@ -19,7 +19,7 @@ const SemesterModulCard = ({modul, onClick}: Props) => {
     return (
         <div>
             <div onClick={onClick}
-                 className="px-6 py-4 rounded-2xl border-x-4 border-y-2 border-flag-red flex flex-row gap-2 cursor-pointer">
+                 className="px-6 py-4 rounded-2xl border-x-4 border-y-2 border-flag-red flex flex-row gap-2 cursor-pointer bg-card">
                 <div className='pr-2 py-4'>
                     <Grip/>
                 </div>
@@ -34,7 +34,7 @@ const SemesterModulCard = ({modul, onClick}: Props) => {
                     </div>
                 </div>
                 <button
-                    className="flex pr-2 py-4 ml-auto hover:text-red-500 transition-colors"
+                    className="flex pr-2 py-4 ml-auto hover:text-flag-red transition-colors"
                     onClick={(e) => {
                         e.stopPropagation();
                     }}
