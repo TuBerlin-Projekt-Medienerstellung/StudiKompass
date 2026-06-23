@@ -22,6 +22,7 @@ interface modulInfo {
     semester?: string | number;
     modulArt: string;
     link: string;
+    bestanden: boolean; ///muss bei den Moduldaten ergänzt werden dann wird bei bestanden die Modulkatrte grün markiert
     beschreibung?: string;
     lernergebnisse?: string;
     voraussetzungen?: string;
@@ -34,7 +35,7 @@ interface modulInfo {
 
 const ModulCard = (props: modulInfo) => {
 
-    const [liked, setLiked] = useState(true);
+    const [liked, setLiked] = useState(false);
     const [open, setOpen] = useState(false);
     const [details, setDetails] = useState<Partial<modulInfo> | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
@@ -58,6 +59,7 @@ const ModulCard = (props: modulInfo) => {
         semester,
         modulArt,
         link,
+        bestanden,
         beschreibung,
         lernergebnisse,
         voraussetzungen,
@@ -94,22 +96,36 @@ const ModulCard = (props: modulInfo) => {
 
     return (
         <div
-            className={`w-full flex flex-col border-y-2 border-x-4 rounded-xl px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
+            className={`w-full flex flex-col border-y-2 border-x-4 rounded-xl px-6 pt-4 transition-all duration-700 ${bestanden ? "border-green-500" : ""} ${open ? 'pb-6' : 'pb-4'}`}>
             <header className="w-full flex items-start justify-between gap-3">
                 <div className="flex min-w-0 gap-3">
-                    <button onClick={() => setLiked(!liked)} className="mt-1 shrink-0">
-                        {liked ? <CircleCheckBig className="text-mint-leaf"/> : <Circle/>}
-                    </button>
+                    <div className="mt-1 shrink-0">
+                        {bestanden ? (
+                            <CircleCheckBig className="text-green-500" />
+                        ) : (
+                        <Circle className="text-gray-400" />
+                        )}
+                    </div>
 
                     <div className="flex min-w-0 flex-col gap-1">
                         <h1 className="break-words text-lg font-bold leading-tight md:text-2xl">
                             {name}
                         </h1>
 
-                        <div className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-muted-foreground md:text-base">
-                            <span>{leistungspunkte} ECTS</span>
+                        <div className="flex flex-wrap gap-x-1.5 gap-y-1 text-xs text-muted-foreground md:text-base">
+                            <span className="whitespace-nowrap">{leistungspunkte} ECTS</span>
                             <span>• {semester} •</span>
-                            <span className="text-blue-bell">{modulArt}</span>
+                            <span
+                                className={
+                                    modulArt === "Pflichtmodul"
+                                        ? "text-flag-red"
+                                        : modulArt === "Wahlpflichtmodul"
+                                        ? "text-blue-bell"
+                                        : "text-muted-foreground"
+                                }
+                            >
+                                {modulArt}
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -133,29 +149,26 @@ const ModulCard = (props: modulInfo) => {
                             </p>
                         </div>
                         <div className="flex gap-2 overflow-x-auto md:overflow-visible">
-                            {/** Hier fetchen für die Details, gerade werden dummy daten von constants gefetchtet **/}
                             {detailBoxen.map((detail, index) => {
-                            const Icon = detail.icon;
+                                const Icon = detail.icon;
 
-                            return (
-                                <div
-                                key={index}
-                                className="bg-stone-grey flex-1 min-w-0 border-2 rounded-xl p-2 md:p-4 flex flex-col items-center justify-between text-center"
-                                >
-                                    <Icon className="h-5 w-5 lg:hidden" />
+                                return (
+                                    <div
+                                        key={index}
+                                        className="bg-stone-grey flex-1 min-w-0 border-2 rounded-xl p-1.5 md:p-4 flex flex-col items-center justify-between text-center overflow-hidden"
+                                    >
+                                        <Icon className="h-5 w-5 mb-1" />
 
-                                    <span className="hidden lg:block text-xs text-center break-words">
-                                        {detail.name}
-                                    </span>
+                                        <span className="hidden md:block text-xs text-center break-words">
+                                            {detail.name}
+                                        </span>
 
-                                    <p className="font-bold text-sm md:text-base text-center break-words">
-                                        {detail.value}
-                                    </p>
-
-                                </div>
-                            );
-                        })}
-
+                                        <p className="font-bold text-[10px] md:text-base text-center break-words leading-tight">
+                                            {detail.value}
+                                        </p>
+                                    </div>
+                                );
+                            })}
                         </div>
                         <div className='flex rounded-lg gap-2'>
                             <button className='bg-violet-ray text-white px-6 font-bold py-2 rounded-lg w-4/6'>
