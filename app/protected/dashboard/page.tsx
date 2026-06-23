@@ -25,42 +25,6 @@ type Meilenstein = {
   fortschritt: number;
 };
 
-type DashboardStats = {
-  aktuelleEcts: number;
-  gesamtEcts: number;
-  aktuellesSemester: number;
-  abschlussSemester: string;
-};
-
-const dashboardStats: DashboardStats = {
-  aktuelleEcts: 103,
-  gesamtEcts: 180,
-  aktuellesSemester: 4,
-  abschlussSemester: "SoSe 2027",
-};
-
-// Platzhalterdaten fuer aktuelle Module, bis echte Studiendaten angebunden werden koennen.
-const aktuelleModule: AktuellesModul[] = [
-  {
-    name: "Lineare Algebra",
-    prof: "Prof. Dr. Weber",
-    ects: 5,
-    laufend: true,
-  },
-  {
-    name: "Programmierung",
-    prof: "Prof. Dr. Beispiel",
-    ects: 6,
-    laufend: true,
-  },
-  {
-    name: "Elektronik",
-    prof: "Prof. Dr. KeineAhnung",
-    ects: 4,
-    laufend: false,
-  },
-];
-
 // Platzhalterdaten fuer Meilensteine und Fortschrittsanzeigen.
 const meilensteine: Meilenstein[] = [
   {
@@ -77,6 +41,14 @@ const meilensteine: Meilenstein[] = [
   },
 ];
 
+function firstOrSingle<T>(value: T | T[] | null | undefined): T | null {
+  if (!value) {
+    return null;
+  }
+
+  return Array.isArray(value) ? value[0] ?? null : value;
+}
+
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -86,30 +58,89 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  const { data: profile } = user
+  ? await supabase
+      .from("profiles")
+      .select("current_semester, max_semester")
+      .eq("id", user.id)
+      .single()
+  : { data: null };
+
+const { data: userModules } = user
+  ? await supabase
+      .from("module")
+      .select("id, name, ects, abgeschlossen, note, versuche")
+      .eq("user_id", user.id)
+  : { data: [] };
+
+const { data: plannedModules } = user
+  ? await supabase
+      .from("planner")
+      .select(`
+        id,
+        semester:group_id (
+          id,
+          name,
+          semesterzahl
+        ),
+        module:modul_id (
+          id,
+          name,
+          ects,
+          abgeschlossen
+        )
+      `)
+      .eq("user_id", user.id)
+  : { data: [] };
+
   const studiengangId = await getUserStudiengangId();
 
   const modulBasis = studiengangId
-    ? await ladeModulBasisAction(studiengangId)
-    : [];
+  ? await ladeModulBasisAction(studiengangId)
+  : [];
 
-  const gesamtEcts = dashboardStats.gesamtEcts;
+  const modules = userModules ?? [];
 
-  const aktuelleEcts = dashboardStats.aktuelleEcts;
+  const gesamtEcts = modules.reduce(
+  (sum, modul) => sum + (modul.ects ?? 0),
+    0
+  );
+
+  const aktuelleEcts = modules
+  .filter((modul) => modul.abgeschlossen)
+  .reduce((sum, modul) => sum + (modul.ects ?? 0), 0);
+
+  const aktuellesSemester = profile?.current_semester ?? 1;
 
   const gesamtfortschritt =
   gesamtEcts > 0
     ? Math.min(100, Math.round((aktuelleEcts / gesamtEcts) * 100))
     : 0;
 
-  const angezeigteModule =
-    modulBasis.length > 0
-      ? modulBasis.slice(0, 3).map((modul) => ({
+  const moduleImAktuellenSemester = (plannedModules ?? []).filter((item) => {
+    const semester = firstOrSingle(item.semester);
+
+    return semester?.semesterzahl === aktuellesSemester;
+  });
+
+  const angezeigteModule: AktuellesModul[] =
+    moduleImAktuellenSemester.length > 0
+      ? moduleImAktuellenSemester.slice(0, 3).map((item) => {
+          const modul = firstOrSingle(item.module);
+
+          return {
+            name: modul?.name ?? "Unbekanntes Modul",
+            prof: "Planner",
+            ects: modul?.ects ?? 0,
+            laufend: !modul?.abgeschlossen,
+          };
+        })
+      : modulBasis.slice(0, 3).map((modul) => ({
           name: modul.name,
           prof: "MOSES",
           ects: modul.lp,
           laufend: false,
-        }))
-      : aktuelleModule;
+        }));
 
   return (
     <div className="space-y-6 px-4 py-4 sm:px-6 lg:px-8">
@@ -155,7 +186,7 @@ export default async function DashboardPage() {
             <Calendar className="h-6 w-6 text-[#C40D1F]" />
             <div>
               <h2 className="text-xl font-bold">
-                {dashboardStats.aktuellesSemester}
+                {aktuellesSemester}
               </h2>
               <p className="text-sm text-muted-foreground">Semester</p>
             </div>
@@ -167,7 +198,7 @@ export default async function DashboardPage() {
             <Clock className="h-6 w-6 text-[#C40D1F]" />
             <div>
               <h2 className="text-xl font-bold">
-                {dashboardStats.abschlussSemester}
+                {profile?.max_semester ? `${profile.max_semester}. Semester` : "Noch offen"}
               </h2>
               <p className="text-sm text-muted-foreground">Voraussichtlich</p>
             </div>
