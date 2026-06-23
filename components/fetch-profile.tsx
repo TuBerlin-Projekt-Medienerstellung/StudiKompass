@@ -106,8 +106,8 @@ export default function Settings({refreshKey}: { refreshKey: number }) {
 
                         {/* Initialien Avatar / Profilbild */}
                         {profile?.avatar_url ? (
-                            <div className="relative w-18 md:w-32 h-32 shrink-0 rounded-3xl md:rounded-full overflow-hidden">
-                                <Image
+                            <div className="relative size-24 md:size-32 shrink-0 rounded-full overflow-hidden">    
+                            <Image
                                     src={profile.avatar_url}
                                     alt="Profile"
                                     fill
@@ -116,7 +116,7 @@ export default function Settings({refreshKey}: { refreshKey: number }) {
                             </div>
                         ) : (
                             <div
-                                className="relative w-18 md:w-32 h-32 shrink-0 bg-flag-red rounded-3xl md:rounded-full flex items-center justify-center text-white text-4xl font-bold">
+                                className="relative size-24 md:size-32 shrink-0 bg-flag-red rounded-full flex items-center justify-center text-white text-3xl md:text-4xl font-bold">
                                 <InitialsAvatar email={email}/>
                             </div>
                         )}
