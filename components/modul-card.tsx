@@ -142,15 +142,16 @@ const ModulCard = (props: modulInfo) => {
                                 key={index}
                                 className="bg-stone-grey flex-1 min-w-0 border-2 rounded-xl p-2 md:p-4 flex flex-col items-center justify-between text-center"
                                 >
-                                    <Icon className="h-5 w-5 md:hidden" />
+                                    <Icon className="h-5 w-5 lg:hidden" />
 
-                                    <span className="hidden md:block">
+                                    <span className="hidden lg:block text-xs text-center break-words">
                                         {detail.name}
                                     </span>
 
-                                    <p className="font-bold">
+                                    <p className="font-bold text-sm md:text-base text-center break-words">
                                         {detail.value}
                                     </p>
+
                                 </div>
                             );
                         })}
