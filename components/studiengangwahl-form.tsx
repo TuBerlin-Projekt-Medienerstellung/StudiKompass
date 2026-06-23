@@ -59,7 +59,7 @@ export default function StudiengangForm({degrees, current}: {
 
                             {/* Liste nur sichtbar wenn: etwas getippt wurde UND noch nichts ausgewählt */}
                             {query.length > 0 && !selected && (
-                                <ul className="absolute z-16 w-full mt-1 max-h-60 overflow-y-auto bg-white border rounded-lg">
+                                <ul className="absolute z-16 w-full mt-1 max-h-60 overflow-y-auto bg-card border rounded-lg">
                                     {filtered.map((deg, index) => {
                                         const typeName = deg?.studiengangart?.name ?? ""
                                         const displayName = typeName
