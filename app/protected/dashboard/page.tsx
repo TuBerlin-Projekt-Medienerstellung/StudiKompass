@@ -25,21 +25,6 @@ type Meilenstein = {
   fortschritt: number;
 };
 
-// Platzhalterdaten fuer Meilensteine und Fortschrittsanzeigen.
-const meilensteine: Meilenstein[] = [
-  {
-    titel: "Pflichtmodule abgeschlossen",
-    fortschritt: 100,
-  },
-  {
-    titel: "Wahlpflichtmodule",
-    fortschritt: 75,
-  },
-  {
-    titel: "Bachelorarbeit begonnen",
-    fortschritt: 25,
-  },
-];
 
 function firstOrSingle<T>(value: T | T[] | null | undefined): T | null {
   if (!value) {
@@ -122,6 +107,46 @@ const { data: plannedModules } = user
 
     return semester?.semesterzahl === aktuellesSemester;
   });
+
+  const abgeschlosseneModule = modules.filter((modul) => modul.abgeschlossen).length;
+
+const moduleFortschritt =
+  modules.length > 0
+    ? Math.min(100, Math.round((abgeschlosseneModule / modules.length) * 100))
+    : 0;
+
+const abgeschlosseneModuleImAktuellenSemester = moduleImAktuellenSemester.filter((item) => {
+  const modul = firstOrSingle(item.module);
+
+  return modul?.abgeschlossen;
+}).length;
+
+const aktuellesSemesterFortschritt =
+  moduleImAktuellenSemester.length > 0
+    ? Math.min(
+        100,
+        Math.round(
+          (abgeschlosseneModuleImAktuellenSemester /
+            moduleImAktuellenSemester.length) *
+            100
+        )
+      )
+    : 0;
+
+const meilensteine: Meilenstein[] = [
+  {
+    titel: "Module abgeschlossen",
+    fortschritt: moduleFortschritt,
+  },
+  {
+    titel: "ECTS abgeschlossen",
+    fortschritt: gesamtfortschritt,
+  },
+  {
+    titel: "Aktuelles Semester",
+    fortschritt: aktuellesSemesterFortschritt,
+  },
+];
 
   const angezeigteModule: AktuellesModul[] =
     moduleImAktuellenSemester.length > 0
