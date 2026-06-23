@@ -2,19 +2,99 @@
 
 import { createClient} from "@/lib/supabase/server";
 
+
+
+
 //leeres Semester hinzufügen
 export async function createSemester() {
-    // Supabase Insert
-    return {
-        nummer: 3,
-        modules: [],
-    };
+    
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+
+    const  { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("max_semester")
+    .eq("id", user.id)
+    .single();
+
+    if (profileError) throw profileError;
+    
+    const { data, error } = await supabase
+    .from('profiles')
+    .update({ max_semester: profile.max_semester +1})
+    .eq("id", user.id)
+    .select()
+    .single();
+
+    if (error) {
+        console.error('Fehler beim Aktualisieren:', error)
+        throw error
+    }
+
+
+
+  return data.max_semester;
 }
 
-//Semester löschen
-export async function deleteSemester() {
-    // Supabase Semester löschen
+//erstellt neue group in planner tabelle
+export async function saveSemester() {
+  const supabase = await createClient();
+
+  const groupId = crypto.randomUUID();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const { data, error } = await supabase
+  .from("planner")
+  .insert({
+    group_id: groupId,  
+    user_id: user.id,
+    modul_id: null,     
+  })
+  .select()
+  .single();
+
+    if (error) throw error;
+    
 }
+
+//leeres Semester löschen
+export async function deleteSemester() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+
+
+    const  { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("max_semester")
+    .eq("id", user.id)
+    .single();
+
+    if (profileError) throw profileError;
+
+    const { data, error } = await supabase
+    .from('profiles')
+    .update({ max_semester: profile.max_semester -1})
+    .eq("id", user.id)
+    .select()
+    .single();
+
+    if (error) {
+        console.error('Fehler beim Löschen:', error)
+        throw error
+    }
+
+    return data
+}
+
+
 
 //Holt STudiengangId weil Infos in Supabase mit StudiengangID gespeichert sind
 export async function getUserStudiengangId() {

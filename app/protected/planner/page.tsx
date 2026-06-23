@@ -4,7 +4,7 @@ import React from 'react'
 import SemesterCard from "@/components/semester-card";
 import { useState } from "react";
 import {Plus, Trash2} from 'lucide-react';
-import { createSemester, deleteSemester } from './actions';
+import { createSemester, deleteSemester, saveSemester } from './actions';
 
 {/** Dummy Daten zum testen, nach Semester gruppiert, werden durch Fetches aus Supabase ersetzt
   Wie aus Semester_ID tatsächliche Nummer des Semesters erhalten? */}
@@ -63,11 +63,18 @@ const Page = () => {
     const [semesterList, setSemesterList] = useState(semesters);
 
     async function handleAddSemester() {
-        const neuesSemester = await createSemester();
+         await createSemester();
+         await saveSemester();
+
+        const neueNummer =
+        Math.max(...semesterList.map((s) => s.nummer)) + 1;
 
         setSemesterList((prev) => [
-            ...prev,
-            neuesSemester,
+          ...prev,
+          {
+            nummer: neueNummer,
+            modules: [],
+          },
         ]);
     }
 
