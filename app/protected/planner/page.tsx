@@ -1,12 +1,13 @@
 "use client";
 
 import SemesterCard from "@/components/semester-card";
+import SemesterModulCard from "@/components/semester-modul-card";
 import { useState, useEffect } from "react";
 import {Plus, Trash2} from 'lucide-react';
 import { createSemester, deleteSemester, updateSemesterTable, getSemesters } from './actions';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
-import SemesterCard from "@/components/semester-card";
+
 
 type Semester = {
   nummer: number;
@@ -24,6 +25,7 @@ const Page = () => {
     const maxNummer = semesterList.length
         ? Math.max(...semesterList.map((s) => s.nummer))
         : 0;
+    const [activeModul, setActiveModul] = useState<modulInfo | null>(null);
 
     useEffect(() => {
   async function loadSemesters() {
