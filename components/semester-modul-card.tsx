@@ -13,8 +13,7 @@ type Props = {
 const SemesterModulCard = ({modul, onClick}: Props) => {
 
     const [isOpen, setIsOpen] = useState(false);
-    const [selectedModul, setSelectedModul] = useState<modulInfo | null>(null);
-    const valueDisplay = document.getElementById("counter-value");
+    const [selectedModul] = useState<modulInfo | null>(null);
 
     return (
         <div>
