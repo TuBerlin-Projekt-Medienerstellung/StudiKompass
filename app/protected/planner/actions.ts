@@ -3,7 +3,26 @@
 import {createClient} from "@/lib/supabase/server";
 
 
+//Semester aus Supabase laden
+export async function getSemesters() {
+  const supabase = await createClient();
 
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("semester")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("semesterzahl");
+
+  if (error) throw error;
+
+  return data;
+}
 
 //leeres Semester hinzufügen
 export async function createSemester() {
@@ -53,7 +72,7 @@ export async function updateSemesterTable (semesterzahl: number){
   if (!user) return null;
 
   const { data, error } = await supabase
-  .from("planner")
+  .from("semester")
   .insert({  
     id: semester_id,
     name: semesterzahl+". Semester",
@@ -62,6 +81,10 @@ export async function updateSemesterTable (semesterzahl: number){
   })
   .select()
   .single();
+
+  if (error) {
+  throw error;
+ }
 
   return data;
 }

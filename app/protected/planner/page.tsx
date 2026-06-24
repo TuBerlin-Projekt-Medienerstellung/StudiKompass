@@ -1,61 +1,63 @@
 "use client";
 
 import SemesterCard from "@/components/semester-card";
-import SemesterModulCard from "@/components/semester-modul-card";
-import { useState } from "react";
-import { Plus, Trash2 } from 'lucide-react';
-import { createSemester, deleteSemester, updateSemesterTable } from './actions';
+import { useState, useEffect } from "react";
+import {Plus, Trash2} from 'lucide-react';
+import { createSemester, deleteSemester, updateSemesterTable, getSemesters } from './actions';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
+import SemesterCard from "@/components/semester-card";
 
-{/** Dummy Daten zum testen, nach Semester gruppiert, werden durch Fetches aus Supabase ersetzt
-  Wie aus Semester_ID tatsächliche Nummer des Semesters erhalten? */}
-const semesters = [
-  {
-    nummer: 1,
-    modules: [
-      {
-        modul_id: "6065ee7e-b9dc-4b90-99de-b91b034e998c",
-        name: "Mathe 1",
-        leistungspunkte: 5,
-        semester: "WiSe",
-        modulArt: "Pflicht",
-        beschreibung: "Lorem ipsum",
-        examform: "Klausur",
-        arbeitsaufwand: 150,
-        link: "/moses",
-        versuche: 1,
-      },
-    ],
-  },
-];
+type Semester = {
+  nummer: number;
+  modules: modulInfo[];
+};
 
+type SemesterList = Semester[];
+  
 const Page = () => {
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [modul, setModul] = useState<modulInfo | null>(null);
-  const [semesterList, setSemesterList] = useState<typeof semesters>(semesters);
-  const lastSemester = semesterList.at(-1);
-  if (!lastSemester) return null;
-  const maxNummer = semesterList.length
-    ? Math.max(...semesterList.map((s) => s.nummer))
-    : 0;
-  const [activeModul, setActiveModul] = useState<any | null>(null);
+    
+    const [isOpen, setIsOpen] = useState(false);
+    const [modul, setModul] = useState<modulInfo | null>(null);
+    const [semesterList, setSemesterList] = useState<SemesterList>([]);
+    const maxNummer = semesterList.length
+        ? Math.max(...semesterList.map((s) => s.nummer))
+        : 0;
 
-  async function handleAddSemester() {
-    await updateSemesterTable(Math.max(...semesterList.map((s) => s.nummer)));
+    useEffect(() => {
+  async function loadSemesters() {
+    const data = await getSemesters();
 
-    const neueNummer =
-      Math.max(...semesterList.map((s) => s.nummer)) + 1;
-
-    setSemesterList((prev) => [
-      ...prev,
-      {
-        nummer: neueNummer,
+    setSemesterList(
+      data.map((s) => ({
+        nummer: s.semesterzahl,
         modules: [],
-      },
-    ]);
+      }))
+    );
   }
+
+  loadSemesters();
+}, []);
+
+    async function handleAddSemester() {
+      const maxNummer =
+        semesterList.length > 0
+          ? Math.max(...semesterList.map((s) => s.nummer))
+          : 0;
+
+      const neueNummer = maxNummer + 1;
+
+      await updateSemesterTable(neueNummer);
+
+      setSemesterList((prev) => [
+        ...prev,
+        {
+          nummer: neueNummer,
+          modules: [],
+        },
+      ]);
+    }
 
   async function handleDeleteSemester(semesterNummer: number) {
     await deleteSemester();
