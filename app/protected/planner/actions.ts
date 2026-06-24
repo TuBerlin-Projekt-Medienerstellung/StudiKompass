@@ -20,10 +20,12 @@ export async function createSemester() {
     .single();
 
     if (profileError) throw profileError;
+
+    const nextSemester = (profile.max_semester ?? 0) + 1;
     
     const { data, error } = await supabase
     .from('profiles')
-    .update({ max_semester: profile.max_semester +1})
+    .update({ max_semester: nextSemester})
     .eq("id", user.id)
     .select()
     .single();
@@ -63,6 +65,29 @@ export async function saveSemester() {
     if (error) throw error;
     
 }
+
+//erstellt neue Zeile in Tabelle Semester
+export async function updateSemesterTable (semesterzahl: number){
+    const supabase = await createClient();
+
+    const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const { data, error } = await supabase
+  .from("planner")
+  .insert({  
+    name: semesterzahl+". Semester",
+    semesterzahl: semesterzahl,
+    user_id: user.id,   
+  })
+  .select()
+  .single();
+}
+
+
 
 //leeres Semester löschen
 export async function deleteSemester() {
