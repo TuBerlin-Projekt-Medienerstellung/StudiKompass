@@ -25,7 +25,8 @@ declare global {
         beschreibung: string,
         examform: string,
         arbeitsaufwand: number,
-        link: string
+        link: string,
+        versuche: number
     }
 }
 export {}

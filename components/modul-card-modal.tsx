@@ -3,8 +3,7 @@
 import Link from "next/link";
 import {useState, useEffect} from 'react';
 import {X, SquareArrowOutUpRight, Circle, CircleCheckBig,} from 'lucide-react';
-import {link} from "fs";
-import {details} from "@/constants";
+import {getTries, saveTries} from "@/app/protected/planner/actions";
 
 {/**wahrscheinlich neuer type notwendig um alle Infos aus Supabase zu holen, momentan noch modulInfo aus types.d.ts */}
 
@@ -14,49 +13,70 @@ type Props = {
     modul: modulInfo | null;
 };
 
-const ModulCardModal = ({
-                            isOpen,
-                            onClose,
-                            modul,
-                        }: Props) => {
+const ModulCardModal = ({ isOpen, onClose, modul }: Props) => {
 
     const [checked, setChecked] = useState(false);
     const [counter, setCount] = useState(0);
+    const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-    const increase = (e: React.MouseEvent) => {
+    const increase = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (counter < 4) {
-            setCount(prev => prev + 1);
+        setErrorMsg(null);
+
+        if (counter < 4 && modul && modul.modul_id) {
+            const nextValue = counter + 1;
+            const result = await saveTries(modul.modul_id, nextValue);
+
+            if (result.success) {
+                setCount(nextValue);
+            } else {
+                setErrorMsg(result.error || "Ein Fehler ist aufgetreten.");
+            }
         }
     };
 
-    const decrease = (e: React.MouseEvent) => {
+    const decrease = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        if (counter > 0) {
-            setCount(prev => prev - 1);
+        setErrorMsg(null);
+
+        if (counter > 0 && modul && modul.modul_id) {
+            const nextValue = counter - 1;
+
+            const result = await saveTries(modul.modul_id, nextValue);
+
+            if (result.success) {
+                setCount(nextValue);
+            } else {
+                setErrorMsg(result.error || "Ein Fehler ist aufgetreten.");
+            }
         }
     };
-
 
     useEffect(() => {
+        const fetchVersuche = async () => {
+            if (!modul || !modul.modul_id) return;
+            const gespeicherteVersuche = await getTries(modul.modul_id);
+            setCount(gespeicherteVersuche ?? 0);
+        };
+
+        if (isOpen && modul?.modul_id) {
+            fetchVersuche();
+            setErrorMsg(null);
+        } else if (!isOpen) {
+            setCount(0);
+        }
         setChecked(false);
-    }, [modul]);
+
+    }, [modul?.modul_id, isOpen]);
 
     if (!modul || !isOpen) return null;
 
-    {/** Eigentlich noch notwendig: Dozent, pruefungsform (nicht in modulInfo -> neuer type?) */
-    }
+    {/** Eigentlich noch notwendig: Dozent, pruefungsform (nicht in modulInfo -> neuer type?)  */}
+
     const {
-        modul_id,
-        name,
         leistungspunkte,
-        semester,
         modulArt,
-        link,
-        beschreibung,
-
     } = modul;
-
 
     return (
 
@@ -64,7 +84,7 @@ const ModulCardModal = ({
             {/**wird nur ausgeführt wenn modul =! NULL */}
             {modul && (
                 <div
-                    className={`fixed z-50 bg-card rounded-xl bottom-8 left-4 right-4 md:left-75 md:right-3 transition-transform transform duration-300 ease-out ${
+                    className={`fixed z-50 bg-card rounded-xl bottom-3 left-3 right-3 md:left-75 md:right-3 transition-transform transform duration-300 ease-out ${
                         isOpen ? "translate-y-0" : "translate-y-full pointer-events-none"
                     }`}>
                     <div
@@ -78,7 +98,16 @@ const ModulCardModal = ({
                                     {modulArt}
                                 </div>
 
-                                <button type="button" onClick={onClose}>
+                                {/* Fehlermeldung, falls Modul nicht in Datenbank existiert */}
+                                {errorMsg && (
+                                    <div className="w-full text-flag-red text-sm font-medium mt-1 ml-4">
+                                        {errorMsg}
+                                    </div>
+                                )}
+
+                                <button type="button"
+                                        onClick={onClose}
+                                        className="hover:opacity-70 transition-opacity">
                                     <X className="w-4 h-4"/>
                                 </button>
                             </div>
@@ -88,7 +117,8 @@ const ModulCardModal = ({
                                 <h1 className="font-bold md:text-3xl text-xl tracking-tight">
                                     {modul.name}
                                 </h1>
-                                <div className="flex flex-row flex-wrap items-center gap-3 text-sm md:text-base md:pt-1">
+                                <div
+                                    className="flex flex-row flex-wrap items-center gap-3 text-sm md:text-base md:pt-1">
                                     <p className="text-flag-red font-medium">
                                         {leistungspunkte} ECTS
                                     </p>
@@ -101,7 +131,8 @@ const ModulCardModal = ({
                                     {/* Counter für Fehlversuche */}
                                     <div className="flex items-center gap-2">
                                         <p className="text-flag-red font-medium">Versuche:</p>
-                                        <div className="flex items-center gap-1 px-2 py-0.5 text-xs bg-muted border rounded-xl">
+                                        <div
+                                            className="flex items-center gap-1 px-2 py-0.5 text-xs bg-muted border rounded-xl">
                                             <button
                                                 className="flex items-center justify-center font-bold rounded-lg text-card-foreground hover:opacity-80 transition-all px-1"
                                                 onClick={decrease}
@@ -155,33 +186,49 @@ const ModulCardModal = ({
                                 </p>
                             </div>
                         </div>
-                        <div className="flex flex-col gap-2 rounded-lg">
-                            <div className="flex rounded-lg gap-2 flex-col md:flex-row">
-                                {/**Ob das Modul schon abgeschlossen ist -> speichert checked oder nicht checked aber noch nicht richtig :(*/}
+
+                        {/**Ob das Modul schon abgeschlossen ist -> speichert checked oder nicht checked aber noch nicht richtig :(*/}
+
+                        <div className="w-full rounded-lg">
+                            <div className="flex gap-3 flex-col flex-wrap md:flex-row w-full items-stretch">
+
+                                {/* Modul Abgeschlossen */}
                                 <button
                                     onClick={() => setChecked(!checked)}
-                                    className={`flex px-4 py-2 rounded-lg md:flex-1 justify-center ${
+                                    className={`flex px-3 py-4 rounded-lg w-full md:flex-1 items-center justify-center whitespace-nowrap transition-colors text-sm md:text-base ${
                                         checked
-                                            ? 'bg-stone-grey text-black'
+                                            ? 'bg-mint-leaf/40 text-gray-500 dark:text-gray-300'
                                             : 'bg-mint-leaf text-white'
                                     }`}>
-                                    {checked
-                                        ? <span className="flex items-center gap-2"><Circle/>Als abgeschlossen markieren</span>
-                                        : <span className="flex items-center gap-2"><CircleCheckBig/>Als abgeschlossen markiert</span>
-                                    }
+                                    {checked ? (
+                                        <span className="flex items-center gap-2 text-center">
+                                            <CircleCheckBig className="w-4 h-4 shrink-0"/>
+                                             Als abgeschlossen markiert
+                                        </span>
+                                    ) : (
+                                        <span className="flex items-center gap-2 text-center">
+                                             <Circle className="w-4 h-4 shrink-0"/>
+                                             Als abgeschlossen markieren
+                                        </span>
+                                    )}
                                 </button>
+
+                                {/* Modul Bewerten */}
+                                <button
+                                    className="bg-blue-bell text-white px-3 py-4 rounded-lg w-full md:flex-1 flex items-center justify-center whitespace-nowrap text-sm md:text-base">
+                                    Modul bewerten
+                                </button>
+
+                                {/* Link zu Moses */}
                                 <Link href={modul.link}
-                                      className="bg-flag-red text-white px-4 py-2 rounded-lg flex items-center justify-center gap-2 md:w-auto">
-                                    zu Moses
-                                    <SquareArrowOutUpRight/>
+                                      className="bg-flag-red text-white px-3 py-4 rounded-lg flex items-center justify-center gap-2 w-full md:flex-1 whitespace-nowrap text-sm md:text-base">
+                                    <span>zu Moses</span>
+                                    <SquareArrowOutUpRight className="w-4 h-4 shrink-0"/>
                                 </Link>
+
                             </div>
-                            <button className="bg-blue-bell text-white px-4 py-2 rounded-lg w-full">
-                                Modul bewerten
-                            </button>
                         </div>
                     </div>
-
                 </div>
             )}
         </div>
