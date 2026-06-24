@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import {words} from "@/constants"
 import Footer from "@/components/footer"
+import { ThemeSwitcher } from "../components/theme-switcher";
 
 export const metadata = {
     title: 'Navis | TU Berlin',
@@ -9,20 +10,18 @@ export const metadata = {
 };
 export default function Home() {
     return (
-        <main className="flex flex-col justify-start min-h-screen text-zinc-950 w-full overflow-x-hidden">
+        <main className="relative z-0 flex flex-col justify-start min-h-screen text-zinc-950 dark:text-zinc-50 w-full overflow-x-hidden">
             {/* Background */}
-            {/*<div className="-z-10">*/}
-            {/*    <div*/}
-            {/*        className="md:size-245 size-20 absolute left-0 -bottom-40 bg-slate-400 rounded-full blur-[254.50px]"/>*/}
+            <div className="absolute inset-0 -z-10 overflow-hidden">
+                <div
+                    className="md:size-245 size-20 absolute left-0 -bottom-40 bg-slate-400 dark:bg-violet-ray/25 rounded-full blur-[254.50px]"/>
 
-            {/*    <div*/}
-            {/*        className="w-full h-80 md:w-212 md:h-206 absolute right-0 bg-raspbarry-plum rounded-full blur-[254.50px]"/>*/}
-            {/*    <img*/}
-            {/*        src="https://images.unsplash.com/photo-1534593963832-01c3595183bd?q=80&w=870&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"*/}
-            {/*        alt=""*/}
-            {/*        className="absolute w-screen h-screen mix-blend-color-bur opacity-10 object-cover"*/}
-            {/*    />*/}
-            {/*</div>*/}
+                <div
+                    className="w-full h-80 md:w-212 md:h-206 absolute right-0 bg-raspbarry-plum dark:bg-raspbarry-plum/50 rounded-full blur-[254.50px]"/>
+                <div
+                    className="absolute inset-0 w-full h-full bg-gradient-to-br from-slate-200/40 via-transparent to-raspbarry-plum/10 dark:from-violet-ray/10 dark:via-transparent dark:to-raspbarry-plum/10"
+                />
+            </div>
 
             {/*<div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10">*/}
             {/*    <div*/}
@@ -39,16 +38,22 @@ export default function Home() {
             {/*        />/!*Idk.. I thought it would look cool if it spun on hover*!/*/}
             {/*    </header>*/}
             {/*</div>*/}
-            <section className="p-4 md:p-15 w-full">
+            <section className="relative z-10 p-4 md:p-15 w-full">
+                    <div className="absolute right-4 top-4 z-50 md:right-8 md:top-8">
+                        <ThemeSwitcher />
+                    </div>
+                    <div className="h-8 md:h-11" />
                 <div className="text-center max-w-3xl space-y-8 z-50">
                     {/*Title*/}
                     <h1 className="flex flex-row gap-4 md:gap-6 w-full items-center">
                         <div className="relative flex size-16 md:size-24 shrink-0">
-                            <Image alt="logo" fill src="/logo/Compass-dark.svg" className=""/>
+                            <Image alt="logo" fill src="/logo/Compass-dark.svg" className="dark:hidden"/>
+                            <Image alt="logo" fill src="/logo/Compass-light.svg" className="hidden dark:block"/>
                         </div>
                         <div className="flex flex-col gap-2">
                             <div className="relative w-24 md:w-32 h-8">
-                                <Image src="/logo/Navis.svg" fill alt="Navis"/>
+                                <Image src="/logo/Navis.svg" fill alt="Navis" className="dark:hidden"/>
+                                <Image src="/logo/Navis-light.svg" fill alt="Navis" className="hidden dark:block"/>
                             </div>
                             <p className="text-xs md:text-sm opacity-60 text-start">Navigations- und
                                 Visualisierungssystem für
@@ -74,13 +79,13 @@ export default function Home() {
 
 
                     {/* What do we aim to do */}
-                    <p className="text-zinc-900 opacity-70 text-base md:text-xl text-start leading-relaxed">
+                    <p className="text-zinc-900 dark:text-zinc-200 opacity-70 text-base md:text-xl text-start leading-relaxed">
                         Dein Studium, perfekt organisiert. Plane Module, tracke ECTS, entdecke Vorlagen aus der
                         Community
                         und hol dir den vollen Durchblick mit unseren Kurz-Tutorials. <br/>
                         <br/> Filter nach nur für dich relevanten Modulen; egal ob <span
-                        className="text-zinc-950 italic">Wahlpflicht</span> oder <span
-                        className="text-zinc-950 italic">Plicht</span>. <br/>
+                        className="text-zinc-950 dark:text-zinc-50 italic">Wahlpflicht</span> oder <span
+                        className="text-zinc-950 dark:text-zinc-50 italic">Pflicht</span>. <br/>
                         Einfach mit der Campus-Mail einloggen und loslegen.
                     </p>
 
@@ -94,7 +99,7 @@ export default function Home() {
                         </Link> {/*I dunno red is the official theme.. but green just looks so much better. Ig the team can vote: bg-rose-600/ bg-red-500?*/}
                         <Link
                             href="/auth/sign-up"
-                            className="w-full sm:w-auto px-10 py-4 bg-zinc-500 hover:bg-zinc-400 text-black dark:bg-zinc-900 dark:hover:bg-zinc-800 dark:text-white font-bold rounded-xl border border-zinc-800 transition-all hover:scale-105 active:scale-95"
+                            className="w-full sm:w-auto px-10 py-4 bg-white/70 hover:bg-white text-zinc-950 dark:bg-[#16081f] dark:hover:bg-[#210b31] dark:text-white font-bold rounded-xl border border-zinc-300 dark:border-violet-ray/40 transition-all hover:scale-105 active:scale-95"
                         > Create Account
                         </Link>
                     </div>
