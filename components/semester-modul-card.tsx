@@ -1,22 +1,22 @@
 "use client";
 
 import Link from "next/link"
-import {SquareArrowOutUpRight, Grip, Trash2} from 'lucide-react';
+import { SquareArrowOutUpRight, Grip, Trash2 } from 'lucide-react';
 import ModulCardModal from '@/components/modul-card-modal';
-import {useState} from "react";
-import {useSortable} from "@dnd-kit/sortable";
-import {CSS} from "@dnd-kit/utilities";
+import { useState } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 
 type Props = {
     modul: modulInfo;
     onClick: () => void;
 };
 
-const SemesterModulCard = ({modul, onClick}: Props) => {
+const SemesterModulCard = ({ modul, onClick }: Props) => {
 
     const [isOpen, setIsOpen] = useState(false);
     const [selectedModul, setSelectedModul] = useState<modulInfo | null>(null);
-    {/*const valueDisplay = document.getElementById("counter-value"); */}
+    {/*const valueDisplay = document.getElementById("counter-value"); */ }
 
     const {
         attributes,
@@ -31,20 +31,20 @@ const SemesterModulCard = ({modul, onClick}: Props) => {
         transform: CSS.Transform.toString(transform),
         transition,
         opacity: isDragging ? 0.5 : 1,
-        
+
     };
-    
+
     return (
         <div ref={setNodeRef} style={style}>
-            <div 
+            <div
                 onClick={onClick}
                 className="px-6 py-4 rounded-2xl border-x-4 border-y-2 border-flag-red flex flex-row gap-2 cursor-pointer bg-card">
-                <div 
+                <div
                     {...attributes}
                     {...listeners}
                     className='pr-2 py-4'>
 
-                    <Grip/>
+                    <Grip />
                 </div>
 
                 <div className='flex flex-col flex-1'>
@@ -52,14 +52,14 @@ const SemesterModulCard = ({modul, onClick}: Props) => {
                     <div className="flex flex-wrap items-center opacity-80 gap-3 text-sm">
                         <span className="text-flag-red">{modul.leistungspunkte} ECTS</span>
                         <span>WiSe</span>
-                        <Link 
-                            href="#" 
-                            className="flex items-center gap-1 text-blue-bell" 
+                        <Link
+                            href="#"
+                            className="flex items-center gap-1 text-blue-bell"
                             onClick={(e: React.MouseEvent<HTMLAnchorElement>) => {
                                 e.stopPropagation();
                             }}
                         >
-                            Moses <SquareArrowOutUpRight size={14}/>
+                            Moses <SquareArrowOutUpRight size={14} />
                         </Link>
                     </div>
                 </div>
@@ -70,13 +70,13 @@ const SemesterModulCard = ({modul, onClick}: Props) => {
                         e.stopPropagation();
                     }}
                 >
-                    <Trash2/>
+                    <Trash2 />
                 </button>
             </div>
             <ModulCardModal
                 isOpen={isOpen}
                 onClose={() => setIsOpen(false)}
-                modul={selectedModul}/>
+                modul={selectedModul} />
         </div>
     );
 };
