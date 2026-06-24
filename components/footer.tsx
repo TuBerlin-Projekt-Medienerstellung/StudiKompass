@@ -6,7 +6,7 @@ import {Heart, Github} from 'lucide-react';
 const Footer = () => {
     return (
         <section
-            className="bg-gray-900 flex flex-col gap-10 w-full py-10 px-4 md:px-30 min-h-fit text-white">
+            className="bg-zinc-800 dark:bg-zinc-950 flex flex-col gap-10 w-full py-10 px-4 md:px-30 min-h-fit text-white">
             <div className="flex flex-col md:flex-row gap-8 md:gap-0 justify-between">
                 <div className="flex flex-col w-full md:w-96 gap-4">
                     <div className="flex flex-row items-center gap-4">
@@ -31,7 +31,7 @@ const Footer = () => {
             </div>
 
             {/*Line*/}
-            <div className="h-0.5 w-full bg-background my-4 opacity-70"/>
+            <div className="h-0.5 w-full bg-background dark:bg-white my-4 opacity-70 dark:opacity-20"/>
 
             <div className="flex flex-col md:flex-row gap-4 md:gap-0 justify-between items-center">
                 <div className="flex flex-row gap-3 items-center">

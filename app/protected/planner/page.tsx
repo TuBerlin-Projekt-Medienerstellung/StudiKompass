@@ -6,7 +6,7 @@ const Page = () => {
         <section className="flex flex-col gap-4">
             <div className="flex flex-col gap-2">
                 <h1 className="font-bold text-4xl">Studienplaner</h1>
-                <p className="opacity-70">Plane dein Studium semesterweise</p>
+                <p className="text-muted-foreground">Plane dein Studium semesterweise</p>
             </div>
             <SemesterCard/>
         </section>
