@@ -1,5 +1,6 @@
 "use server";
 import { createClient } from "@/lib/supabase/server";
+import { UUID } from "crypto";
 
 export async function getUserStudiengangId() {
     const supabase = await createClient();
@@ -176,3 +177,98 @@ export async function ladeDetailedModulAction(modul_id: number) {
 
     return (details)
 }
+
+//Custom Modul in Supabase speichern:
+//Wird immer in current Semester hinzugefügt
+
+export async function getCurrentSemester(){
+    const supabase = await createClient();
+    const {data: {user}} = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const { data, error } = await supabase
+    .from('profiles')
+    .select("current_semester")
+    .eq("id", user.id)
+    .select()
+    .single();
+
+    if (error) {
+        console.error('Fehler beim Aktualisieren:', error)
+        throw error
+    }
+
+
+
+    return data.current_semester;
+}
+
+export async function createCustomModul(modulname: string,
+                                        bereichspfad: string,
+                                        ects: number,
+                                        turnus: string,
+                                        beschreibung: string,
+                                        pruefungsform: string,
+                                        benotet: boolean | null,) {
+    
+    const supabase = await createClient();
+    const {data: {user}} = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const modul_id = crypto.randomUUID();
+    const { data, error } = await supabase
+    .from('module')
+    .insert({id:modul_id,
+            name: modulname,
+            turnus: turnus,
+            bereichpfad: bereichspfad,
+            ects: ects,
+            lernergebnisse: beschreibung,
+            pruefungsform: pruefungsform,
+            benotet: benotet,
+            voraussetzungen: null,
+            moseslink: null,
+            note: null,
+            gewichtung: null,
+            versuche: 1,
+            arbeitsaufwand: 0,
+            user_id: user.id,
+    })
+    .select()
+    .single();
+
+    if (error) {
+        console.log(error.code);
+        console.log(error.message);
+        console.log(error.details);
+        console.log(error.hint);
+        console.error('Fehler beim Aktualisieren:', error)
+        throw error
+    }
+
+    return data.id;
+}
+
+export async function addCustomModultoPlanner() {
+    const supabase = await createClient();
+    const {
+        data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    const modul_id = crypto.randomUUID();
+    const groupId = crypto.randomUUID();
+
+    const { data, error } = await supabase
+    .from("planner")
+    .insert({
+        group_id: groupId,   //Woher nehme ich die GroupID?
+        user_id: user.id,
+        modul_id: modul_id,     
+    })
+    .select()
+    .single();
+
+        if (error) throw error;
+    }
