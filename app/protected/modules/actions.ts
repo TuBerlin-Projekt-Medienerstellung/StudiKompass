@@ -238,10 +238,6 @@ export async function createCustomModul(modulname: string,
     .single();
 
     if (error) {
-        console.log(error.code);
-        console.log(error.message);
-        console.log(error.details);
-        console.log(error.hint);
         console.error('Fehler beim Aktualisieren:', error)
         throw error
     }

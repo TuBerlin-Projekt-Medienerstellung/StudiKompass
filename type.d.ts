@@ -1,3 +1,4 @@
+import { UUID } from "crypto";
 import {LucideIcon} from "lucide-react";
 
 declare global {
@@ -17,7 +18,7 @@ declare global {
     }
 
     interface modulInfo {
-        modul_id: number,
+        modul_id: string, //später zu UUID
         name: string,
         leistungspunkte: number,
         semester: string,
@@ -26,7 +27,7 @@ declare global {
         examform: string,
         arbeitsaufwand: number,
         link: string,
-        versuche: number
+        versuche?: number;
     }
 }
 export {}
