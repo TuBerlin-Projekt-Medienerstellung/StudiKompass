@@ -19,6 +19,9 @@ const SemesterModulCard = ({modul}: Props) => {
     const [checked, setChecked] = useState(false);
     const [counter, setCount] = useState(0);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
+    const [noteInput, setNoteInput] = useState<number>(modul.note || 1.0);
+    const [isSavingNote, setIsSavingNote] = useState(false);
+    const [gewichtung, setGewichtung] = useState(false);
 
     const {
         attributes,
@@ -52,7 +55,7 @@ const SemesterModulCard = ({modul}: Props) => {
         }
     }
 
-    const increase = async (e: React.MouseEvent) => {
+    const increaseTries = async (e: React.MouseEvent) => {
         e.stopPropagation();
         setErrorMsg(null);
         if (counter < 4) {
@@ -66,7 +69,7 @@ const SemesterModulCard = ({modul}: Props) => {
         }
     };
 
-    const decrease = async (e: React.MouseEvent) => {
+    const decreaseTries = async (e: React.MouseEvent) => {
         e.stopPropagation();
         setErrorMsg(null);
         if (counter > 0) {
@@ -77,6 +80,20 @@ const SemesterModulCard = ({modul}: Props) => {
             } else {
                 setErrorMsg(result.error || "Ein Fehler ist aufgetreten.");
             }
+        }
+    };
+
+    const decreaseNote = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (noteInput > 0.7) {
+            setNoteInput(Number((noteInput - 0.1).toFixed(1)));
+        }
+    };
+
+    const increaseNote = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        if (noteInput < 4.0) {
+            setNoteInput(Number((noteInput + 0.1).toFixed(1)));
         }
     };
 
@@ -119,7 +136,7 @@ const SemesterModulCard = ({modul}: Props) => {
                                 {modul.leistungspunkte} ECTS
                             </span>
                             <span>
-                                {modul.semester}
+                                {modul.turnus}
                             </span>
                             <Link
                                 className="flex items-center gap-1 text-blue-bell hover:underline"
@@ -156,7 +173,7 @@ const SemesterModulCard = ({modul}: Props) => {
                                 <div className="flex flex-row flex-wrap items-center gap-3 text-sm">
                                     <div
                                         className="bg-flag-red text-card rounded-xl py-1 px-2 w-fit text-xs font-semibold">
-                                        {modul.modulArt || "Pflicht"}
+                                        {modul.bereichpfad || "-"}
                                     </div>
                                     <div className="text-muted-foreground">•</div>
 
@@ -167,13 +184,13 @@ const SemesterModulCard = ({modul}: Props) => {
                                         </p>
                                         <div
                                             className="flex items-center gap-1 px-2 py-0.5 text-xs bg-muted border rounded-xl">
-                                            <button className="px-1 font-bold hover:opacity-70" onClick={decrease}>
+                                            <button className="px-1 font-bold hover:opacity-70" onClick={decreaseTries}>
                                                 -
                                             </button>
                                             <span className="font-semibold w-4 text-center">
                                                 {counter}
                                             </span>
-                                            <button className="px-1 font-bold hover:opacity-70" onClick={increase}>
+                                            <button className="px-1 font-bold hover:opacity-70" onClick={increaseTries}>
                                                 +
                                             </button>
                                         </div>
@@ -190,63 +207,113 @@ const SemesterModulCard = ({modul}: Props) => {
                                     Beschreibung
                                 </h2>
                                 <p className="text-sm opacity-80 leading-relaxed">
-                                    {modul.beschreibung || details?.beschreibung || "Keine Beschreibung vorhanden."}
+                                    {modul.lernergebnisse || details?.beschreibung || "Keine Beschreibung vorhanden."}
                                 </p>
                             </div>
 
                             {/* Infokästen */}
-                            <div className="grid grid-cols-2 gap-3 md:grid-cols-4 w-full">
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-4 w-full">
                                 <div
                                     className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-xs opacity-70">
+                                    <p className="text-lg opacity-70">
                                         Arbeitsaufwand
                                     </p>
-                                    <p className="font-semibold text-sm">
-                                        {modul.modulArt}
+                                    <p className="font-semibold text-md">
+                                        {modul.arbeitsaufwand}
                                     </p>
                                 </div>
 
                                 <div
                                     className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-xs opacity-70">
+                                    <p className="text-lg opacity-70">
                                         Angebot
                                     </p>
-                                    <p className="font-semibold text-sm">
-                                        {modul.semester}
+                                    <p className="font-semibold text-md">
+                                        {modul.turnus}
                                     </p>
                                 </div>
 
                                 <div
                                     className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-xs opacity-70">
+                                    <p className="text-lg opacity-70">
                                         Prüfungsform
                                     </p>
-                                    <p className="font-semibold text-sm">
-                                        xxx
+                                    <p className="font-semibold text-md">
+                                        {modul.pruefungsform}
                                     </p>
                                 </div>
 
-                                <div
-                                    className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-xs opacity-70">
+                                <div className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
+                                    <p className="text-lg opacity-70 mb-2">
                                         Bewertung
                                     </p>
-                                    <div className="font-semibold text-sm">
+                                    <div className="font-semibold text-sm w-full flex justify-center">
                                         {!modul.benotet ? (
-                                            <span className="text-gray-500 font-normal text-xs">
+                                            <span className="text-gray-500 font-normal text-md">
                                                 nicht benotet
                                             </span>
-                                        ) : modul.note ? (
-                                            <span className="text-sm">
-                                                {modul.note}
-                                            </span>
                                         ) : (
-                                            <input
-                                                type="number"
-                                                step="0.1"
-                                                placeholder="1.0"
-                                                className="w-12 text-center border rounded p-0.5 text-xs bg-background"
-                                            />
+                                            <div className="flex flex-col items-center gap-3 w-full max-w-xs md:max-w-none">
+
+                                                {/* Container für die beiden Regler */}
+                                                <div className="flex flex-col items-center gap-2 w-full justify-center">
+
+                                                    {/* Noten-Auswahl */}
+                                                    <div className="flex items-center justify-between md:justify-center gap-2 px-3 py-1 text-xs bg-card border rounded-xl flex-1 md:flex-none">
+                                                        <button
+                                                            className="px-1 font-bold hover:opacity-70 disabled:opacity-30 text-sm"
+                                                            onClick={decreaseNote}
+                                                            disabled={noteInput <= 0.7}>
+                                                            -
+                                                        </button>
+                                                        <span className="font-semibold w-7 text-center">
+                                                            {noteInput.toFixed(1)}
+                                                        </span>
+                                                        <button
+                                                            className="px-1 font-bold hover:opacity-70 disabled:opacity-30 text-sm"
+                                                            onClick={increaseNote}
+                                                            disabled={noteInput >= 4.0}>
+                                                            +
+                                                        </button>
+                                                    </div>
+
+                                                    {/* Gewichtungs-Toggle */}
+                                                    <div className="flex items-center justify-between md:justify-center gap-3 px-3 py-2 bg-card border rounded-xl flex-1 md:flex-none select-none">
+                                                        <span className="text-xs font-normal opacity-70 whitespace-nowrap">
+                                                             {gewichtung ? "normal gewichtet" : "nicht gewichtet"}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => setGewichtung(!gewichtung)}
+                                                            className={`${
+                                                                gewichtung ? "bg-mint-leaf" : "bg-muted border shadow-inner"
+                                                            } relative inline-flex h-3.5 w-7 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none items-center`}>
+                                                            <span
+                                                                className={`${
+                                                                    gewichtung ? "translate-x-3.5 bg-card" : "translate-x-0.5 bg-muted-foreground/60"
+                                                                } pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full shadow transition duration-200 ease-in-out`}
+                                                            />
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                {/* Sichern Button */}
+                                                <button
+                                                    disabled={isSavingNote}
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        setIsSavingNote(true);
+                                                        try {
+                                                            console.log(`Speichere Note ${noteInput} für Modul ${modul.modul_id}`);
+                                                        } catch (error) {
+                                                            console.error("Fehler beim Speichern der Note", error);
+                                                        } finally {
+                                                            setIsSavingNote(false);
+                                                        }
+                                                    }}
+                                                    className="w-auto px-1 py-0.5 text-xs bg-flag-red text-white font-medium rounded-xl hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
+                                                    {isSavingNote ? "..." : "Sichern"}
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
                                 </div>

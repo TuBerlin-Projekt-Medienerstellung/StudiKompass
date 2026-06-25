@@ -20,16 +20,19 @@ declare global {
     interface modulInfo {
         modul_id: string, //später zu UUID
         name: string,
+        turnus: string,
+        bereichpfad: string,
         leistungspunkte: number,
-        semester: string,
-        modulArt: string,
-        beschreibung: string,
-        examform: string,
-        arbeitsaufwand: number,
-        link: string,
-        versuche?: number;
+        lernergebnisse: string,
+        pruefungsform: string,
         benotet: boolean,
+        vorraussetzungen: string,
+        link: string,
         note?: number,
+        gewichtung?: number,
+        abgeschlossen?: boolean,
+        versuche?: number;
+        arbeitsaufwand: number,
     }
 }
 export {}
