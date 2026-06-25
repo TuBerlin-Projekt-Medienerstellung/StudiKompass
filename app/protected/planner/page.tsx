@@ -18,12 +18,7 @@ type SemesterList = Semester[];
 
 const Page = () => {
 
-
-    const [modul, setModul] = useState<modulInfo | null>(null);
     const [semesterList, setSemesterList] = useState<SemesterList>([]);
-    const maxNummer = semesterList.length
-        ? Math.max(...semesterList.map((s) => s.nummer))
-        : 0;
     const [activeModul, setActiveModul] = useState<modulInfo | null>(null);
 
     useEffect(() => {

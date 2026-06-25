@@ -1,6 +1,6 @@
 "use server";
 import {createClient} from "@/lib/supabase/server";
-import {UUID} from "crypto";
+//import {UUID} from "crypto";
 
 export async function getUserStudiengangId() {
     const supabase = await createClient();
@@ -46,6 +46,16 @@ async function getBereichPfad(bereichId: number): Promise<string[]> {
     return [bereich.name];
 }
 
+interface StupoListItem {
+    id: number;
+    [key: string]: unknown;
+}
+
+interface ZuordnungRef {
+    id: number;
+    [key: string]: unknown;
+}
+
 export interface ModulBasis {
     id: number;
     name: string;
@@ -58,7 +68,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
     const studiengang = studiengangDaten?.data?.[0];
     if (!studiengang) return [];
 
-    const neuesteStupo = studiengang.stupoList.reduce((max: any, s: any) =>
+    const neuesteStupo = studiengang.stupoList.reduce((max: StupoListItem, s: StupoListItem) =>
         s.id > max.id ? s : max
     );
 
@@ -90,7 +100,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
     for (let i = 0; i < zuordnungen.length; i += BATCH_SIZE) {
         const batch = zuordnungen.slice(i, i + BATCH_SIZE);
         const batchErgebnisse = await Promise.all(
-            batch.map(async (z: any) => {
+            batch.map(async (z: ZuordnungRef) => {
                 try {
                     const zuordnungRaw = await fetchMoses(`/studiengangszuordnung/${z.id}`);
                     const zuordnung = zuordnungRaw?.data?.[0];

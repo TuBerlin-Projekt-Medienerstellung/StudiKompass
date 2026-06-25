@@ -10,11 +10,16 @@ import {getTries, saveTries, saveGrade, saveStatus} from "@/app/protected/planne
 
 type Props = {
     modul: modulInfo;
+}
+
+type ModulDetails = {
+    beschreibung?: string;
+    [key: string]: unknown;
 };
 
 const SemesterModulCard = ({modul}: Props) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [details, setDetails] = useState<any | null>(null);
+    const [details, setDetails] = useState<ModulDetails | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
     const [checked, setChecked] = useState<boolean>(modul.abgeschlossen ?? false);
     const [counter, setCount] = useState(0);
@@ -219,7 +224,13 @@ const SemesterModulCard = ({modul}: Props) => {
                                     Beschreibung
                                 </h2>
                                 <p className="text-sm opacity-80 leading-relaxed">
-                                    {modul.lernergebnisse || details?.beschreibung || "Keine Beschreibung vorhanden."}
+                                    {loadingDetails ? (
+                                        <span className="italic opacity-50">
+                                            Beschreibung wird geladen...
+                                        </span>
+                                    ) : (
+                                        modul.lernergebnisse || details?.beschreibung || "Keine Beschreibung vorhanden."
+                                    )}
                                 </p>
                             </div>
 
