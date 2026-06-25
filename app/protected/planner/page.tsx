@@ -4,9 +4,9 @@ import SemesterCard from "@/components/semester-card";
 import SemesterModulCard from "@/components/semester-modul-card";
 import {useState, useEffect} from "react";
 import {Plus, Trash2} from 'lucide-react';
-import { reduceSemesterTable, deleteSemester, updateSemesterTable, getSemesters } from './actions';
-import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
-import { arrayMove } from '@dnd-kit/sortable';
+import {reduceSemesterTable, deleteSemester, updateSemesterTable, getSemesters} from './actions';
+import {DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay} from '@dnd-kit/core';
+import {arrayMove} from '@dnd-kit/sortable';
 
 
 type Semester = {
@@ -30,41 +30,42 @@ const Page = () => {
         async function loadSemesters() {
             const data = await getSemesters();
 
-    setSemesterList(
-      data.map((s, index) => ({
-        nummer: s.semesterzahl,
-        modules:
-          index === 0
-            ? [
-                {
-                  modul_id: "m1",
-                  name: "Mathematik 1",
-                  leistungspunkte: 5,
-                  semester: "1",
-                  modulArt: "Pflicht",
-                  beschreibung: "Testmodul",
-                  examform: "Klausur",
-                  arbeitsaufwand: 150,
-                  link: "#",
-                  benotet: false,
-                },
-                {
-                  modul_id: "m2",
-                  name: "Programmierung 1",
-                  leistungspunkte: 6,
-                  semester: "1",
-                  modulArt: "Pflicht",
-                  beschreibung: "Testmodul",
-                  examform: "Klausur",
-                  arbeitsaufwand: 180,
-                  link: "#",
-                  benotet: true,
-                },
-              ]
-            : [],
-      }))
-    );
-  }
+            setSemesterList(
+                data.map((s, index) => ({
+                    nummer: s.semesterzahl,
+                    modules:
+                        index === 0
+                            ? [
+                                {
+                                    modul_id: "m1",
+                                    name: "Mathematik 1",
+                                    turnus: "WiSe, SoSe",
+                                    bereichpfad: "Pflicht",
+                                    leistungspunkte: 6,
+                                    lernergebnisse: "blah blah blah",
+                                    pruefungsform: "Klausur",
+                                    benotet: true,
+                                    link: "#",
+                                    arbeitsaufwand: 180
+                                },
+                                {
+                                    modul_id: "m2",
+                                    name: "Einführung in die Programmierung",
+                                    turnus: "WiSe",
+                                    bereichpfad: "Pflicht",
+                                    leistungspunkte: 6,
+                                    lernergebnisse: "blah blah blah",
+                                    pruefungsform: "Portfolioprüfung",
+                                    benotet: true,
+                                    link: "#",
+                                    note: 1.3,
+                                    arbeitsaufwand: 180
+                                },
+                            ]
+                            : [],
+                }))
+            );
+        }
 
         loadSemesters();
     }, []);
@@ -88,9 +89,9 @@ const Page = () => {
         ]);
     }
 
-  async function handleDeleteSemester(semesterNummer: number) {
-    await deleteSemester();
-    await reduceSemesterTable(semesterNummer);
+    async function handleDeleteSemester(semesterNummer: number) {
+        await deleteSemester();
+        await reduceSemesterTable(semesterNummer);
 
         setSemesterList((prev) =>
             prev.filter((sem) => sem.nummer !== semesterNummer)
