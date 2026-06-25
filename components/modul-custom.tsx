@@ -3,6 +3,7 @@
 import { X } from 'lucide-react';
 import { useState } from 'react';
 import { createCustomModul } from '@/app/protected/modules/actions';
+import ModulCustomJob from './modul-custom-job';
 
 type Props = {
   isOpen: boolean;
@@ -16,10 +17,13 @@ type FormData = {
     beschreibung: string,
     pruefungsform: string,
     benotet: boolean | null,
+    arbeitsaufwand: number,
 }
 
 export default function ModulCustom({ isOpen, onClose }: Props) {
   if (!isOpen) return null;
+
+    const [mode, setMode] = useState<"modul" | "job">("modul");
 
     const [formData, setFormData] = useState<FormData>({
     modulname: "",
@@ -29,6 +33,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
     beschreibung: "",
     pruefungsform: "",
     benotet: null,
+    arbeitsaufwand: 0,
     }); 
     
     //speichern der Eingaben
@@ -41,7 +46,8 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
         formData.turnus,
         formData.beschreibung,
         formData.pruefungsform,
-        formData.benotet
+        formData.benotet,
+        formData.arbeitsaufwand
         );
 
         console.log('Erstellte Modul-ID:', modulId);
@@ -52,9 +58,11 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
     }
     };
 
+   
+
     return (
 
-        <>
+    <>
       {/**Overlay */}
         <div
             className="fixed inset-0 bg-black/50 z-40"
@@ -71,8 +79,40 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                 
             </header>
             <div className='flex flex-col gap-6'>
-                <div className='flex gap-2 flex-col'>
-                    <p className='font-bold text-[14px]'>Modulname</p>
+                <div className="relative flex border-b">
+  
+  <button
+    className="flex-1 py-2 text-center"
+    onClick={() => setMode("modul")}
+  >
+    Modul
+  </button>
+
+  <button
+    className="flex-1 py-2 text-center"
+    onClick={() => {
+  setMode("job");
+  setFormData(prev => ({
+    ...prev,
+    bereichspfad: "job",
+    ects: 0,
+    turnus: "",
+    pruefungsform: "",
+    benotet: false,
+  }));
+  }}>
+  Job
+  </button>
+  
+
+  <div
+  className={`absolute bottom-0 h-[2px] bg-flag-red transition-transform duration-300 w-1/2`}
+  style={{
+    transform: mode === "modul" ? "translateX(0%)" : "translateX(100%)",
+  }}
+    /></div>
+                     {mode === "modul" ? (
+                    <>
                     <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg'>
                         <input
                             className="w-full outline-none"
@@ -86,8 +126,9 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                             }
                         />
                     </div>
-                </div>
+                
             
+                 
                 <div className='flex gap-2 flex-col'>
                     <p className='font-bold text-[14px]'>Prüfungsform</p>
                     <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg'>
@@ -203,6 +244,11 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                         />
                 </div>
             </div>
+            </>
+            ):(<ModulCustomJob
+                formData={formData}
+                setFormData={setFormData}
+                />)}
                 
             <div className='flex gap-2 flex-col md:flex-row items-center align-items self-stretch'>
                 <button onClick={onClose}
@@ -218,6 +264,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
             
             </div>
         </div>
+        
         </>
     )
 }

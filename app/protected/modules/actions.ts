@@ -209,7 +209,8 @@ export async function createCustomModul(modulname: string,
                                         turnus: string,
                                         beschreibung: string,
                                         pruefungsform: string,
-                                        benotet: boolean | null,) {
+                                        benotet: boolean | null,
+                                        arbeitsaufwand: number) {
     
     const supabase = await createClient();
     const {data: {user}} = await supabase.auth.getUser();
@@ -231,7 +232,7 @@ export async function createCustomModul(modulname: string,
             note: null,
             gewichtung: null,
             versuche: 1,
-            arbeitsaufwand: 0,
+            arbeitsaufwand: arbeitsaufwand,
             user_id: user.id,
     })
     .select()
