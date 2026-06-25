@@ -28,6 +28,9 @@ declare global {
         arbeitsaufwand: number,
         link: string,
         versuche?: number;
+        benotet: boolean,
+        note: number,
+        versuche: number
     }
 }
 export {}
