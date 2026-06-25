@@ -6,7 +6,7 @@ import {CSS} from "@dnd-kit/utilities";
 import {SquareArrowOutUpRight, Grip, Trash2, ChevronDown, ChevronUp, Circle, CircleCheckBig} from 'lucide-react';
 import {useState, useEffect} from "react";
 import {ladeDetailedModulAction} from "@/app/protected/modules/actions";
-import {getTries, saveTries} from "@/app/protected/planner/actions";
+import {getTries, saveTries, saveGrade, saveStatus} from "@/app/protected/planner/actions";
 
 type Props = {
     modul: modulInfo;
@@ -16,12 +16,12 @@ const SemesterModulCard = ({modul}: Props) => {
     const [isOpen, setIsOpen] = useState(false);
     const [details, setDetails] = useState<any | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
-    const [checked, setChecked] = useState(false);
+    const [checked, setChecked] = useState<boolean>(modul.abgeschlossen ?? false);
     const [counter, setCount] = useState(0);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
-    const [noteInput, setNoteInput] = useState<number>(modul.note || 1.0);
+    const [noteInput, setNoteInput] = useState<number>(modul.note ?? 2.3);
     const [isSavingNote, setIsSavingNote] = useState(false);
-    const [gewichtung, setGewichtung] = useState(false);
+    const [gewichtung, setGewichtung] = useState<boolean>(modul.gewichtung === 1);
 
     const {
         attributes,
@@ -97,7 +97,7 @@ const SemesterModulCard = ({modul}: Props) => {
         }
     };
 
-    // Lädt die Versuche, sobald die Karte geöffnet wird
+    // Lädt die Daten zum Modul, sobald die Karte geöffnet wird
     useEffect(() => {
         const fetchVersuche = async () => {
             const gespeicherteVersuche = await getTries(modul.modul_id);
@@ -107,7 +107,19 @@ const SemesterModulCard = ({modul}: Props) => {
         if (isOpen) {
             fetchVersuche();
         }
-    }, [isOpen, modul.modul_id]);
+
+        if (modul.note !== undefined && modul.note !== null) {
+            setNoteInput(modul.note);
+        }
+        if (modul.gewichtung !== undefined && modul.gewichtung !== null) {
+            setGewichtung(modul.gewichtung === 1);
+        }
+
+        if (modul.abgeschlossen !== undefined && modul.abgeschlossen !== null) {
+            setChecked(modul.abgeschlossen);
+        }
+
+    }, [isOpen, modul.modul_id, modul.note, modul.gewichtung, modul.abgeschlossen]);
 
     return (
         <div ref={setNodeRef} style={style}>
@@ -162,7 +174,7 @@ const SemesterModulCard = ({modul}: Props) => {
                     </button>
                 </div>
 
-                {/* Ausgeklappte Karte - details */}
+                {/* Ausgeklappte Karte - Details */}
                 <div className={`grid transition-all duration-500 ease-in-out ${
                     isOpen ? 'grid-rows-[1fr] opacity-100 mt-4 pt-4 border-t' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
                 }`}>
@@ -243,7 +255,8 @@ const SemesterModulCard = ({modul}: Props) => {
                                     </p>
                                 </div>
 
-                                <div className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
+                                <div
+                                    className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
                                     <p className="text-lg opacity-70 mb-2">
                                         Bewertung
                                     </p>
@@ -253,13 +266,14 @@ const SemesterModulCard = ({modul}: Props) => {
                                                 nicht benotet
                                             </span>
                                         ) : (
-                                            <div className="flex flex-col items-center gap-3 w-full max-w-xs md:max-w-none">
+                                            <div
+                                                className="flex flex-col items-center gap-3 w-full max-w-xs md:max-w-none">
 
-                                                {/* Container für die beiden Regler */}
                                                 <div className="flex flex-col items-center gap-2 w-full justify-center">
 
                                                     {/* Noten-Auswahl */}
-                                                    <div className="flex items-center justify-between md:justify-center gap-2 px-3 py-1 text-xs bg-card border rounded-xl flex-1 md:flex-none">
+                                                    <div
+                                                        className="flex items-center justify-between md:justify-center gap-2 px-3 py-1 text-xs bg-background border rounded-xl flex-1 md:flex-none">
                                                         <button
                                                             className="px-1 font-bold hover:opacity-70 disabled:opacity-30 text-sm"
                                                             onClick={decreaseNote}
@@ -278,8 +292,11 @@ const SemesterModulCard = ({modul}: Props) => {
                                                     </div>
 
                                                     {/* Gewichtungs-Toggle */}
-                                                    <div className="flex items-center justify-between md:justify-center gap-3 px-3 py-2 bg-card border rounded-xl flex-1 md:flex-none select-none">
-                                                        <span className="text-xs font-normal opacity-70 whitespace-nowrap">
+                                                    <div
+                                                        title="Welche Noten (nicht) in den Gesamtschnitt einfließen, steht in der StuPo zum Studiengang."
+                                                        className="flex items-center justify-between md:justify-center gap-3 px-3 py-2 bg-background border rounded-xl flex-1 md:flex-none select-none">
+                                                        <span
+                                                            className="text-xs font-normal opacity-70 whitespace-nowrap">
                                                              {gewichtung ? "normal gewichtet" : "nicht gewichtet"}
                                                         </span>
                                                         <button
@@ -289,7 +306,7 @@ const SemesterModulCard = ({modul}: Props) => {
                                                             } relative inline-flex h-3.5 w-7 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none items-center`}>
                                                             <span
                                                                 className={`${
-                                                                    gewichtung ? "translate-x-3.5 bg-card" : "translate-x-0.5 bg-muted-foreground/60"
+                                                                    gewichtung ? "translate-x-3.5 bg-background" : "translate-x-0.5 bg-muted-foreground/60"
                                                                 } pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full shadow transition duration-200 ease-in-out`}
                                                             />
                                                         </button>
@@ -302,15 +319,24 @@ const SemesterModulCard = ({modul}: Props) => {
                                                     onClick={async (e) => {
                                                         e.stopPropagation();
                                                         setIsSavingNote(true);
+                                                        setErrorMsg(null); // Alten Fehler zurücksetzen
+
                                                         try {
-                                                            console.log(`Speichere Note ${noteInput} für Modul ${modul.modul_id}`);
+                                                            const result = await saveGrade(modul.modul_id, noteInput, gewichtung);
+
+                                                            if (result.success) {
+                                                                console.log("Erfolgreich gespeichert!");
+                                                            } else {
+                                                                setErrorMsg(result.error || "Fehler beim Speichern.");
+                                                            }
                                                         } catch (error) {
-                                                            console.error("Fehler beim Speichern der Note", error);
+                                                            console.error("Fehler beim Speichern der Note:", error);
+                                                            setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");
                                                         } finally {
                                                             setIsSavingNote(false);
                                                         }
                                                     }}
-                                                    className="w-auto px-1 py-0.5 text-xs bg-flag-red text-white font-medium rounded-xl hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
+                                                    className="w-auto p-1.5 text-xs bg-flag-red text-white font-medium rounded-xl hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
                                                     {isSavingNote ? "..." : "Sichern"}
                                                 </button>
                                             </div>
@@ -321,8 +347,26 @@ const SemesterModulCard = ({modul}: Props) => {
 
                             {/* Buttons unten */}
                             <div className="flex gap-2 flex-col md:flex-row w-full items-stretch text-sm">
+
                                 <button
-                                    onClick={() => setChecked(!checked)}
+                                    onClick={async (e) => {
+                                        e.stopPropagation();
+                                        const nextCheckedState = !checked;
+                                        setChecked(nextCheckedState);
+                                        setErrorMsg(null);
+
+                                        try {
+                                            const result = await saveStatus(modul.modul_id, nextCheckedState);
+                                            if (!result.success) {
+                                                setChecked(checked);
+                                                setErrorMsg(result.error || "Status konnte nicht gespeichert werden.");
+                                            }
+                                        } catch (error) {
+                                            setChecked(checked);
+                                            console.error("Fehler beim Speichern des Status:", error);
+                                            setErrorMsg("Unerwarteter Fehler beim Aktualisieren.");
+                                        }
+                                    }}
                                     className={`flex p-3 rounded-lg w-full md:flex-1 items-center justify-center gap-2 transition-colors ${
                                         checked ? 'bg-mint-leaf text-white' : 'bg-mint-leaf/40 text-gray-500'}`}>
                                     {checked ? <CircleCheckBig className="w-4 h-4"/> : <Circle className="w-4 h-4"/>}

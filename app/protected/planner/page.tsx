@@ -37,7 +37,7 @@ const Page = () => {
                         index === 0
                             ? [
                                 {
-                                    modul_id: "m1",
+                                    modul_id: "d39ef5d3-5e87-4be6-8a1b-6d70227e3117",
                                     name: "Mathematik 1",
                                     turnus: "WiSe, SoSe",
                                     bereichpfad: "Pflicht",
@@ -46,6 +46,9 @@ const Page = () => {
                                     pruefungsform: "Klausur",
                                     benotet: true,
                                     link: "#",
+                                    note: 0.7,
+                                    gewichtung: 1.0,
+                                    abgeschlossen: true,
                                     arbeitsaufwand: 180
                                 },
                                 {
@@ -174,8 +177,7 @@ const Page = () => {
         <DndContext
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}
-        >
+            onDragEnd={handleDragEnd}>
             <section className="flex flex-col gap-4 p-6">
                 <div className="flex flex-col gap-2">
                     <h1 className="font-bold text-4xl">Studienplaner</h1>
