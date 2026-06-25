@@ -121,6 +121,26 @@ export async function deleteSemester() {
     return data
 }
 
+export async function reduceSemesterTable(semesterzahl:number) {
+    const supabase = await createClient();
+
+    const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const { error } = await supabase
+    .from("semester")
+    .delete()
+    .eq("user_id", user.id)
+    .eq("semesterzahl", semesterzahl);
+
+  if (error) throw error;
+}
+
+
+
 //Holt die anzahl der Versuche eines bestimmten Moduls
 export async function getTries(modulId: number) {
     const supabase = await createClient();

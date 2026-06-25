@@ -29,8 +29,7 @@ declare global {
         link: string,
         versuche?: number;
         benotet: boolean,
-        note: number,
-        versuche: number
+        note?: number,
     }
 }
 export {}
