@@ -1,4 +1,4 @@
-import {UUID} from "crypto";
+// import {UUID} from "crypto";
 import {LucideIcon} from "lucide-react";
 
 declare global {
@@ -26,7 +26,7 @@ declare global {
         lernergebnisse: string,
         pruefungsform: string,
         benotet: boolean,
-        vorraussetzungen?: string,
+        voraussetzungen?: string,
         link: string,
         note?: number,
         gewichtung?: number,
