@@ -32,9 +32,42 @@ const Page = () => {
     const data = await getSemesters();
 
     setSemesterList(
-      data.map((s) => ({
+      data.map((s, index) => ({
         nummer: s.semesterzahl,
-        modules: [],
+        modules:
+          index === 0
+            ? [
+                {
+                  modul_id: "m1",
+                  name: "Mathematik 1",
+                  leistungspunkte: 5,
+                  semester: "1",
+                  modulArt: "Pflicht",
+                  beschreibung: "Testmodul",
+                  examform: "Klausur",
+                  arbeitsaufwand: 150,
+                  link: "#",
+                },
+                
+    
+
+      
+  
+
+   
+    {
+                  modul_id: "m2",
+                  name: "Programmierung 1",
+                  leistungspunkte: 6,
+                  semester: "1",
+                  modulArt: "Pflicht",
+                  beschreibung: "Testmodul",
+                  examform: "Klausur",
+                  arbeitsaufwand: 180,
+                  link: "#",
+                },
+              ]
+            : [],
       }))
     );
   }
