@@ -1,12 +1,13 @@
 "use server";
-import { createClient } from "@/lib/supabase/server";
+import {createClient} from "@/lib/supabase/server";
+//import {UUID} from "crypto";
 
 export async function getUserStudiengangId() {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {data: {user}} = await supabase.auth.getUser();
     if (!user) return null;
 
-    const { data: profile } = await supabase
+    const {data: profile} = await supabase
         .from("profiles") // oder wie deine Tabelle heißt
         .select("studiengang_id")
         .eq("id", user.id)
@@ -18,12 +19,12 @@ export async function getUserStudiengangId() {
 
 async function fetchMoses(path: string) {
     try {
-        const res = await fetch(`${process.env.moses_API_URL}${path}`, { 
-            headers: { 
+        const res = await fetch(`${process.env.moses_API_URL}${path}`, {
+            headers: {
                 "accept": "application/json",
                 "x-api-key": process.env.moses_API_KEY || ""
             },
-            next: { revalidate: 86400 } 
+            next: {revalidate: 86400}
         });
         if (!res.ok) return null;
         return res.json();
@@ -39,17 +40,27 @@ async function getBereichPfad(bereichId: number): Promise<string[]> {
     const bereich = data?.data?.[0];
     if (!bereich) return [];
     if (bereich.parent?.id) {
-        const elternPfad = await getBereichPfad(bereich.parent.id); 
+        const elternPfad = await getBereichPfad(bereich.parent.id);
         return [...elternPfad, bereich.name];
     }
     return [bereich.name];
+}
+
+interface StupoListItem {
+    id: number;
+    [key: string]: unknown;
+}
+
+interface ZuordnungRef {
+    id: number;
+    [key: string]: unknown;
 }
 
 export interface ModulBasis {
     id: number;
     name: string;
     lp: number;
-    bereichPfad: string[]; 
+    bereichPfad: string[];
 }
 
 export async function ladeModulBasisAction(studiengangId: number): Promise<ModulBasis[]> {
@@ -57,7 +68,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
     const studiengang = studiengangDaten?.data?.[0];
     if (!studiengang) return [];
 
-    const neuesteStupo = studiengang.stupoList.reduce((max: any, s: any) =>
+    const neuesteStupo = studiengang.stupoList.reduce((max: StupoListItem, s: StupoListItem) =>
         s.id > max.id ? s : max
     );
 
@@ -89,7 +100,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
     for (let i = 0; i < zuordnungen.length; i += BATCH_SIZE) {
         const batch = zuordnungen.slice(i, i + BATCH_SIZE);
         const batchErgebnisse = await Promise.all(
-            batch.map(async (z: any) => {
+            batch.map(async (z: ZuordnungRef) => {
                 try {
                     const zuordnungRaw = await fetchMoses(`/studiengangszuordnung/${z.id}`);
                     const zuordnung = zuordnungRaw?.data?.[0];
@@ -98,9 +109,9 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
                     const bereichPfad = zuordnung?.studiengangsbereich?.id
                         ? await getBereichPfad(zuordnung.studiengangsbereich.id)
                         : [];
-                    const actualModulId = zuordnung?.bolognamodul?.id || 
-                          zuordnung?.bolognamodulVersion?.bolognamodul?.id || 
-                          z.id;
+                    const actualModulId = zuordnung?.bolognamodul?.id ||
+                        zuordnung?.bolognamodulVersion?.bolognamodul?.id ||
+                        z.id;
                     return {
                         id: actualModulId,
                         name: zuordnung?.name,
@@ -116,21 +127,20 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
     }
 
     return moduleRoh;
- }
+}
 
 // Verlagerung der detailedmodules Komponente, da client komponenten keine server action/Komponente wrappen/einbetten oder aufrufen können..
-
-export async function ladeDetailedModulAction(modul_id: number) {
+export async function ladeDetailedModulAction(modul_id: string) {
     const supabase = await createClient();
     const {data: {user}} = await supabase.auth.getUser();
     if (!user) return null;
 
     const baseUrl = process.env.moses_API_URL;
     const headers: HeadersInit = process.env.moses_API_KEY
-        ? { 'x-api-key': process.env.moses_API_KEY }
+        ? {'x-api-key': process.env.moses_API_KEY}
         : {};
 
-  
+
     let details = {
         lehrinhalte: "",
         lernergebnisse: "",
@@ -146,8 +156,14 @@ export async function ladeDetailedModulAction(modul_id: number) {
     try {
         if (baseUrl) {
             const [beschreibungResponse, pruefungResponse] = await Promise.all([
-                fetch(`${baseUrl}/bolognamodulbeschreibung?bolognamodulId=${modul_id}`, { headers, next: { revalidate: 86400 } }),
-                fetch(`${baseUrl}/bolognamodulpruefung?bolognamodulId=${modul_id}`,     { headers, next: { revalidate: 86400 } }),
+                fetch(`${baseUrl}/bolognamodulbeschreibung?bolognamodulId=${modul_id}`, {
+                    headers,
+                    next: {revalidate: 86400}
+                }),
+                fetch(`${baseUrl}/bolognamodulpruefung?bolognamodulId=${modul_id}`, {
+                    headers,
+                    next: {revalidate: 86400}
+                }),
             ]);
 
             const [beschreibungData, pruefungData] = await Promise.all([
@@ -166,7 +182,7 @@ export async function ladeDetailedModulAction(modul_id: number) {
                 pruefungsform: pruefung?.pruefungsform?.name,
                 benotet: pruefung?.benotet,
                 pruefungsBeschreibung: pruefung?.beschreibungDE,
-                pruefungselemente: pruefung?.pruefungselementList?.map((p: {name:string}) => p.name) ?? [],
+                pruefungselemente: pruefung?.pruefungselementList?.map((p: { name: string }) => p.name) ?? [],
                 anmeldeformalitaetenDE: pruefung?.anmeldeformalitaetenDE,
             }
         }
@@ -175,4 +191,96 @@ export async function ladeDetailedModulAction(modul_id: number) {
     }
 
     return (details)
+}
+
+//Custom Modul in Supabase speichern:
+//Wird immer in current Semester hinzugefügt
+
+export async function getCurrentSemester() {
+    const supabase = await createClient();
+    const {data: {user}} = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const {data, error} = await supabase
+        .from('profiles')
+        .select("current_semester")
+        .eq("id", user.id)
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Fehler beim Aktualisieren:', error)
+        throw error
+    }
+
+
+    return data.current_semester;
+}
+
+export async function createCustomModul(modulname: string,
+                                        bereichspfad: string,
+                                        ects: number,
+                                        turnus: string,
+                                        beschreibung: string,
+                                        pruefungsform: string,
+                                        benotet: boolean | null,
+                                        arbeitsaufwand: number) {
+
+    const supabase = await createClient();
+    const {data: {user}} = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const modul_id = crypto.randomUUID();
+    const {data, error} = await supabase
+        .from('module')
+        .insert({
+            id: modul_id,
+            name: modulname,
+            turnus: turnus,
+            bereichpfad: bereichspfad,
+            ects: ects,
+            lernergebnisse: beschreibung,
+            pruefungsform: pruefungsform,
+            benotet: benotet,
+            voraussetzungen: null,
+            moseslink: null,
+            note: null,
+            gewichtung: null,
+            versuche: 1,
+            arbeitsaufwand: arbeitsaufwand,
+            user_id: user.id,
+        })
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Fehler beim Aktualisieren:', error)
+        throw error
+    }
+
+    return data.id;
+}
+
+export async function addCustomModultoPlanner() {
+    const supabase = await createClient();
+    const {
+        data: {user},
+    } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    const modul_id = crypto.randomUUID();
+    const groupId = crypto.randomUUID();
+
+    const {error} = await supabase
+        .from("planner")
+        .insert({
+            group_id: groupId,   //Woher nehme ich die GroupID?
+            user_id: user.id,
+            modul_id: modul_id,
+        })
+        .select()
+        .single();
+
+    if (error) throw error;
 }

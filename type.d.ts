@@ -1,3 +1,4 @@
+// import {UUID} from "crypto";
 import {LucideIcon} from "lucide-react";
 
 declare global {
@@ -17,14 +18,21 @@ declare global {
     }
 
     interface modulInfo {
+        modul_id: string, //später zu UUID
         name: string,
+        turnus: string,
+        bereichpfad: string,
         leistungspunkte: number,
-        semester: string,
-        modulArt: string,
-        beschreibung: string,
-        examform: string,
+        lernergebnisse: string,
+        pruefungsform: string,
+        benotet: boolean,
+        voraussetzungen?: string,
+        link: string,
+        note?: number,
+        gewichtung?: number,
+        abgeschlossen?: boolean,
+        versuche?: number;
         arbeitsaufwand: number,
-        link: string
     }
 }
 export {}
