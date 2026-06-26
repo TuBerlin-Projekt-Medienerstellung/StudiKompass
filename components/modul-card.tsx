@@ -1,15 +1,15 @@
 "use client";
 
 import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight} from 'lucide-react';
-import { ladeDetailedModulAction } from '@/app/protected/modules/actions';
+import {ladeDetailedModulAction} from '@/app/protected/modules/actions';
 import Link from "next/link";
-import { useState } from 'react';
+import {useState} from 'react';
 
 interface modulInfo {
-    modul_id: number;
+    modul_id: string;
     name: string;
     leistungspunkte: number;
-    semester?: string | number;
+    turnus?: string | number;
     modulArt: string;
     link: string;
     beschreibung?: string;
@@ -28,15 +28,16 @@ const ModulCard = (props: modulInfo) => {
     const [open, setOpen] = useState(false);
     const [details, setDetails] = useState<Partial<modulInfo> | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
-    
+
 
     async function handleAusklappen() {
         setOpen(!open);
         if (!open && !details) {
             setLoadingDetails(true);
             const data = await ladeDetailedModulAction(modul_id);
-            if (data){
-                setDetails(data);}
+            if (data) {
+                setDetails(data);
+            }
             setLoadingDetails(false);
         }
     }
@@ -45,7 +46,7 @@ const ModulCard = (props: modulInfo) => {
         modul_id,
         name,
         leistungspunkte,
-        semester,
+        turnus,
         modulArt,
         link,
         beschreibung,
@@ -58,9 +59,9 @@ const ModulCard = (props: modulInfo) => {
     } = props;
 
     const detailBoxen = [
-        { name: "Prüfungsform", value: details?.pruefungsform ?? "—" },
-        { name: "Benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—" },
-        { name: "Voraussetzungen", value: details?.voraussetzungen ?? "—" },
+        {name: "Prüfungsform", value: details?.pruefungsform ?? "—"},
+        {name: "Benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—"},
+        {name: "Voraussetzungen", value: details?.voraussetzungen ?? "—"},
     ];
 
     const isWahlpflicht = modulArt.toLowerCase().includes("wahlpflicht");
@@ -69,27 +70,29 @@ const ModulCard = (props: modulInfo) => {
         : "border-l-flag-red border-r-flag-red dark:border-l-flag-red dark:border-r-flag-red";
 
     return (
-        <div className={`w-full flex flex-col border-y-2 border-x-4 border-border ${moduleBorderClass} bg-background dark:bg-card rounded-xl px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
+        <div
+            className={`w-full flex flex-col border-y-2 border-x-4 border-border ${moduleBorderClass} bg-background dark:bg-card rounded-xl px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
             <header className='w-full flex justify-between items-center'>
                 <div className='flex w-fit gap-2.5'>
                     <button onClick={() => setLiked(!liked)}>
-                        {liked ? <CircleCheckBig className="text-mint-leaf" /> : <Circle />}
+                        {liked ? <CircleCheckBig className="text-mint-leaf"/> : <Circle/>}
                     </button>
                     <div className='flex gap-6 items-center md:flex-row flex-col'>
                         <h1 className='font-bold md:text-2xl text-xl'>{name}</h1>
                         <div className='flex gap-2'>
                             <div>{leistungspunkte} ECTS</div>
-                            <span>• {semester} •</span>
+                            <span>• {turnus} •</span>
                             <p className='text-blue-bell dark:text-violet-ray'>{modulArt}</p>
                         </div>
                     </div>
                 </div>
                 <div className="cursor-pointer" onClick={handleAusklappen}>
-                    {open ? <ChevronUp /> : <ChevronDown />}
+                    {open ? <ChevronUp/> : <ChevronDown/>}
                 </div>
             </header>
 
-            <div className={`grid transition-all duration-700 ease-in-expo ${open ? 'grid-rows-[1fr] mt-5' : 'grid-rows-[0fr] mb-0'}`}>
+            <div
+                className={`grid transition-all duration-700 ease-in-expo ${open ? 'grid-rows-[1fr] mt-5' : 'grid-rows-[0fr] mb-0'}`}>
                 <div className='overflow-hidden'>
                     <div className='flex flex-col gap-y-5'>
                         {/* Beschreibung / Lernergebnisse */}
@@ -114,7 +117,8 @@ const ModulCard = (props: modulInfo) => {
                         <div className='flex justify-between gap-2 md:flex-row flex-col'>
                             {/** Hier fetchen für die Details, gerade werden dummy daten von constants gefetchtet **/}
                             {detailBoxen.map((detail, index) => (
-                                <div key={index} className='bg-[#E3E6EA] dark:bg-[#16081f] flex border-2 border-border rounded-xl w-full items-center p-4 flex-col'>
+                                <div key={index}
+                                     className='bg-[#E3E6EA] dark:bg-[#16081f] flex border-2 border-border rounded-xl w-full items-center p-4 flex-col'>
                                     <span>{detail.name}</span>
                                     <p className='font-bold'>{detail.value}</p>
                                 </div>
@@ -122,7 +126,8 @@ const ModulCard = (props: modulInfo) => {
                         </div>
 
                         <div className='flex rounded-lg gap-2'>
-                            <button className='bg-violet-ray hover:bg-blue-bell text-white px-4 py-2 rounded-lg w-5/6 transition-colors'>
+                            <button
+                                className='bg-violet-ray hover:bg-blue-bell text-white px-4 py-2 rounded-lg w-5/6 transition-colors'>
                                 Zum Planer hinzufügen
                             </button>
                             {details?.link ? (
@@ -133,12 +138,13 @@ const ModulCard = (props: modulInfo) => {
                                     className='bg-flag-red text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2'
                                 >
                                     zu Moses
-                                    <SquareArrowOutUpRight className='justify-self-end' />
+                                    <SquareArrowOutUpRight className='justify-self-end'/>
                                 </Link>
                             ) : (
-                                <span className='bg-gray-300 text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed'>
+                                <span
+                                    className='bg-gray-300 text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed'>
                                     zu Moses
-                                    <SquareArrowOutUpRight />
+                                    <SquareArrowOutUpRight/>
                                 </span>
                             )}
                         </div>
