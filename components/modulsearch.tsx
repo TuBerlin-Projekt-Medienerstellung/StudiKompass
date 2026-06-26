@@ -9,7 +9,7 @@ interface Props {
 
 export default function ModulSearch({modules}:Props){
         const [query, setQuery] = useState("")
-        const [selected, setSelected] = useState<{id:number, name:string} | null>(null)
+        const [selected, setSelected] = useState<{id:string, name:string} | null>(null)
         const filtered = modules.filter(m =>
         m.name?.toLowerCase().includes(query.toLowerCase())
         )
