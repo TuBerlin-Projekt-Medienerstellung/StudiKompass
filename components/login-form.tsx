@@ -42,9 +42,8 @@ export function LoginForm({
             });
 
             if (signInError) {
-                if (signInError.message.toLowerCase().includes("Ungültige Anmeldedaten") ||
-                    signInError.message.toLowerCase().includes("Ungültige Anmeldedaten")) {
-                    throw new Error("E-Mail/Benutzername oder Passwort ist falsch.");
+                if (signInError.message.toLowerCase().includes("invalid login credentials")) {
+                    throw new Error("Passwort ist falsch.");
                 }
                 throw signInError;
             }
