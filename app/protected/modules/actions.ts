@@ -48,6 +48,7 @@ async function getBereichPfad(bereichId: number): Promise<string[]> {
 // (Die vollen MOSES-Antwortobjekte bleiben bewusst untypisiert)
 interface MosesRef {
     id: number;
+    name?: string;
 }
 
 export interface ModulBasis {
@@ -102,11 +103,22 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
         if (!aktuelleModulliste) return [];
         const zuordnungen: MosesRef[] = aktuelleModulliste.studiengangszuordnungList ?? [];   // ← typisiert
         if (zuordnungen.length === 0) return [];
+        //there are duplicate elements in studiengangszuordnungList..so gotta get the newest vers
+        const uniquezuordnungen = new Map<string, MosesRef>()
+        for (const z of zuordnungen){
+            const moduleName = z.name || z.id.toString();
+            const existing = uniquezuordnungen.get(moduleName);
+            if (!existing || z.id >existing.id){
+                uniquezuordnungen.set(moduleName, z);
+            }
+        }const filteredzuordnungen = Array.from(uniquezuordnungen.values());
+
+
         const BATCH_SIZE = 30;
         const moduleRoh: ModulBasis[] = [];
 
-        for (let i = 0; i < zuordnungen.length; i += BATCH_SIZE) {
-            const batch = zuordnungen.slice(i, i + BATCH_SIZE);
+        for (let i = 0; i < filteredzuordnungen.length; i += BATCH_SIZE) {
+            const batch = filteredzuordnungen.slice(i, i + BATCH_SIZE);
             const batchErgebnisse = await Promise.all(
                 batch.map(async (z) => {   // ← z wird automatisch als MosesRef erkannt, kein any mehr
                     try {
@@ -149,12 +161,19 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 
         const gruppenRefs: MosesRef[] = aktuelleBolognaListe.bolognamodulListengruppeList ?? [];
         if (gruppenRefs.length === 0) return [];
-
+          const uniquegroups = new Map<string, MosesRef>()
+            for (const x of gruppenRefs){
+                const moduleName = x.name || x.id.toString();
+                const existing = uniquegroups.get(moduleName);
+                if (!existing || x.id >existing.id){
+                    uniquegroups.set(moduleName, x);
+                }
+            }const filteredgroups = Array.from(uniquegroups.values());
         // loop through groups basically
         const gruppenErgebnisse = await Promise.all(
-            gruppenRefs.map(async (gruppe) => {
+            filteredgroups.map(async (gruppe) => {
                 try {
-                    const gruppenRaw = await fetchMoses(`//bolognamodullistengruppe/${gruppe.id}`);
+                    const gruppenRaw = await fetchMoses(`/bolognamodullistengruppe/${gruppe.id}`);
                     const gruppeDetail = gruppenRaw?.data?.[0];
                     return gruppeDetail?.bolognamodulListenzuordnungList ?? [];
                 } catch {
@@ -167,13 +186,21 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
         // the array needs to be 1 dim
         const alleBolognaZuordnungen: MosesRef[] = gruppenErgebnisse.flat();
         if (alleBolognaZuordnungen.length === 0) return [];
-
+        //#removed duplicates like above and below
+        const uniqueBolognaMap = new Map<string, MosesRef>()
+        for (const z of alleBolognaZuordnungen){
+            const moduleName = z.name || z.id.toString();
+            const existing = uniqueBolognaMap.get(moduleName);
+            if (!existing || z.id >existing.id){
+                uniqueBolognaMap.set(moduleName, z);
+            }
+        }const filteredbolognazuordnungen = Array.from(uniqueBolognaMap.values());
    
         const BATCH_SIZE = 30;
         const moduleRoh: ModulBasis[] = [];
 
-        for (let i = 0; i < alleBolognaZuordnungen.length; i += BATCH_SIZE) {
-            const batch = alleBolognaZuordnungen.slice(i, i + BATCH_SIZE);
+        for (let i = 0; i < filteredbolognazuordnungen.length; i += BATCH_SIZE) {
+            const batch = filteredbolognazuordnungen.slice(i, i + BATCH_SIZE);
             const batchErgebnisse = await Promise.all(
                 batch.map(async (z) => {
                     try {
@@ -237,11 +264,10 @@ export async function ladeDetailedModulAction(modul_id: number) {
         let zuordnungRaw = await fetchMoses(`/studiengangszuordnung/${modul_id}`);
         let zuordnung = zuordnungRaw?.data?.[0];
         if (!zuordnung) {
-            if (!zuordnung) {
             zuordnungRaw = await fetchMoses(`/bolognamodullistenzuordnung/${modul_id}`); //new fallback
             zuordnung = zuordnungRaw?.data?.[0];
         }
-        }  
+          
         if (!zuordnung) return details;// Fallback: leere Details zurückgeben
 
 
