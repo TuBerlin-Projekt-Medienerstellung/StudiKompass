@@ -16,9 +16,9 @@
  * Details werden erst beim Ausklappen einer Karte gefetcht (TODO).
  */
 
-import { useState } from 'react';
+import {useState} from 'react';
 import ModulCard from '@/components/modul-card';
-import { ladeModulBasisAction, ModulBasis } from '@/app/protected/modules/actions';
+import {ladeModulBasisAction, ModulBasis} from '@/app/protected/modules/actions';
 
 interface Props {
     // studiengangId wird von page.tsx weitergegeben
@@ -28,7 +28,7 @@ interface Props {
 
 type FilterTyp = "alle" | "pflicht" | "wahlpflicht";
 
-export default function MosesModulsuche({ studiengangId }: Props) {
+export default function MosesModulsuche({studiengangId}: Props) {
     // Aktuell ausgewählter Filter — null = noch kein Button gedrückt
     const [filter, setFilter] = useState<FilterTyp | null>(null);
 
@@ -57,8 +57,8 @@ export default function MosesModulsuche({ studiengangId }: Props) {
             try {
                 // Server Action aufrufen — läuft serverseitig
                 // kein CORS Problem, API-Key bleibt sicher auf dem Server
-                const module = await ladeModulBasisAction(studiengangId);
-                setModuleList(module);
+                const modulItems = await ladeModulBasisAction(studiengangId);
+                setModuleList(modulItems);
                 setGeladen(true);
             } catch (e) {
                 console.error("Fehler beim Laden der Module:", e);
@@ -85,9 +85,9 @@ export default function MosesModulsuche({ studiengangId }: Props) {
     });
 
     const filterButtons: { label: string; value: FilterTyp }[] = [
-        { label: "Alle Module", value: "alle" },
-        { label: "Pflichtmodule", value: "pflicht" },
-        { label: "Wahlpflichtmodule", value: "wahlpflicht" },
+        {label: "Alle Module", value: "alle"},
+        {label: "Pflichtmodule", value: "pflicht"},
+        {label: "Wahlpflichtmodule", value: "wahlpflicht"},
     ];
 
     return (
@@ -152,8 +152,8 @@ export default function MosesModulsuche({ studiengangId }: Props) {
                                 modul_id={modul.id}
                                 name={modul.name}
                                 leistungspunkte={modul.lp}
-                                modulArt={modul.bereichPfad[0] ?? "—"} link={''} 
-                                semester={modul.semester}                             
+                                modulArt={modul.bereichPfad[0] ?? "—"} link={''}
+                                turnus={modul.turnus}
                             />
                         ))
                     )}
