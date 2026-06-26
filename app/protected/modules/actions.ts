@@ -1,5 +1,6 @@
 "use server";
 import {createClient} from "@/lib/supabase/server";
+
 //import {UUID} from "crypto";
 
 export async function getUserStudiengangId() {
@@ -48,19 +49,22 @@ async function getBereichPfad(bereichId: number): Promise<string[]> {
 
 interface StupoListItem {
     id: number;
+
     [key: string]: unknown;
 }
 
 interface ZuordnungRef {
     id: number;
+
     [key: string]: unknown;
 }
 
 export interface ModulBasis {
-    id: number;
+    id: string;
     name: string;
     lp: number;
     bereichPfad: string[];
+    turnus?: string;
 }
 
 export async function ladeModulBasisAction(studiengangId: number): Promise<ModulBasis[]> {
@@ -80,7 +84,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
     const abbildungDetail = abbildungDetailDaten?.data?.[0];
     if (!abbildungDetail) return [];
 
-    const modullisteIds: { id: number }[] = abbildungDetail.modullisteList ?? [];
+    const modullisteIds: { id: string }[] = abbildungDetail.modullisteList ?? [];
     if (modullisteIds.length === 0) return [];
 
     const neuesteModullisteId = modullisteIds.reduce(
