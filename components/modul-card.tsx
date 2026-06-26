@@ -133,7 +133,6 @@ const ModulCard = (props: modulInfo) => {
                         </div>
 
                         {/* Aktionen */}
-                        {/* Aktionen */}
                         <div className='flex items-start rounded-lg gap-2'>
                             {/* Planer-Button mit Semester-Picker */}
                             <div className='flex-1 flex flex-col gap-2'>
