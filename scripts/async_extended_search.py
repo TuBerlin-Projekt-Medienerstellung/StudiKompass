@@ -1,10 +1,12 @@
 import os
-import requests
+import asyncio
+import aiohttp
+# in ayncio instead of session (requests)-> with aiohttp.ClientSession() as session:
 import json
 import time
-from requests.exceptions import RequestException
 import concurrent.futures
 
+#this whole file is just a tester file where I aim to convert it to async from the existing working file
 #first testing the fetch with .env file to isolate possible problems
 from dotenv import load_dotenv
 load_dotenv()
