@@ -136,7 +136,7 @@ export function UpdateSemesterForm({
                                         type="number"
                                         placeholder="z.B. 1"
                                         min={1}
-                                        max={20}
+                                        max={maxSemester || 20}        // ← nicht höher als max
                                         value={currentSemester}
                                         onChange={(e) => setCurrentSemester(e.target.value)}
                                     />
@@ -147,7 +147,7 @@ export function UpdateSemesterForm({
                                         id="max_semester"
                                         type="number"
                                         placeholder="z.B. 6"
-                                        min={1}
+                                        min={currentSemester || 1}     // ← nicht unter current
                                         max={20}
                                         value={maxSemester}
                                         onChange={(e) => setMaxSemester(e.target.value)}
