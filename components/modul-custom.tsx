@@ -25,6 +25,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
 
     const [mode, setMode] = useState<"modul" | "job">("modul");
 
+    //direkte Eingaben werden in einem UseState gepeichert
     const [formData, setFormData] = useState<FormData>({
     modulname: "",
     bereichspfad: "",
@@ -36,7 +37,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
     arbeitsaufwand: 0,
     }); 
     
-    //speichern der Eingaben
+    //speichern der Eingaben aus UseState in Supabase
     const handleSubmit = async () => {
     try {
         const modulId = await createCustomModul(
@@ -51,8 +52,8 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
         );
 
         console.log('Erstellte Modul-ID:', modulId);
-
         onClose(); // Modal schließen
+    
     } catch (err) {
         console.error('Fehler beim Speichern:', err);
     }
@@ -63,7 +64,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
     return (
 
     <>
-      {/**Overlay */}
+        {/**Overlay */}
         <div
             className="fixed inset-0 bg-black/50 z-40"
             onClick={onClose}
@@ -76,59 +77,58 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                 <button onClick={onClose}>
                     <X className='flex flex-none w-4 h-4'></X>
                 </button>
-                
             </header>
+            
+            {/**Switch von modul-costom erstellen zu job erstellen */}
             <div className='flex flex-col gap-6'>
                 <div className="relative flex border-b">
-  
-  <button
-    className="flex-1 py-2 text-center"
-    onClick={() => setMode("modul")}
-  >
-    Modul
-  </button>
+                    <button
+                        className="flex-1 py-2 text-center"
+                        onClick={() => setMode("modul")}>
+                        Modul
+                    </button>
 
-  <button
-    className="flex-1 py-2 text-center"
-    onClick={() => {
-  setMode("job");
-  setFormData(prev => ({
-    ...prev,
-    bereichspfad: "job",
-    ects: 0,
-    turnus: "",
-    pruefungsform: "",
-    benotet: false,
-  }));
-  }}>
-  Job
-  </button>
-  
+                    <button
+                        className="flex-1 py-2 text-center"
+                        onClick={() => {
+                        setMode("job");
+                        setFormData(prev => ({
+                            ...prev,
+                            bereichspfad: "job",
+                            ects: 0,
+                            turnus: "",
+                            pruefungsform: "",
+                            benotet: false,
+                        }));
+                        }}>Job
+                    </button>
+                    <div
+                    className={`absolute bottom-0 h-[2px] bg-flag-red transition-transform duration-300 w-1/2`}
+                    style={{
+                        transform: mode === "modul" ? "translateX(0%)" : "translateX(100%)",
+                    }}
+                    />
+                </div>
 
-  <div
-  className={`absolute bottom-0 h-[2px] bg-flag-red transition-transform duration-300 w-1/2`}
-  style={{
-    transform: mode === "modul" ? "translateX(0%)" : "translateX(100%)",
-  }}
-    /></div>
-                     {mode === "modul" ? (
-                    <>
-                    <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg'>
-                        <input
-                            className="w-full outline-none"
-                            placeholder="Wie heißt dein Modul?"
-                            value={formData.modulname}
-                            onChange={(e) =>
+        {/**Wenn Modus Modul ist, wird das normale custom-modul angezeigt*/}
+        {mode === "modul" ? (
+            <>
+                {/** Modulname */}
+                <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg'>
+                    <input
+                        className="w-full outline-none"
+                        placeholder="Wie heißt dein Modul?"
+                        value={formData.modulname}
+                        onChange={(e) =>
                                 setFormData({
                                 ...formData,
                                 modulname: e.target.value,
                                 })
                             }
-                        />
-                    </div>
+                    />
+                </div>
                 
-            
-                 
+                {/** Prüfungsform */}
                 <div className='flex gap-2 flex-col'>
                     <p className='font-bold text-[14px]'>Prüfungsform</p>
                     <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg'>
@@ -147,87 +147,93 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                 </div>
             
                 
-            <div className='flex gap-2 flex-col md:flex-row'>
-                <div>
-                    <p className='font-bold text-[14px]'>ECTS</p>
-                    <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between'>
-                        <input
-                            className="flex-1 appearance-none leading-none outline-none w-full outline-none"
-                            type='number'
-                            value={formData.ects}
+                <div className='flex gap-2 flex-col md:flex-row'>
+                    {/** ECTS */}
+                    <div>
+                        <p className='font-bold text-[14px]'>ECTS</p>
+                        <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between'>
+                            <input
+                                className="flex-1 appearance-none leading-none outline-none w-full outline-none"
+                                type='number'
+                                value={formData.ects}
+                                onChange={(e) =>
+                                    setFormData({
+                                    ...formData,
+                                    ects: Number(e.target.value),
+                                    })
+                                }
+                            />
+                        </div>
+                    </div>
+                
+                    {/** turnus */}
+                    <div>
+                        <p className='flex-1 font-bold text-[14px]'>Semester</p>
+                        <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between'>
+                            <select
+                                value={formData.turnus}
+                                onChange={(e) =>
+                                    setFormData({
+                                    ...formData,
+                                    turnus: e.target.value,
+                                    })
+                                }
+                                className="flex-1 w-full bg-transparent outline-none">
+                                    <option value="">Bitte wählen</option>
+                                    <option value="WiSe">WiSe</option>
+                                    <option value="SoSe">SoSe</option>
+                                    <option value="WiSe/SoSe">WiSe/SoSe</option>
+                            </select>
+                        </div>
+                    </div>
+                
+                    {/** Modulart */}
+                    <div>
+                        <p className='flex-1 font-bold text-[14px]'>Modulart</p>
+                        <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between'>
+                            <select
+                            value={formData.bereichspfad}
                             onChange={(e) =>
                                 setFormData({
                                 ...formData,
-                                ects: Number(e.target.value),
+                                bereichspfad: e.target.value,
                                 })
                             }
-                        />
+                            className="w-full bg-transparent outline-none">
+                                <option value="">Bitte wählen</option>
+                                <option value="1">Pflicht</option>
+                                <option value="2">Wahlpflicht</option>
+                                <option value="3">Wahl</option>
+                            </select>
+                        </div>
                     </div>
-                </div>
-                <div>
-                    <p className='flex-1 font-bold text-[14px]'>Semester</p>
-                    <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between'>
-                        <select
-                        value={formData.turnus}
-                        onChange={(e) =>
-                            setFormData({
-                            ...formData,
-                            turnus: e.target.value,
-                            })
-                        }
-                        className="flex-1 w-full bg-transparent outline-none"
-                        >
-                        <option value="">Bitte wählen</option>
-                        <option value="1">WiSe</option>
-                        <option value="2">SoSe</option>
-                        <option value="3">WiSe/SoSe</option>
-                        </select>
+                
+                    {/** benotet */}
+                    <div>
+                        <p className='font-bold text-[14px]'>benotet?</p>
+                        <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between'>
+                            <select
+                            value={formData.benotet === null ? "" : String(formData.benotet)}
+                            onChange={(e) =>
+                                setFormData({
+                                ...formData,
+                                benotet:
+                                    e.target.value === ""
+                                    ? null
+                                    : e.target.value === "true",
+                                })
+                            }
+                            className="w-full bg-transparent outline-none">
+                                <option value="">Bitte wählen</option>
+                                <option value="true">Ja</option>
+                                <option value="false">Nein</option>
+                            </select>
+                        </div>
                     </div>
+            
                 </div>
-                <div>
-                    <p className='flex-1 font-bold text-[14px]'>Modulart</p>
-                    <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between'>
-                        <select
-                        value={formData.bereichspfad}
-                        onChange={(e) =>
-                            setFormData({
-                            ...formData,
-                            bereichspfad: e.target.value,
-                            })
-                        }
-                        className="w-full bg-transparent outline-none"
-                        >
-                        <option value="">Bitte wählen</option>
-                        <option value="1">Pflicht</option>
-                        <option value="2">Wahlpflicht</option>
-                        <option value="3">Wahl</option>
-                        </select>
-                    </div>
-                </div>
-                <div>
-                    <p className='font-bold text-[14px]'>benotet?</p>
-                    <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between'>
-                        <select
-                        value={formData.benotet === null ? "" : String(formData.benotet)}
-                        onChange={(e) =>
-                            setFormData({
-                            ...formData,
-                            benotet:
-                                e.target.value === ""
-                                ? null
-                                : e.target.value === "true",
-                            })
-                        }
-                        className="w-full bg-transparent outline-none"
-                        >
-                        <option value="">Bitte wählen</option>
-                        <option value="true">Ja</option>
-                        <option value="false">Nein</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
 
+            {/** Beschreibung */}
             <div className='flex gap-2 flex-col'>
                 <p className='font-bold text-[14px]'>Beschreibung</p>
                 <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg'>
@@ -244,12 +250,15 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                         />
                 </div>
             </div>
-            </>
-            ):(<ModulCustomJob
+        </>
+
+        
+        ):(<ModulCustomJob
                 formData={formData}
                 setFormData={setFormData}
-                />)}
+                />)} {/** wenn Modus job ist, wird ModulCustomJob geladen */}
                 
+            {/** Buttons zum Schließen und speichern */}
             <div className='flex gap-2 flex-col md:flex-row items-center align-items self-stretch'>
                 <button onClick={onClose}
                         className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg font-bold w-full md:w-1/3 items-center justify-center'>
@@ -265,7 +274,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
             </div>
         </div>
         
-        </>
+    </>
     )
 }
 
