@@ -241,7 +241,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 
 // Verlagerung der detailedmodules Komponente, da client komponenten keine server action/Komponente wrappen/einbetten oder aufrufen können..
 
-export async function ladeDetailedModulAction(modul_id: number) {
+export async function ladeDetailedModulAction(modul_id: string) {
     const supabase = await createClient();
     const {data: {user}} = await supabase.auth.getUser();
     if (!user) return null;
