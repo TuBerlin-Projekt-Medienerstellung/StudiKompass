@@ -1,6 +1,7 @@
 // components/moses-modulsuche.tsx
 "use client";
 
+
 /**
  * MosesModulsuche Komponente
  *
@@ -42,6 +43,8 @@ export default function MosesModulsuche({studiengangId}: Props) {
     // Ob Module bereits geladen wurden — verhindert wiederholte Fetches
     const [geladen, setGeladen] = useState(false);
 
+    const [query, setQuery] = useState("");
+
     /**
      * Wird aufgerufen wenn ein Filter-Button geklickt wird.
      * Beim ersten Klick: Server Action aufrufen und alle Module laden.
@@ -78,11 +81,27 @@ export default function MosesModulsuche({studiengangId}: Props) {
      * "alle": keine Filterung
      */
     const gefilterteModule = moduleList.filter((modul) => {
-        if (filter === "alle") return true;
+        
+        
         const bereich = modul.bereichPfad[0]?.toLowerCase() ?? "";
-        if (filter === "pflicht") return bereich.includes("pflicht") && !bereich.includes("wahl");
-        if (filter === "wahlpflicht") return bereich.includes("wahlpflicht");
-        return true;
+        const name = modul.name?.toLowerCase() ?? "";
+        const search = query.toLowerCase().trim();
+
+        //filter nach name, optional
+        const searchOk = search === "" || name.includes(search);
+        
+        //bereichspfad Filter
+        let filterOk = true;
+
+        if (filter === "pflicht") {
+            filterOk = bereich.includes("pflicht") && !bereich.includes("wahl");
+            } 
+        else if (filter === "wahlpflicht") {
+            filterOk = bereich.includes("wahlpflicht");
+            }
+
+
+        return searchOk && filterOk;
     });
 
     const filterButtons: { label: string; value: FilterTyp }[] = [
@@ -111,7 +130,7 @@ export default function MosesModulsuche({studiengangId}: Props) {
                     </button>
                     
                 ))}
-
+            
                 {/* Anzahl der gefilterten Module — nur sichtbar wenn geladen */}
                 {geladen && (
                     <span className="ml-auto self-center text-sm opacity-60">
@@ -134,10 +153,18 @@ export default function MosesModulsuche({studiengangId}: Props) {
                 </p>
             )}
 
+            {/** Suchbar wird angezeigt nachdem ein Filter ausgewählt ist und Module geladen sind */}
+            {geladen && filter !== null && (
+                <ModulSearch
+                    modules={moduleList}
+                    query={query}
+                    onQueryChange={setQuery}
+                />
+            )}
+
             {/* Modulliste — nur sichtbar wenn geladen und nicht am laden */}
             {!laden && geladen && (
                 <div className="w-full flex flex-col gap-4">
-                    <ModulSearch modules={moduleList} />
                     {gefilterteModule.length === 0 ? (
                         <p className="text-center opacity-50 py-10">
                             Keine Module gefunden.
