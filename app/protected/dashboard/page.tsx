@@ -12,6 +12,10 @@ import {
   CircleCheckBig,
   Circle,
 } from "lucide-react";
+import {
+  berechneGesamtschnitt,
+  berechneUrteil,
+} from "@/lib/grades";
 
 type AktuellesModul = {
   name: string;
@@ -24,7 +28,6 @@ type Meilenstein = {
   titel: string;
   fortschritt: number;
 };
-
 
 function firstOrSingle<T>(value: T | T[] | null | undefined): T | null {
   if (!value) {
@@ -42,6 +45,21 @@ export default async function DashboardPage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const { data: notenModule } = user
+  ? await supabase
+  .from("module")
+  .select("ects, note, gewichtung, benotet, abgeschlossen")
+  .eq("user_id", user.id)
+  : { data: [] };
+
+const gesamtschnitt = berechneGesamtschnitt(notenModule ?? []);
+const urteil = berechneUrteil(gesamtschnitt);
+
+console.log("User:", user?.id);
+console.log("Notenmodule:", notenModule);
+console.log("Gesamtschnitt:", gesamtschnitt);
+console.log("Urteil:", urteil);
 
   const { data: profile } = user
   ? await supabase
@@ -226,6 +244,23 @@ const meilensteine: Meilenstein[] = [
                 {profile?.max_semester ? `${profile.max_semester}. Semester` : "Noch offen"}
               </h2>
               <p className="text-sm text-muted-foreground">Voraussichtlich</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-2xl border border-border bg-white dark:bg-card p-5 flex flex-col justify-center">
+          <div className="flex items-center justify-between gap-4">
+            <TrendingUp className="h-6 w-6 text-[#C40D1F]" />
+            <div>
+              <h2 className="text-xl font-bold">
+                {gesamtschnitt !== null ? gesamtschnitt.toFixed(1) : "—"}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Gesamtschnitt
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {urteil}
+              </p>
             </div>
           </div>
         </div>
