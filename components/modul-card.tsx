@@ -81,7 +81,9 @@ const ModulCard = (props: modulInfo) => {
                         <h1 className='font-bold md:text-2xl text-xl'>{name}</h1>
                         <div className='flex gap-2'>
                             <div>{leistungspunkte} ECTS</div>
-                            <span>• {turnus} •</span>
+                            <div>•</div>
+                            <span> {turnus}</span>
+                            <div>•</div>
                             <p className='text-blue-bell dark:text-violet-ray'>{modulArt}</p>
                         </div>
                     </div>
