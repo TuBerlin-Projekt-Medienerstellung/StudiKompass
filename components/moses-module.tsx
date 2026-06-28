@@ -18,6 +18,7 @@
 
 import {useState} from 'react';
 import ModulCard from '@/components/modul-card';
+import ModulSearch from './modulsearch';
 import {ladeModulBasisAction, ModulBasis} from '@/app/protected/modules/actions';
 
 interface Props {
@@ -108,7 +109,9 @@ export default function MosesModulsuche({studiengangId}: Props) {
                     >
                         {btn.label}
                     </button>
+                    
                 ))}
+
                 {/* Anzahl der gefilterten Module — nur sichtbar wenn geladen */}
                 {geladen && (
                     <span className="ml-auto self-center text-sm opacity-60">
@@ -134,6 +137,7 @@ export default function MosesModulsuche({studiengangId}: Props) {
             {/* Modulliste — nur sichtbar wenn geladen und nicht am laden */}
             {!laden && geladen && (
                 <div className="w-full flex flex-col gap-4">
+                    <ModulSearch modules={moduleList} />
                     {gefilterteModule.length === 0 ? (
                         <p className="text-center opacity-50 py-10">
                             Keine Module gefunden.
