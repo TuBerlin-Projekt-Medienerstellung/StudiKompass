@@ -15,7 +15,7 @@ export default function ModulSearch({modules, query, onQueryChange}:Props){
         m.name?.toLowerCase().includes(query.toLowerCase())
         )
     return(
-        <div className="bg-white dark:bg-card border-2 border-grey dark:border-flag-red p-6 rounded-xl">
+        <div className="bg-card border-y-2 border-x-4 border-border border-l-mint-leaf border-r-mint-leaf p-6 rounded-xl">
             <div className="space-y-4">
                 <label className="block text-base font-semibold text-black dark:text-white mb-2">
                     Suche nach deinem Modul

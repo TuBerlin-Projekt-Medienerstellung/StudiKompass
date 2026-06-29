@@ -4,6 +4,7 @@ import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight} f
 import {ladeDetailedModulAction} from '@/app/protected/modules/actions';
 import Link from "next/link";
 import {useState} from 'react';
+import ModulFeedback from "./modul-feedback";
 
 interface modulInfo {
     modul_id: string;
@@ -137,8 +138,7 @@ const ModulCard = (props: modulInfo) => {
                                     href={details.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className='bg-flag-red text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2'
-                                >
+                                    className='bg-flag-red text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2'>
                                     zu Moses
                                     <SquareArrowOutUpRight className='justify-self-end'/>
                                 </Link>
@@ -150,6 +150,7 @@ const ModulCard = (props: modulInfo) => {
                                 </span>
                             )}
                         </div>
+                        <ModulFeedback modulId={modul_id} modulName={name}/>
                     </div>
                 </div>
             </div>
