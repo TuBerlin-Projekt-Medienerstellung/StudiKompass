@@ -1,9 +1,10 @@
 "use client";
 
-import { ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight } from 'lucide-react';
-import { ladeDetailedModulAction } from '@/app/protected/modules/actions';
+import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight} from 'lucide-react';
+import {ladeDetailedModulAction} from '@/app/protected/modules/actions';
 import Link from "next/link";
-import { useState } from 'react';
+import {useState} from 'react';
+import ModulFeedback from "./modul-feedback";
 
 interface modulInfo {
     modul_id: number;
@@ -57,9 +58,9 @@ const ModulCard = (props: modulInfo) => {
     }
 
     const detailBoxen = [
-        { name: "Prüfungsform", value: details?.pruefungsform ?? "—" },
-        { name: "Benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—" },
-        { name: "Voraussetzungen", value: details?.voraussetzungen ?? "—" },
+        {name: "Prüfungsform", value: details?.pruefungsform ?? "—"},
+        {name: "Benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—"},
+        {name: "Voraussetzungen", value: details?.voraussetzungen ?? "—"},
     ];
 
     const isWahlpflicht = modulArt.toLowerCase().includes("wahlpflicht");
@@ -72,7 +73,7 @@ const ModulCard = (props: modulInfo) => {
             <header className='w-full flex justify-between items-center'>
                 <div className='flex w-fit gap-2.5'>
                     <button onClick={() => setLiked(!liked)}>
-                        {liked ? <CircleCheckBig className="text-mint-leaf" /> : <Circle />}
+                        {liked ? <CircleCheckBig className="text-mint-leaf"/> : <Circle/>}
                     </button>
                     <div className='flex gap-6 items-center md:flex-row flex-col'>
                         <h1 className='font-bold md:text-2xl text-xl'>{name}</h1>
@@ -84,11 +85,12 @@ const ModulCard = (props: modulInfo) => {
                     </div>
                 </div>
                 <div className="cursor-pointer" onClick={handleAusklappen}>
-                    {open ? <ChevronUp /> : <ChevronDown />}
+                    {open ? <ChevronUp/> : <ChevronDown/>}
                 </div>
             </header>
 
-            <div className={`grid transition-all duration-700 ease-in-expo ${open ? 'grid-rows-[1fr] mt-5' : 'grid-rows-[0fr] mb-0'}`}>
+            <div
+                className={`grid transition-all duration-700 ease-in-expo ${open ? 'grid-rows-[1fr] mt-5' : 'grid-rows-[0fr] mb-0'}`}>
                 <div className='overflow-hidden'>
                     <div className='flex flex-col gap-y-5'>
                         {/* Beschreibung / Lernergebnisse */}
@@ -131,15 +133,17 @@ const ModulCard = (props: modulInfo) => {
                                     className='bg-flag-red text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2'
                                 >
                                     zu Moses
-                                    <SquareArrowOutUpRight className='justify-self-end' />
+                                    <SquareArrowOutUpRight className='justify-self-end'/>
                                 </Link>
                             ) : (
-                                <span className='bg-gray-300 text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed'>
+                                <span
+                                    className='bg-gray-300 text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed'>
                                     zu Moses
-                                    <SquareArrowOutUpRight />
+                                    <SquareArrowOutUpRight/>
                                 </span>
                             )}
                         </div>
+                        <ModulFeedback modulId={modul_id} modulName={name}/>
                     </div>
                 </div>
             </div>
