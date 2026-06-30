@@ -18,6 +18,7 @@ load_dotenv(dotenv_path=env_path)
 
 base_url = os.getenv("moses_API_URL")
 api_key = os.getenv("moses_API_KEY")
+service_role = os.getenv("SERVICE_ROLE_KEY")
 
 if not base_url:
     raise ValueError(f"CRITICAL: Could not find moses_API_URL! Checked path: {env_path}")
@@ -368,16 +369,3 @@ if __name__ == "__main__":
     print(f"\nProcess Finished with Status: {status}")
     print(json.dumps(final_dict, indent=4, ensure_ascii=False))
 
-
-    '''
-    
-starting dict fetch test
-Fetched 220 total degrees.
-Testing pipeline with 220 degrees...
-Fetch crashed due to: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
-Found 2198 module associations to process...
-An Error occured: HTTPSConnectionPool(host='demo.moses.tu-berlin.de', port=443): 
-Max retries exceeded with url: /moses/api/v2/bolognamodul/193 
-(Caused by ConnectTimeoutError(<HTTPSConnection(host='demo.moses.tu-berlin.de', port=443) at 0x7f049bb24dc0>, 
-'Connection to demo.moses.tu-berlin.de timed out. (connect timeout=None)'))
-    '''

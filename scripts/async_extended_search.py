@@ -1,9 +1,10 @@
 import os
 import asyncio
-import aiohttp
+import httpx
 # in ayncio instead of session (requests)-> with aiohttp.ClientSession() as session:
 import json
-import time
+import logging
+from supabase import create_client, Client
 import concurrent.futures
 
 #this whole file is just a tester file where I aim to convert it to async from the existing working file
@@ -20,6 +21,8 @@ load_dotenv(dotenv_path=env_path)
 
 base_url = os.getenv("moses_API_URL")
 api_key = os.getenv("moses_API_KEY")
+supabase_url = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
+service_role = os.getenv("SERVICE_ROLE_KEY")
 
 if not base_url:
     raise ValueError(f"CRITICAL: Could not find moses_API_URL! Checked path: {env_path}")
@@ -28,130 +31,115 @@ headers = {
     "x-api-key": api_key
     }
 #I kept getting timeout bc of the amount of requests, so I switched from requests to sessions, to reduce TLS
-session = requests.Session()
-session.headers.update(headers)
-from requests.adapters import HTTPAdapter
-adapter = HTTPAdapter(pool_connections=5, pool_maxsize=5, max_retries=3)
-session.mount('https://', adapter)
-session.mount('http://', adapter)
+# session = requests.Session()
+# session.headers.update(headers)
+# from requests.adapters import HTTPAdapter
+# adapter = HTTPAdapter(pool_connections=5, pool_maxsize=5, max_retries=3)
+# session.mount('https://', adapter)
+# session.mount('http://', adapter)
 
 #logic for a single page out here so the ThreadPool can use it
-my_dict = {}
-def fetch_single_page(page, endpoint, headers):
-    try:
-        response = session.get(
-            endpoint, 
-            headers=headers, 
-            params={"pageSize": 500, "pageNumber": page, "fields": "id,name, stupoList"}
-        )
-        if response.status_code == 200:
-
-            result = response.json().get("data") or []
-            cache=[]
+async def fetch_deg_page(client: httpx.AsyncClient, page: int, sem: asyncio.Semaphore):
+    #Fetches a single page of degrees and extracts id, name, max_stupo_id
+    endpoint = f"{base_url}/studiengang"
+    async with sem:
+        try:
+            response = await client.get(
+                endpoint, 
+                params={"pageSize": 500, "pageNumber": page, "fields": "id,name,stupoList"},
+                timeout=15.0
+            )
+            response.raise_for_status()
+            
+            data = response.json()
+            result = data.get("data") or []
+            cache = []
+            
             for x in result:
-                stupo_list = x.get("stupoList",[])
+                stupo_list = x.get("stupoList", [])
                 max_id = max((s.get("id", 0) for s in stupo_list), default=None)
-                cache.append([
-                    x.get("id"),
-                    x.get("name"),
-                    max_id
-                ])
-            return cache
-        else:
-            print(f"Failed on page {page} - Status code: {response.status_code}")
-            return []
-    except Exception as e:
-        print(f"Page {page} crashed: {e}")
-        return []
+                cache.append((x.get("id"), x.get("name"), max_id))
+                
+            return cache, data.get("totalPages", 1)
+        except Exception as e:
+            print(f"Failed degree page {page}: {e}")
+            return [], 1
+        
     '''error handling rn is just so I have the structure, however ThreadPoolExecutor needs 
     more error handling as all threads are joined before the executor can exit, meaning errorcodes should be able to stop process.
     Also this is the reason I need two functions'''
-def fetch_all_degs():
 
-    #baseurl
-    endpoint = f"{base_url}/studiengang"
-    studiengaenge = []
-    
-    try: 
+async def fetch_all_degs(client, sem):    
         # params need to be for one page
-        response = session.get(endpoint, headers=headers, params={"pageSize": 500, "pageNumber": 1, "fields": "id,name,stupoList"})
-        
-        if response.status_code == 200:
-            first_page = response.json()
-            
-            for item in first_page.get("data") or []:
-                stupo_list = item.get("stupoList") or []
-                max_id = max((s.get("id", 0) for s in stupo_list), default=None)
-                studiengaenge.append([
-                    item.get("id"),
-                    item.get("name"),
-                    max_id
-                ])
-            
-            total_pages = first_page.get("totalPages", 1)
-            
-            if total_pages > 1:
-                pages_to_fetch = range(2, total_pages + 1)
-                
-                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                    # Point the executor to our helper function at the top of the file
-                    #https://docs.python.org/3/library/concurrent.futures.html#concurrent.futures.ThreadPoolExecutor
-                    futures_map = {
-                        executor.submit(fetch_single_page, page, endpoint, headers): page
-                        for page in pages_to_fetch
-                    }
-                    
-                    # Wait for all the parallel requests to finish basically like await and promise all
-                    for future in concurrent.futures.as_completed(futures_map):
-                        page_data = future.result() 
-                        studiengaenge.extend(page_data)
-                        
-    except Exception as e:
-        #will need to add more error handling 
-        return print(f"Fetch crashed due to: {e}")
-        
-    finally: 
+        first_page, total_pages = await fetch_deg_page(client, 1, sem)
+        studiengaenge = first_page
+
+        if total_pages > 1:
+            tasks = [fetch_deg_page(client, p, sem) for p in range(2, total_pages + 1)]
+            results = await asyncio.gather(*tasks)
+            for page_data, _ in results:
+                studiengaenge.extend(page_data)
+
         return studiengaenge
     
-#prolly need to make another single fetch function bc I wanna use Threadpooler again
-def fetch_single(endpoint, params, only_id):
-    time.sleep(0.1)
+async def fetch_single(client, endpoint, params, only_id, deduplicate, sem):
     #get params from endpoint
     #if only_id == True -> get only the id
     #else get the whole parameter (list)/ dict
-    response = session.get(endpoint, headers=headers).json()
-    data_arr = response.get("data") or [{}]
-    res = data_arr[0].get(params)
+    async with sem:
+        try:
+            response = await client.get(endpoint, timeout=15.0)
+            data_arr = response.json().get("data") or [{}]
+            res = data_arr[0].get(params)
     
-    if not only_id or not res:
-        return res
-    # If the response is a LIST of dictionaries (like bolognamodulVersionList)
-    if isinstance(res, list):
-        return [item.get("id") for item in res if isinstance(item, dict) and "id" in item]
+            if not res:
+                return res
+            if deduplicate and isinstance(res, list):
+            # If the response is a LIST of dictionaries (like bolognamodulVersionList)
+                ids= {}
+                for item in res:
+                    if isinstance(item, dict) and deduplicate in item and "id" in item:
+                        key_value = item.get(deduplicate) 
+                        
+                        # max_id again
+                        if key_value not in ids or item.get("id") > ids[key_value]:
+                            ids[key_value] = item.get("id")
+                return list(ids.values())
+                            
+            if not only_id:
+                return res
 
-    if isinstance(res, dict):
-        return res.get("id")
+            if isinstance(res, list):
+                return [item.get("id") if isinstance(item, dict) else item for item in res]
+            
+            if isinstance(res, dict):
+                return res.get("id")
+                
+            return res
+        except Exception as e:
+            print(f"Fetch failed: {e}")
+            return None
         
-    return res
-
     # ->/studiengang-> stupo_id-> get fields from reference in /studiengangabbildung -> if modulliste exists: isBologna stays false -> /studiengangzuordnung->Module
     # if isBologna is true: -> /bolognamodulliste -> get group ids-> /bolognamodullistengruppe -> /bolognamodullistenzuordnung/{id}
-def fetch_is_Bologna(my_list):
+async def fetch_is_Bologna(client, deg_info, sem):
     list_modules=[]
     isBologna= False
-    try:
-        # response = requests.get(f"{base_url}/studiengangsabbildung/{my_list[2]}", headers=headers, params={"fields":"stupo"})
-        response = session.get(f"{base_url}/studiengangsabbildung", headers=headers, params={"stupoId": my_list[2]})
-        if response.status_code == 200:
-            data_list = response.json().get("data") or []
-            if not data_list:
-                return None, False
-            matching_ref = data_list[0].get("id")
-            # matching_ref =next((item for item in res if item == my_list[2]), None)
-            # if not (matching_ref):
-            #     return None, False
-            try:
-                fetch_res = session.get(f"{base_url}/studiengangsabbildung/{matching_ref}", headers=headers, params= {"fields": "modullisteList,bolognamodullisteList"})
+    deg_id, deg_name, stupo_id = deg_info
+    async with sem:
+        try:
+            # response = requests.get(f"{base_url}/studiengangsabbildung/{my_list[2]}", headers=headers, params={"fields":"stupo"})
+            response1 = await client.get(f"{base_url}/studiengangsabbildung", headers=headers, params={"stupoId": stupo_id}, timeout=15.0)
+            if response1.status_code == 200:
+                data_list = response1.json().get("data") or []
+                if not data_list:
+                    return None, False
+                matching_ref = data_list[0].get("id")
+                # matching_ref =next((item for item in res if item == my_list[2]), None)
+                # if not (matching_ref):
+                #     return None, False
+                
+                fetch_res = await client.get(f"{base_url}/studiengangsabbildung/{matching_ref}", headers=headers, params= {"fields": "modullisteList,bolognamodullisteList"}, timeout=15.0)
                 if fetch_res.status_code == 200:
                     res_data = fetch_res.json().get("data") or [{}]
                     data= res_data[0]
@@ -170,127 +158,170 @@ def fetch_is_Bologna(my_list):
 
                     max_id = max((s.get("id",0) for s in list_modules), default=None) 
                     return max_id, isBologna
-            except Exception as e:
-                print(f"Fetch crashed due to: {e}")
+
+            else:
                 return None, False
-        else:
-            return None, False
        
+        except Exception as e:
+            send_status_admin()
+            print(f"Fetch crashed due to: {e}")
+            return None, False
+    
+#A1 Get max_id from groups
+async def fetch_a_groups(client, deg_info, max_id, sem):
+    #-> /bolognamodulliste/{id} -> Returns Group_id
+    try:
+        group_id = await fetch_single(client, f"{base_url}/bolognamodulliste/{max_id}", "bolognamodulListengruppeList", True, "name", sem)
+        #I move the de-duplication logic into single fetch since I used it so much.. for better readability and less spaghetti
+        return deg_info, group_id or []
     except Exception as e:
-        send_status_admin()
-        print(f"Fetch crashed due to: {e}")
-        return None, False
+        print(f"{e}")
+        return deg_info, []
+
+#A2 Get Zuordnung_id
+async def fetch_a_zuordnungen(client, deg_info, group_id, sem):
+    #-> /bolognamodullistengruppe/{id} -> Returns Zuordnung_id
+    try:
+        zuordnungs_id = await fetch_single(client, f"{base_url}/bolognamodullistengruppe/{group_id}", "bolognamodulListenzuordnungList", True, None, sem)
+        return deg_info, zuordnungs_id or []
+    except Exception as e:
+        if (e == httpx.ConnectTimeout):
+           send_status_admin("Httpx ConnectTimeout Error in fetch_a_zuordnungen: {e}")
+        print(f"{e}")
+        return deg_info, []
+
+#A3 Get Version_id
+async def fetch_a_version(client, deg_info, zuordnung_id, sem):
+    #-> /bolognamodullistenzuordnung/{id} -> Returns Version_id
+    try:
+        vers_id = await fetch_single(client, f"{base_url}/bolognamodullistenzuordnung/{zuordnung_id}", "bolognamodulVersion", True, None, sem)
+        if isinstance(vers_id, list) and len(vers_id) > 0:
+            return deg_info, vers_id[0] or None
+        return deg_info, vers_id or []
+    except Exception as e:
+            print(f"{e}")  
+            return deg_info, None
+
+#B1 ->/modulliste/{max_id} similar to A1
+async def fetch_b_zuordnungen(client, deg_info, max_id, sem):
+    try:
+        zuordnungs_id = await fetch_single(client, f"{base_url}/modulliste/{max_id}", "studiengangszuordnungList", True, "name", sem)
+        return deg_info, zuordnungs_id or []
+    except Exception as e:
+        print(f"{e}")
+        return deg_info, []
+#B2
+async def fetch_b_version(client, deg_info, zuordnung_id, sem):
+    try:
+        vers_id = await fetch_single(client, f"{base_url}/studiengangszuordnung/{zuordnung_id}", "bolognamodulVersion", True, None, sem)
+        if isinstance(vers_id, list) and len(vers_id) > 0:
+            return deg_info, vers_id[0] or None
+        return deg_info, vers_id or []
+    
+    except Exception as e:
+        print(f"{e}")
+        return deg_info, []
+#C aka for both paths
+async def fetch_module_id(client, deg_info, vers_id, sem):
+    try:
+        module_id = await fetch_single(client, f"{base_url}/bolognamodulversion/{vers_id}", "bolognamodul", True, "name", sem)
+        return deg_info, module_id or []
+    except Exception as e:
+        print(f"{e}")
+        return deg_info, []
          
 # ->/studiengang-> stupo_id-> get fields from reference in /studiengangsabbildung -> if modulliste exists: isBologna stays false -> /studiengangzuordnung->Module
 # if isBologna is true: -> /bolognamodulliste -> get group ids-> /bolognamodullistengruppe -> /bolognamodullistenzuordnung/{id} -> /bolognamodulversion/{id}
-def fetch_all_modules(deg_list):
-    all_modules= []
-    for x in deg_list:
-        max_id, isBologna = fetch_is_Bologna(x)
-        if max_id is None:
+async def fetch_all_modules(client, deg_list, sem):
+    #this function should become the bologna path manager.. aka if bologna I choose group A if not then group B
+    #At the very end the fetch for module id with the bolognamodulversion is neutral and is done regardless of whatever path was taken before
+    #I obv also need delete this whole thing to become basic if else.. I will define the rest of the async helper functions and call them here
+    bologna_tasks = [fetch_is_Bologna(client, deg, sem) for deg in deg_list]
+    bologna_results = await asyncio.gather(*bologna_tasks)
+    a_path, b_path= [],[]
+
+    for deg_info, (max_id, isBologna) in zip(deg_list, bologna_results):
+        if not max_id:
             continue
+        print(f"DEBUG: Found {len(a_path)} Bologna degrees and {len(b_path)} Standard degrees.")
         if (isBologna):
-            try:
-                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                    #fetch bolognamodulListengruppeList from /bolognamodulliste/{max_id}
-                    #also unsure abt field: bolognamodulListengruppeList
-                    len_list_groups = session.get(f"{base_url}/bolognamodulliste/{max_id}",headers=headers, params= "data")
-                    #if name is duplicate choose the greater id
+            a_path.append((deg_info, max_id))
+        else:
+            b_path.append((deg_info, max_id))
 
-                    data_arr = len_list_groups.json().get("data") or [{}]
-                    len_list_group = data_arr[0].get("bolognamodulListengruppeList") or []
-                    ids={}
-                    for item in len_list_group:
-                        name = item.get("name")
-                        if name not in ids or item.get("id")>ids[name]:
-                            ids[name]=item.get("id")
-                    #list_groups = len_list_group.get("id")
+    all_modules=[]
+    cache = []
+    if a_path:
+        a1_tasks = [fetch_a_groups(client, deg_info, max_id, sem) for deg_info, max_id in a_path]
+        a1_results = await asyncio.gather(*a1_tasks, return_exceptions=True)
+        print(f"DEBUG: a1_results count: {len(a1_results)}")
+        print(a1_results[0])
 
-                    #for every group_id fetch bolognamodulListenzuordnungList from /bolognamodullistengruppe/{id}
-                    futures_map = {
-                        executor.submit(fetch_single, params="bolognamodulListenzuordnungList", only_id= False, endpoint= f"{base_url}/bolognamodullistengruppe/{el}"): el
-                        for el in list(ids.values())
-                    }#unsure if field:bolognamodulListenzuordnungList exists, or if it is just 1 dim in data
-                    for future in concurrent.futures.as_completed(futures_map):
-                        result_list = future.result() or []
-                        for zuordnungs_id in result_list:
-                            #fetch bolognamodulVersion for every bolognamodulListenzuordnungList_id from /bolognamodullistenzuordnung/{id}
-                            future_map ={
-                                executor.submit(fetch_single, params="bolognamodulVersion", only_id= True, endpoint= f"{base_url}/bolognamodullistenzuordnung/{zuordnungs_id}")
-                            }  
-                            for futurex in concurrent.futures.as_completed(future_map):
-                                result_id = futurex.result()
-                                if isinstance(result_id, list) and len(result_id) > 0:
-                                    result_id = result_id[0]
-                                if not result_id:
-                                    continue
-                                module_field= session.get(f"{base_url}/bolognamodulversion/{result_id}",headers=headers)
-                                m_data_arr = module_field.json().get("data") or [{}]
-                                module_id = m_data_arr[0].get("bolognamodul", {}).get("id")
-                                all_modules.append((x,module_id))
-                            #fetch bolognamodul_id from /bolognamodulversion/{id}
+        # a2_tasks = [fetch_a_zuordnungen(client, deg_info, group_id, sem) for deg_info, group_id in a1_results]
+        #Moses provides a list of ids (due to my single fetch) so I gotta unpack it first
+        a2_tasks = []
+        for deg_info, group_ids in a1_results:
+            if isinstance(group_ids, list):
+                for g_id in group_ids:
+                    a2_tasks.append(fetch_a_zuordnungen(client, deg_info, g_id, sem))
+        a2_results = await asyncio.gather(*a2_tasks, return_exceptions=True)
+        print(f"DEBUG: a2_results count: {len(a2_results)}")
+        print(a2_results[0])
 
-            except Exception as e:
-                send_status_admin()
-                print(f"Fetch crashed due to: {e}")
-                continue
-        elif not isBologna:
-            try:
-                with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-                    bologna_list_groups = session.get(f"{base_url}/modulliste/{max_id}",headers=headers, params= {"fields":"studiengangszuordnungList"})
-                    data_arr = bologna_list_groups.json().get("data") or [{}]
-                    bologna_list_group = data_arr[0].get("studiengangszuordnungList") or []
-                    #if name is duplicate choose the greater id
-                    ids={}
-                    for item in bologna_list_group:
-                        name = item.get("name")
-                        if name not in ids or item.get("id")>ids[name]:
-                            ids[name]=item.get("id")
-                    futures_map = {
-                        executor.submit(fetch_single, params="bolognamodulVersion", only_id=True, endpoint= f"{base_url}/studiengangszuordnung/{el}"): el
-                        for el in ids.values()
-                    }
-                    #/modulliste->studiengangszuordnungList-> /studiengangszuordnung/{id}-> bolognamodulVersion -> /bolognamodulversion/{id}-> bolognamodul_id
-                    for future in concurrent.futures.as_completed(futures_map):
-                        res_id = future.result()
-                        if isinstance(res_id, list) and len(res_id) > 0:
-                            res_id = res_id[0]
-                        if not res_id:
-                            continue
-                        next_map={
-                            executor.submit(fetch_single, params="bolognamodul", only_id= True, endpoint= f"{base_url}/bolognamodulversion/{res_id}") 
-                        }
-                        for next in concurrent.futures.as_completed(next_map):
-                            final_res_id = next.result()
-                            
-                            # data is not 1dim needs unpacking if list
-                            if isinstance(final_res_id, list) and len(final_res_id) > 0:
-                                final_res_id = final_res_id[0]
-                            if not final_res_id:
-                                continue
-                                
-                            all_modules.append((x, final_res_id))
-    
-            except Exception as e:
-                send_status_admin()
-                print(f"Fetch crashed due to: {e}")
-                continue
-                 
-    return all_modules    
+        # a3_tasks = [fetch_a_version(client, deg_info, zuordnung_id, sem) for deg_info, zuordnung_id in a2_results]
+        a3_tasks = []
+        for deg_info, zuordnungs_ids in a2_results:
+            if isinstance(zuordnungs_ids, list):
+                for z_id in zuordnungs_ids:
+                    a3_tasks.append(fetch_a_version(client, deg_info, z_id, sem))
+            elif isinstance(zuordnungs_ids, int):
+                a3_tasks.append(fetch_a_version(client, deg_info, zuordnungs_ids, sem))
+        a3_results = await asyncio.gather(*a3_tasks, return_exceptions=True)
+        print(f"DEBUG: a3_results count: {len(a3_results)}")
+        cache.extend(a3_results)
+    if b_path:
+        b1_tasks = [fetch_b_zuordnungen(client,deg_info, max_id, sem) for deg_info, max_id in b_path]
+        b1_results = await asyncio.gather(*b1_tasks, return_exceptions=True)
+        print(f"DEBUG: b1_results count: {len(b1_results)}")
+        print(b1_results[0])
+
+        # b2_tasks = [fetch_a_version(client, deg_info, zuordnung_id, sem) for deg_info, zuordnung_id in b1_results]
+        b2_tasks = []
+        for deg_info, zuordnungs_ids in b1_results:
+            if isinstance(zuordnungs_ids, list):
+                for z_id in zuordnungs_ids:
+                    b2_tasks.append(fetch_a_version(client, deg_info, z_id, sem))
+            elif isinstance(zuordnungs_ids, int):
+                b2_tasks.append(fetch_a_version(client, deg_info, zuordnungs_ids, sem))
+        b2_results = await asyncio.gather(*b2_tasks, return_exceptions=True)
+        cache.extend(b2_results)
+        print(f"DEBUG: b2_results count: {len(b2_results)}")
+
+    c_tasks = [fetch_module_id(client, deg_info, vers_id, sem) for deg_info, vers_id in cache]
+    c_results= await asyncio.gather(*c_tasks, return_exceptions=True)
+    print(f"DEBUG: c_results count: {len(c_results)}")
+    all_modules.extend(c_results)
+    print(all_modules[0])
+    return all_modules
     
 
-
-
-def module_manager():
+async def module_manager():
+    #Imma keep the same logic as I defined in the synchronous version, because it supports dictionary logic, while staying clean and readable
+    #However I made the singl fetch async too bc otherwise it could interfere with the awaited value in the loop, it needs to be able to drop a tak until it's ready
+    my_dict= {}
     process_status = 0
-    list_studiengaenge = fetch_all_degs()
-    print(f"Fetched {len(list_studiengaenge)} total degrees.")
+    sem = asyncio.Semaphore(20)
+    limits = httpx.Limits(max_connections=50, max_keepalive_connections=10)
+    async with httpx.AsyncClient(headers=headers, limits=limits) as client:
     
-    list_studiengaenge = list_studiengaenge[: ]
-    print(f"Testing pipeline with {len(list_studiengaenge)} degrees...")
-
-    list_modules = fetch_all_modules(list_studiengaenge)
-    print(f"Found {len(list_modules)} module associations to process...")
+        # 2. Your async pipelines go here...
+        list_studiengaenge = await fetch_all_degs(client, sem)
+        print(f"Fetched {len(list_studiengaenge)} total degrees.")
+        
+        list_modules = await fetch_all_modules(client, list_studiengaenge, sem)
+        print(f"DEBUG: list_modules count: {len(list_modules)}")
+        if len(list_modules) > 0:
+            print(f"DEBUG: Sample result: {list_modules[0]}")
     for x,module_id in list_modules:
         if not module_id:
             continue
@@ -300,13 +331,11 @@ def module_manager():
             # my_dict_list=[{"id":mod_id, **details} for mod_id, details in my_dict.items()]
             if not module_id in my_dict:
                 #fetch Lehrinhalt of that module with id  /bolognamodulbeschreibung/{id} (id from modulversion endpoint)
-                multiname = fetch_single(f"{base_url}/bolognamodul/{module_id}","multiname" ,False) or {}
+                multiname = await fetch_single(client, f"{base_url}/bolognamodul/{module_id}","multiname" ,False, None, sem) or {}
                 de_name = multiname.get("de", "")
                 en_name = multiname.get("en", "")
-                #add [] and {} literally everywhere so it doesnt return None and crash omfg
-                # version_id = max(fetch_single(f"{base_url}/bolognamodul/{module_id}","bolognamodulVersionList" ,True)) or []
-                # description_id = max(fetch_single(f"{base_url}/bolognamodulversion/{version_id}","bolognamodulBeschreibung" ,True))
-                v_res = fetch_single(f"{base_url}/bolognamodul/{module_id}","bolognamodulVersionList" ,True)
+
+                v_res = await fetch_single(client, f"{base_url}/bolognamodul/{module_id}", "bolognamodulVersionList", True, None, sem)
                 if isinstance(v_res, list) and len(v_res) > 0:
                     version_id = max(v_res)
                 elif isinstance(v_res, int):
@@ -315,14 +344,14 @@ def module_manager():
                     version_id = None
                 description_id = None
                 if version_id:
-                    desc_res = fetch_single(f"{base_url}/bolognamodulversion/{version_id}","bolognamodulBeschreibung" ,True)
+                    desc_res = await fetch_single(client, f"{base_url}/bolognamodulversion/{version_id}","bolognamodulBeschreibung" ,True, None, sem)
                     if isinstance(desc_res, list) and len(desc_res) > 0:
                         description_id = max(desc_res)
                     elif isinstance(desc_res, int):
                         description_id = desc_res
                 Lehrinhalt = ""
                 if description_id:
-                    Lehrinhalt = fetch_single(f"{base_url}/bolognamodulbeschreibung/{description_id}","lehrinhalteDE", False) or ""
+                    Lehrinhalt = await fetch_single(client, f"{base_url}/bolognamodulbeschreibung/{description_id}","lehrinhalteDE", False, None, sem) or ""
                 #dict= {id: {/*"id":module_id,*/ "de_name":de_name, "en_name":en_name, "studiengänge":[], "lehrinhalt": Lehrinhalt, "words:[]"}, ...}
                 #append module to my_dict
                 my_dict[module_id] = {
@@ -347,6 +376,8 @@ def module_manager():
             process_status = 2
     return my_dict, process_status
 
+
+
 #what if we use Threadpool for this and for the fetching we use asyncio?
 #start of transformers: chunking->vibe vectors ->vector mean -> compare vector mean to all candidate words in text (unique)
 def find_internal_candidates():
@@ -358,28 +389,23 @@ def sparql_candidates():
 def to_json():
     pass
 
-def send_status_admin():
+def send_status_admin(message, level):
     #return process details, error codes/success message after json code gets placed in a bucket
     #create extra log? or maybe a supabase table?
+    supabase: Client = create_client(supabase_url, service_role)
+    log_entry={
+        "message": message,
+        "level": level,
+        "metadata": {"github_run_id": os.environ.get("GITHUB_RUN_ID")}
+    }
+    response = supabase.table("logs".insert(log_entry)).execute()
+    print(f"You logged this: {response}")
     pass
 
 #For testing the fetch/sorting logic and Threading
 if __name__ == "__main__":
     print("starting dict fetch test")
-    final_dict, status = module_manager()
+    final_dict, status = asyncio.run(module_manager())
     print(f"\nProcess Finished with Status: {status}")
     print(json.dumps(final_dict, indent=4, ensure_ascii=False))
 
-
-    '''
-    
-starting dict fetch test
-Fetched 220 total degrees.
-Testing pipeline with 220 degrees...
-Fetch crashed due to: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))
-Found 2198 module associations to process...
-An Error occured: HTTPSConnectionPool(host='demo.moses.tu-berlin.de', port=443): 
-Max retries exceeded with url: /moses/api/v2/bolognamodul/193 
-(Caused by ConnectTimeoutError(<HTTPSConnection(host='demo.moses.tu-berlin.de', port=443) at 0x7f049bb24dc0>, 
-'Connection to demo.moses.tu-berlin.de timed out. (connect timeout=None)'))
-    '''
