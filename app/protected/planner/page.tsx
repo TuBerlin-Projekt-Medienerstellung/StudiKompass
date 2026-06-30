@@ -173,10 +173,11 @@ const Page = () => {
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}>
-            <section className="flex flex-col gap-4 p-6">
+            <section className="flex flex-col gap-4 p-4 md:p-6">
+                {/* Responsive Header: auf Mobile etwas kleiner */}
                 <div className="flex flex-col gap-2">
-                    <h1 className="font-bold text-4xl">Studienplaner</h1>
-                    <p className="opacity-70">Plane dein Studium semesterweise</p>
+                    <h1 className="text-3xl font-bold md:text-4xl">Studienplaner</h1>
+                    <p className="text-sm opacity-70 md:text-base">Plane dein Studium semesterweise</p>
                 </div>
 
                 <div className="flex flex-col gap-6">
@@ -190,13 +191,14 @@ const Page = () => {
                     ))}
                 </div>
 
-                <div className='flex flex-row gap-4'>
+                {/* Buttons auf Mobile untereinander, auf Desktop nebeneinander */}
+                <div className='flex flex-col gap-4 md:flex-row'>
                     <button onClick={handleAddSemester}
-                            className='border-2 rounded-2xl border-dashed p-4 flex cursor-pointer items-center justify-center px-6 py-4 md:w-5/6 w-full'>
+                            className='flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-4 md:w-5/6'>
                         <Plus></Plus>Semester hinzufügen
                     </button>
                     <button onClick={() => handleDeleteSemester(semesterList[semesterList.length - 1].nummer)}
-                            className='flex border-2 rounded-2xl border-flag-red cursor-pointer md:w-1/6 w-full items-center justify-center'>
+                            className='flex w-full cursor-pointer items-center justify-center rounded-2xl border-2 border-flag-red px-6 py-4 md:w-1/6'>
                         <Trash2></Trash2>
                     </button>
                 </div>
