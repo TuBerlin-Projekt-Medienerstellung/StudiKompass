@@ -21,24 +21,26 @@ const SemesterCard = ({semester, module, onClick}: Props) => {
         <div
             ref={setNodeRef}
             onClick={onClick}
-            className="border-2 rounded-2xl p-4 gap-4 flex flex-col cursor-pointer bg-card">
-            <header className="flex justify-between">
-                <div>
-                    <h2 className="font-bold text-xl">{semester}. Semester</h2>
-                    <p className="opacity-70 text-sm">
+            className="flex w-full min-w-0 cursor-pointer flex-col gap-4 rounded-2xl border-2 bg-card p-4">
+            {/* Header auf Mobile enger, ECTS rechts bündig */}
+            <header className="flex items-start justify-between gap-4">
+                <div className="min-w-0">
+                    <h2 className="text-lg font-bold sm:text-xl">{semester}. Semester</h2>
+                    <p className="text-sm opacity-70">
                         {module.length} {module.length === 1 ? "Modul" : "Module"}
                     </p>
                 </div>
-                <div className="text-right">
-                    <h2 className="font-bold text-xl text-oxblood">{totalECTS}</h2>
-                    <p>ECTS</p>
+
+                <div className="shrink-0 text-right">
+                    <h2 className="text-lg font-bold text-oxblood sm:text-xl">{totalECTS}</h2>
+                    <p className="text-sm">ECTS</p>
                 </div>
             </header>
 
             <SortableContext
                 items={module.map(modul => String(modul.modul_id))}
                 strategy={verticalListSortingStrategy}>
-                <div className="flex flex-col gap-2 min-h-15">
+                <div className="flex min-h-16 flex-col gap-3">
                     {module.map((modul) => (
                         <SemesterModulCard
                             key={modul.modul_id}
@@ -48,13 +50,12 @@ const SemesterCard = ({semester, module, onClick}: Props) => {
                 </div>
             </SortableContext>
 
-
             {/** Button leitet zur Modulsuche weiter */}
             <Link
                 href="/protected/modules"
-                className="border-2 border-dashed rounded-2xl flex items-center justify-center px-6 py-4 mt-2"
+                className="mt-1 flex items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-4 py-4 text-sm sm:px-6 sm:text-base"
                 onClick={(e) => e.stopPropagation()}>
-                <Plus/>
+                <Plus className="h-5 w-5 shrink-0"/>
                 <span>Modul hinzufügen</span>
             </Link>
         </div>

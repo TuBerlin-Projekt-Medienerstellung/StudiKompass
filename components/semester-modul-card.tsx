@@ -127,32 +127,32 @@ const SemesterModulCard = ({modul}: Props) => {
     }, [isOpen, modul.modul_id, modul.note, modul.gewichtung, modul.abgeschlossen]);
 
     return (
-        <div ref={setNodeRef} style={style}>
+        <div ref={setNodeRef} style={style} className="w-full min-w-0">
             <div
                 onClick={handleAusklappen}
-                className={`px-6 py-4 rounded-2xl border-x-4 border-y-2 border-flag-red flex flex-col gap-2 cursor-pointer bg-card transition-all duration-300 ${
+                className={`flex w-full min-w-0 cursor-pointer flex-col gap-3 rounded-2xl border-x-4 border-y-2 border-flag-red bg-card px-4 py-4 transition-all duration-300 sm:px-6 ${
                     isOpen ? "shadow-md" : ""}`}>
 
                 {/* Eingeklappte Version des Moduls */}
-                <div className="flex flex-row gap-2 items-center w-full">
+                <div className="flex w-full min-w-0 items-start gap-3">
                     <div
                         {...attributes}
                         {...listeners}
-                        className='pr-2 text-muted-foreground cursor-grab active:cursor-grabbing'
+                        className='mt-1 shrink-0 cursor-grab pr-1 text-muted-foreground active:cursor-grabbing'
                         onClick={(e) => e.stopPropagation()}>
-                        <Grip/>
+                        <Grip className="h-5 w-5"/>
                     </div>
 
-                    <div className='flex flex-col flex-1'>
-                        <h1 className="font-bold text-lg">
+                    <div className='flex min-w-0 flex-1 flex-col gap-1'>
+                        <h1 className="break-words text-base font-bold leading-tight sm:text-lg">
                             {modul.name}
                         </h1>
 
-                        <div className="flex flex-wrap items-center opacity-80 gap-3 text-sm">
-                            <span className="text-flag-red">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm opacity-80">
+                            <span className="whitespace-nowrap text-flag-red">
                                 {modul.leistungspunkte} ECTS
                             </span>
-                            <span>
+                            <span className="whitespace-nowrap">
                                 {modul.turnus}
                             </span>
                             <Link
@@ -166,27 +166,27 @@ const SemesterModulCard = ({modul}: Props) => {
                     </div>
 
                     {/* Pfeil rechts, zeigt den Aufklapp-Status an */}
-                    <div className="text-muted-foreground px-2">
+                    <div className="shrink-0 px-1 pt-1 text-muted-foreground">
                         {isOpen ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
                     </div>
 
                     <button
-                        className="flex pr-2 py-4 ml-2 hover:text-flag-red transition-colors"
+                        className="shrink-0 px-1 pt-1 transition-colors hover:text-flag-red"
                         onClick={(e) => {
                             e.stopPropagation();
                         }}>
-                        <Trash2/>
+                        <Trash2 className="h-5 w-5"/>
                     </button>
                 </div>
 
                 {/* Ausgeklappte Karte - Details */}
                 <div className={`grid transition-all duration-500 ease-in-out ${
-                    isOpen ? 'grid-rows-[1fr] opacity-100 mt-4 pt-4 border-t' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                    isOpen ? 'grid-rows-[1fr] opacity-100 mt-3 pt-4 border-t' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
                 }`}>
                     <div className="overflow-hidden">
                         <div className="flex flex-col gap-6 text-card-foreground"
                              onClick={(e) => e.stopPropagation()}>
-                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-y-2">
+                            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                                 <div className="flex flex-row flex-wrap items-center gap-3 text-sm">
                                     <div
                                         className="bg-flag-red text-card rounded-xl py-1 px-2 w-fit text-xs font-semibold">
@@ -235,40 +235,40 @@ const SemesterModulCard = ({modul}: Props) => {
                             </div>
 
                             {/* Infokästen */}
-                            <div className="grid grid-cols-1 gap-3 md:grid-cols-4 w-full">
+                            <div className="grid w-full grid-cols-1 gap-3 md:grid-cols-4">
                                 <div
                                     className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-lg opacity-70">
+                                    <p className="text-sm opacity-70 md:text-lg">
                                         Arbeitsaufwand
                                     </p>
-                                    <p className="font-semibold text-md">
+                                    <p className="font-semibold text-sm md:text-md">
                                         {modul.arbeitsaufwand}
                                     </p>
                                 </div>
 
                                 <div
                                     className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-lg opacity-70">
+                                    <p className="text-sm opacity-70 md:text-lg">
                                         Angebot
                                     </p>
-                                    <p className="font-semibold text-md">
+                                    <p className="font-semibold text-sm md:text-md">
                                         {modul.turnus}
                                     </p>
                                 </div>
 
                                 <div
                                     className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-lg opacity-70">
+                                    <p className="text-sm opacity-70 md:text-lg">
                                         Prüfungsform
                                     </p>
-                                    <p className="font-semibold text-md">
+                                    <p className="font-semibold text-sm md:text-md">
                                         {modul.pruefungsform}
                                     </p>
                                 </div>
 
                                 <div
                                     className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-lg opacity-70 mb-2">
+                                    <p className="text-sm opacity-70 mb-2 md:text-lg">
                                         Bewertung
                                     </p>
                                     <div className="font-semibold text-sm w-full flex justify-center">
