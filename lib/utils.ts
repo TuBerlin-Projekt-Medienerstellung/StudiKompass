@@ -10,6 +10,11 @@ export const hasEnvVars =
     process.env.NEXT_PUBLIC_SUPABASE_URL &&
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-export function handleModule(id: ModuleId) {
-    return String(id.value);
+export function handleModule(id: ModuleId | string | number) {
+    // Fall 1: Es ist das Objekt-Format { type, value }
+    if (id && typeof id === "object" && "value" in id) {
+        return String(id.value);
+    }
+    // Fall 2: Es ist direkt eine Zahl oder ein String (der echte Fall aus der Suche)
+    return String(id);
 }

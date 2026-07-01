@@ -1,21 +1,21 @@
 "use client";
 
-import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight, CalendarPlus} from 'lucide-react';
-import {ladeDetailedModulAction} from '@/app/protected/modules/actions';
+import { ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight, CalendarPlus } from 'lucide-react';
+import { ladeDetailedModulAction } from '@/app/protected/modules/actions';
 import Link from "next/link";
-import {useState} from 'react';
+import { useState } from 'react';
 import ModulFeedback from "./modul-feedback";
-import {handleModule} from "@/lib/utils";
+import { handleModule } from "@/lib/utils";
 
 
 // Placeholder – später aus Supabase laden
 const SEMESTER_LISTE = [
-    {nummer: 1, name: "1. Semester", typ: "Wintersemester"},
-    {nummer: 2, name: "2. Semester", typ: "Sommersemester"},
-    {nummer: 3, name: "3. Semester", typ: "Wintersemester"},
-    {nummer: 4, name: "4. Semester", typ: "Sommersemester"},
-    {nummer: 5, name: "5. Semester", typ: "Wintersemester"},
-    {nummer: 6, name: "6. Semester", typ: "Sommersemester"},
+    { nummer: 1, name: "1. Semester", typ: "Wintersemester" },
+    { nummer: 2, name: "2. Semester", typ: "Sommersemester" },
+    { nummer: 3, name: "3. Semester", typ: "Wintersemester" },
+    { nummer: 4, name: "4. Semester", typ: "Sommersemester" },
+    { nummer: 5, name: "5. Semester", typ: "Wintersemester" },
+    { nummer: 6, name: "6. Semester", typ: "Sommersemester" },
 ];
 
 const ModulCard = (props: modulInfo) => {
@@ -63,9 +63,9 @@ const ModulCard = (props: modulInfo) => {
     }
 
     const detailBoxen = [
-        {name: "Prüfungsform", value: details?.pruefungsform ?? "—"},
-        {name: "Benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—"},
-        {name: "Voraussetzungen", value: details?.voraussetzungen ?? "—"},
+        { name: "Prüfungsform", value: details?.pruefungsform ?? "—" },
+        { name: "Benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—" },
+        { name: "Voraussetzungen", value: details?.voraussetzungen ?? "—" },
     ];
 
     const isWahlpflicht = bereichpfad.toLowerCase().includes("wahlpflicht");
@@ -79,7 +79,7 @@ const ModulCard = (props: modulInfo) => {
             <header className='w-full flex justify-between items-center'>
                 <div className='flex w-fit gap-2.5'>
                     <button onClick={() => setLiked(!liked)}>
-                        {liked ? <CircleCheckBig className="text-mint-leaf"/> : <Circle/>}
+                        {liked ? <CircleCheckBig className="text-mint-leaf" /> : <Circle />}
                     </button>
                     <div className='flex gap-6 items-center md:flex-row flex-col'>
                         <h1 className='font-bold md:text-2xl text-xl'>{name}</h1>
@@ -93,7 +93,7 @@ const ModulCard = (props: modulInfo) => {
                     </div>
                 </div>
                 <div className="cursor-pointer" onClick={handleAusklappen}>
-                    {open ? <ChevronUp/> : <ChevronDown/>}
+                    {open ? <ChevronUp /> : <ChevronDown />}
                 </div>
             </header>
 
@@ -124,7 +124,7 @@ const ModulCard = (props: modulInfo) => {
                             {/** Hier fetchen für die Details, gerade werden dummy daten von constants gefetchtet **/}
                             {detailBoxen.map((detail, index) => (
                                 <div key={index}
-                                     className='bg-[#E3E6EA] dark:bg-[#16081f] flex border-2 border-border rounded-xl w-full items-center p-4 flex-col'>
+                                    className='bg-[#E3E6EA] dark:bg-[#16081f] flex border-2 border-border rounded-xl w-full items-center p-4 flex-col'>
                                     <span>{detail.name}</span>
                                     <p className='font-bold'>{detail.value}</p>
                                 </div>
@@ -140,15 +140,15 @@ const ModulCard = (props: modulInfo) => {
                                     className='w-full bg-foreground text-background px-4 py-2.5 rounded-xl flex items-center justify-between gap-2 transition-colors hover:opacity-90 dark:bg-[#35AE80]'
                                 >
                                     <div className='flex items-center gap-2'>
-                                        <CalendarPlus className='w-5 h-5'/>
+                                        <CalendarPlus className='w-5 h-5' />
                                         <span className='font-medium'>
-                    {selectedSemester
-                        ? `${selectedSemester}. Semester gewählt`
-                        : 'Zum Planer hinzufügen'}
-                </span>
+                                            {selectedSemester
+                                                ? `${selectedSemester}. Semester gewählt`
+                                                : 'Zum Planer hinzufügen'}
+                                        </span>
                                     </div>
-                                    {plannerOpen ? <ChevronUp className='w-4 h-4'/> :
-                                        <ChevronDown className='w-4 h-4'/>}
+                                    {plannerOpen ? <ChevronUp className='w-4 h-4' /> :
+                                        <ChevronDown className='w-4 h-4' />}
                                 </button>
 
                                 {/* Semester-Picker Dropdown */}
@@ -177,13 +177,12 @@ const ModulCard = (props: modulInfo) => {
                                                                 className='font-medium text-foreground'>{sem.name}</span>
                                                         </div>
                                                         <span
-                                                            className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
-                                                                isWinter
+                                                            className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${isWinter
                                                                     ? 'text-blue-bell border-blue-bell/30 bg-blue-bell/10'
                                                                     : 'text-amber-500 border-amber-400/30 bg-amber-50 dark:bg-amber-500/10'
-                                                            }`}>
-                                    {sem.typ}
-                                </span>
+                                                                }`}>
+                                                            {sem.typ}
+                                                        </span>
                                                     </button>
                                                 );
                                             })}
@@ -201,17 +200,17 @@ const ModulCard = (props: modulInfo) => {
                                     className='shrink-0 bg-flag-red text-white px-4 py-2.5 rounded-xl flex items-center gap-2 whitespace-nowrap'
                                 >
                                     zu Moses
-                                    <SquareArrowOutUpRight className='justify-self-end'/>
+                                    <SquareArrowOutUpRight className='justify-self-end' />
                                 </Link>
                             ) : (
                                 <span
                                     className='bg-gray-300 text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed'>
                                     zu Moses
-                                    <SquareArrowOutUpRight/>
+                                    <SquareArrowOutUpRight />
                                 </span>
                             )}
                         </div>
-                        <ModulFeedback modulId={modul_id} modulName={name}/>
+                        <ModulFeedback modulId={modul_id} modulName={name} />
                     </div>
                 </div>
             </div>
