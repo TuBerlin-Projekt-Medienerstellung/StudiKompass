@@ -21,6 +21,7 @@ import {useState} from 'react';
 import ModulCard from '@/components/modul-card';
 import ModulSearch from './modulsearch';
 import {ladeModulBasisAction, ModulBasis} from '@/app/protected/modules/actions';
+import {handleModule} from "@/lib/utils";
 
 interface Props {
     // studiengangId wird von page.tsx weitergegeben
@@ -81,24 +82,23 @@ export default function MosesModulsuche({studiengangId}: Props) {
      * "alle": keine Filterung
      */
     const gefilterteModule = moduleList.filter((modul) => {
-        
-        
+
+
         const bereich = modul.bereichPfad[0]?.toLowerCase() ?? "";
         const name = modul.name?.toLowerCase() ?? "";
         const search = query.toLowerCase().trim();
 
         //filter nach name, optional
         const searchOk = search === "" || name.includes(search);
-        
+
         //bereichspfad Filter
         let filterOk = true;
 
         if (filter === "pflicht") {
             filterOk = bereich.includes("pflicht") && !bereich.includes("wahl");
-            } 
-        else if (filter === "wahlpflicht") {
+        } else if (filter === "wahlpflicht") {
             filterOk = bereich.includes("wahlpflicht");
-            }
+        }
 
 
         return searchOk && filterOk;
@@ -128,9 +128,9 @@ export default function MosesModulsuche({studiengangId}: Props) {
                     >
                         {btn.label}
                     </button>
-                    
+
                 ))}
-            
+
                 {/* Anzahl der gefilterten Module — nur sichtbar wenn geladen */}
                 {geladen && (
                     <span className="ml-auto self-center text-sm opacity-60">

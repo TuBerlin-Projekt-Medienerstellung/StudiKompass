@@ -5,6 +5,7 @@ import {ladeDetailedModulAction} from '@/app/protected/modules/actions';
 import Link from "next/link";
 import {useState} from 'react';
 import ModulFeedback from "./modul-feedback";
+import {handleModule} from "@/lib/utils";
 
 
 // Placeholder – später aus Supabase laden
@@ -54,6 +55,7 @@ const ModulCard = (props: modulInfo) => {
         pruefungsform,
         benotet,
     } = props;
+
     function handleSemesterWahl(nummer: number) {
         setSelectedSemester(nummer);
         // TODO: Supabase insert hier einfügen
@@ -209,7 +211,7 @@ const ModulCard = (props: modulInfo) => {
                                 </span>
                             )}
                         </div>
-                        <ModulFeedback modulId = {handleModule(modul_id)} modulName={name}/>
+                        <ModulFeedback modulId={modul_id} modulName={name}/>
                     </div>
                 </div>
             </div>

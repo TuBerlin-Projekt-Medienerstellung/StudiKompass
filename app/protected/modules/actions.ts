@@ -1,13 +1,13 @@
 "use server";
 import {createClient} from "@/lib/supabase/server";
-import { UUID } from "crypto";
+import {UUID} from "crypto";
 
 export async function getUserStudiengangId() {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const {data: {user}} = await supabase.auth.getUser();
     if (!user) return null;
 
-    const { data: profile } = await supabase
+    const {data: profile} = await supabase
         .from("profiles")
         .select("studiengang_id")
         .eq("id", user.id)
@@ -17,14 +17,14 @@ export async function getUserStudiengangId() {
 }
 
 
-async function fetchMoses(path: string) {
+export async function fetchMoses(path: string) {
     try {
-        const res = await fetch(`${process.env.moses_API_URL}${path}`, { 
-            headers: { 
+        const res = await fetch(`${process.env.moses_API_URL}${path}`, {
+            headers: {
                 "accept": "application/json",
                 "x-api-key": process.env.moses_API_KEY || ""
             },
-            next: { revalidate: 86400 } 
+            next: {revalidate: 86400}
         });
         if (!res.ok) return null;
         return res.json();
@@ -40,11 +40,12 @@ async function getBereichPfad(bereichId: number): Promise<string[]> {
     const bereich = data?.data?.[0];
     if (!bereich) return [];
     if (bereich.parent?.id) {
-        const elternPfad = await getBereichPfad(bereich.parent.id); 
+        const elternPfad = await getBereichPfad(bereich.parent.id);
         return [...elternPfad, bereich.name];
     }
     return [bereich.name];
 }
+
 // Minimaler Typ für MOSES-Referenzen, die nur eine id tragen.
 // (Die vollen MOSES-Antwortobjekte bleiben bewusst untypisiert)
 interface MosesRef {
@@ -56,10 +57,11 @@ export interface ModulBasis {
     id: ModuleId;
     name: string;
     lp: number;
-    bereichPfad: string[]; 
+    bereichPfad: string[];
     semester: string;
     turnus?: string;
 }
+
 // Baut die MOSES-Modul-URL.
 // Fehlt die Version, öffnet auf MOSES automatisch die aktuellste Version des Moduls.
 function baueMosesLink(nummer: number | string, version?: number | string | null): string {
@@ -89,9 +91,13 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
     const abbildungDetail = abbildungDetailDaten?.data?.[0];
     if (!abbildungDetail) return [];
 
-    let modullisteIds: MosesRef[] = abbildungDetail.modullisteList ?? []; 
-    let isBologna= false; 
-    if (modullisteIds.length === 0) { modullisteIds= abbildungDetail.bolognamodullisteList ?? []; isBologna = true;};
+    let modullisteIds: MosesRef[] = abbildungDetail.modullisteList ?? [];
+    let isBologna = false;
+    if (modullisteIds.length === 0) {
+        modullisteIds = abbildungDetail.bolognamodullisteList ?? [];
+        isBologna = true;
+    }
+    ;
     if (modullisteIds.length === 0) return [];
 
     const neuesteModullisteId = modullisteIds.reduce(
@@ -99,7 +105,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
     ).id;
 
 
-    if (!isBologna){
+    if (!isBologna) {
         const modullisteDaten = await fetchMoses(`/modulliste/${neuesteModullisteId}`);
         const aktuelleModulliste = modullisteDaten?.data?.[0];
         if (!aktuelleModulliste) return [];
@@ -107,13 +113,14 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
         if (zuordnungen.length === 0) return [];
         //there are duplicate elements in studiengangszuordnungList..so gotta get the newest vers
         const uniquezuordnungen = new Map<string, MosesRef>()
-        for (const z of zuordnungen){
+        for (const z of zuordnungen) {
             const moduleName = z.name || z.id.toString();
             const existing = uniquezuordnungen.get(moduleName);
-            if (!existing || z.id >existing.id){
+            if (!existing || z.id > existing.id) {
                 uniquezuordnungen.set(moduleName, z);
             }
-        }const filteredzuordnungen = Array.from(uniquezuordnungen.values());
+        }
+        const filteredzuordnungen = Array.from(uniquezuordnungen.values());
 
 
         const BATCH_SIZE = 30;
@@ -141,9 +148,8 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
                             lp: zuordnung?.modullp ?? 0,                       // ← Fallback
                             bereichPfad,
                             semester: zuordnung?.makroturnus?.name ?? ""       // ← ?. + Fallback (war makroturnus.name)
-                        } as ModulBasis;}
-   
-                    catch {
+                        } as ModulBasis;
+                    } catch {
                         return null;
                     }
                 })
@@ -153,9 +159,9 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 
         return moduleRoh;
     }
-    // ->/studiengang-> stupoid-> get fields from reference in /studiengangabbildung -> if modulliste exists: isBologna stays false -> /studiengangzuordnung->Module
+        // ->/studiengang-> stupoid-> get fields from reference in /studiengangabbildung -> if modulliste exists: isBologna stays false -> /studiengangzuordnung->Module
     // if isBologna is true: -> /bolognamodulliste -> get group ids-> /bolognamodullistengruppe -> /bolognamodullistenzuordnung/{id}
-    else{
+    else {
         const bolognaDaten = await fetchMoses(`/bolognamodulliste/${neuesteModullisteId}`);
         const aktuelleBolognaListe = bolognaDaten?.data?.[0];
         if (!aktuelleBolognaListe) return [];
@@ -163,14 +169,15 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 
         const gruppenRefs: MosesRef[] = aktuelleBolognaListe.bolognamodulListengruppeList ?? [];
         if (gruppenRefs.length === 0) return [];
-          const uniquegroups = new Map<string, MosesRef>()
-            for (const x of gruppenRefs){
-                const moduleName = x.name || x.id.toString();
-                const existing = uniquegroups.get(moduleName);
-                if (!existing || x.id >existing.id){
-                    uniquegroups.set(moduleName, x);
-                }
-            }const filteredgroups = Array.from(uniquegroups.values());
+        const uniquegroups = new Map<string, MosesRef>()
+        for (const x of gruppenRefs) {
+            const moduleName = x.name || x.id.toString();
+            const existing = uniquegroups.get(moduleName);
+            if (!existing || x.id > existing.id) {
+                uniquegroups.set(moduleName, x);
+            }
+        }
+        const filteredgroups = Array.from(uniquegroups.values());
         // loop through groups basically
         const gruppenErgebnisse = await Promise.all(
             filteredgroups.map(async (gruppe) => {
@@ -190,14 +197,15 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
         if (alleBolognaZuordnungen.length === 0) return [];
         //#removed duplicates like above and below
         const uniqueBolognaMap = new Map<string, MosesRef>()
-        for (const z of alleBolognaZuordnungen){
+        for (const z of alleBolognaZuordnungen) {
             const moduleName = z.name || z.id.toString();
             const existing = uniqueBolognaMap.get(moduleName);
-            if (!existing || z.id >existing.id){
+            if (!existing || z.id > existing.id) {
                 uniqueBolognaMap.set(moduleName, z);
             }
-        }const filteredbolognazuordnungen = Array.from(uniqueBolognaMap.values());
-   
+        }
+        const filteredbolognazuordnungen = Array.from(uniqueBolognaMap.values());
+
         const BATCH_SIZE = 30;
         const moduleRoh: ModulBasis[] = [];
 
@@ -213,8 +221,8 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 
                         // ID-Fallback (identisch zum alten System)
                         const actualModulId = zuordnung?.bolognamodulVersion?.bolognamodul?.id ||
-                                              zuordnung?.bolognamodul?.id || 
-                                              z.id;
+                            zuordnung?.bolognamodul?.id ||
+                            z.id;
 
                         // BereichsPfad in zuordnung 
                         const gruppenName = zuordnung?.bolognamodulListengruppe?.name;
@@ -226,7 +234,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
                             name: zuordnung?.modultitel ?? zuordnung?.bolognamodulVersion?.name ?? "",
                             lp: zuordnung?.modullp ?? 0,
                             bereichPfad,
-                            semester: zuordnung?.makroturnus?.name ?? "" 
+                            semester: zuordnung?.makroturnus?.name ?? ""
                         } as ModulBasis;
                     } catch {
                         return null;
@@ -238,7 +246,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 
         return moduleRoh;
     }
-    }
+}
 
 // Verlagerung der detailedmodules Komponente, da client komponenten keine server action/Komponente wrappen/einbetten oder aufrufen können..
 
@@ -269,7 +277,7 @@ export async function ladeDetailedModulAction(modul_id: string) {
             zuordnungRaw = await fetchMoses(`/bolognamodullistenzuordnung/${modul_id}`); //new fallback
             zuordnung = zuordnungRaw?.data?.[0];
         }
-          
+
         if (!zuordnung) return details;// Fallback: leere Details zurückgeben
 
 
@@ -309,7 +317,7 @@ export async function ladeDetailedModulAction(modul_id: string) {
             pruefungsform: pruefung?.pruefungsform?.name ?? "",
             benotet: pruefung?.benotet ?? null,
             pruefungsBeschreibung: pruefung?.beschreibungDE ?? "",
-            pruefungselemente: pruefung?.pruefungselementList?.map((p: {name: string}) => p.name) ?? [],
+            pruefungselemente: pruefung?.pruefungselementList?.map((p: { name: string }) => p.name) ?? [],
             anmeldeformalitaetenDE: pruefung?.anmeldeformalitaetenDE ?? "",
             link: nummer != null ? baueMosesLink(nummer, versionsnummer) : "",
         }
@@ -320,7 +328,6 @@ export async function ladeDetailedModulAction(modul_id: string) {
 
     return details;
 }
-         
 
 
 //Custom Modul in Supabase speichern:
@@ -333,25 +340,22 @@ export async function getCurrentSemester() {
 
     const {data, error} = await supabase
         .from('profiles')
-        .select("current_semester")
+        .select("current_semester, max_semester")
         .eq("id", user.id)
-        .select()
         .single();
 
-    if (data.current_Semester <= 0) {
-        throw new Error("Das aktuelle Semester muss größer als 0 sein.");
-    }
-
-    if (data.maxSemester <= 0) {
-    throw new Error("Das maximale Semester muss größer als 0 sein.");
-    }
-
     if (error) {
-        console.error('Fehler beim Aktualisieren:', error)
+        console.error('Fehler beim Abrufen:', error)
         throw error
     }
 
+    if (data.current_semester <= 0) {
+        throw new Error("Das aktuelle Semester muss größer als 0 sein.");
+    }
 
+    if (data.max_semester <= 0) {
+        throw new Error("Das maximale Semester muss größer als 0 sein.");
+    }
 
     return data.current_semester;
 }
@@ -369,7 +373,7 @@ export async function createCustomModul(modulname: string,
     const {data: {user}} = await supabase.auth.getUser();
     if (!user) return null;
 
-    
+
     const {data, error} = await supabase
         .from('module')
         .insert({
@@ -399,7 +403,7 @@ export async function createCustomModul(modulname: string,
     return data.id;
 }
 
-export async function addCustomModultoPlanner(groupId: UUID, modul_id: ModuleId ) {
+export async function addCustomModultoPlanner(groupId: UUID, modul_id: ModuleId) {
     const supabase = await createClient();
     const {
         data: {user},
@@ -411,9 +415,9 @@ export async function addCustomModultoPlanner(groupId: UUID, modul_id: ModuleId 
         .from("planner")
         .insert({
             modul_id: modul_id,
-            group_id: groupId,   
+            group_id: groupId,
             user_id: user.id,
-            
+
         })
         .select()
         .single();

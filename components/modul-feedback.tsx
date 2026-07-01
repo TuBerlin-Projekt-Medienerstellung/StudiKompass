@@ -14,7 +14,7 @@ import {
 } from "./ui/feedback-utlis";
 
 interface ModulFeedbackProps {
-    modulId: string;
+    modulId: ModuleId;
     modulName: string;
 }
 

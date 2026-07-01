@@ -18,16 +18,16 @@ declare global {
     }
 
     type ModuleId =
-    | { type: "moses"; value: number }
-    | { type: "uuid"; value: string };
+        | { type: "moses"; value: number }
+        | { type: "uuid"; value: string };
 
-    function handleModule(id: ModuleId) {
-        if (id.type === 'moses') {
-            return fetchMoses(`/module/${id.value}`);
-        } else {
-            return supabase.from('module').select('*').eq('id', id.value);
-        }
-    }
+    // function handleModule(id: ModuleId) {
+    //     if (id.type === 'moses') {
+    //         return fetchMoses(`/module/${id.value}`);
+    //     } else {
+    //         return supabase.from('module').select('*').eq('id', id.value);
+    //     }
+    // }
 
 
     interface modulInfo {

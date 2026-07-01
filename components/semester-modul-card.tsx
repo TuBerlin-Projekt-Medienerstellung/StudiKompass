@@ -5,6 +5,7 @@ import {useSortable} from "@dnd-kit/sortable";
 import {CSS} from "@dnd-kit/utilities";
 import {SquareArrowOutUpRight, Grip, Trash2, ChevronDown, ChevronUp, Circle, CircleCheckBig} from 'lucide-react';
 import {useState, useEffect} from "react";
+import {handleModule} from "@/lib/utils";
 import {ladeDetailedModulAction} from "@/app/protected/modules/actions";
 import {getTries, saveTries, saveGrade, saveStatus, deleteGrade} from "@/app/protected/planner/actions";
 
@@ -325,58 +326,58 @@ const SemesterModulCard = ({modul}: Props) => {
                                                 </div>
 
                                                 <div className="flex flex-row gap-2">
-                                                {/* Sichern Button */}
-                                                <button
-                                                    disabled={isSavingNote}
-                                                    onClick={async (e) => {
-                                                        e.stopPropagation();
-                                                        setIsSavingNote(true);
-                                                        setErrorMsg(null); // Alten Fehler zurücksetzen
+                                                    {/* Sichern Button */}
+                                                    <button
+                                                        disabled={isSavingNote}
+                                                        onClick={async (e) => {
+                                                            e.stopPropagation();
+                                                            setIsSavingNote(true);
+                                                            setErrorMsg(null); // Alten Fehler zurücksetzen
 
-                                                        try {
-                                                            const result = await saveGrade(handleModule(modul.modul_id), noteInput, gewichtung);
+                                                            try {
+                                                                const result = await saveGrade(handleModule(modul.modul_id), noteInput, gewichtung);
 
-                                                            if (result.success) {
-                                                                console.log("Erfolgreich gespeichert!");
-                                                            } else {
-                                                                setErrorMsg(result.error || "Fehler beim Speichern.");
+                                                                if (result.success) {
+                                                                    console.log("Erfolgreich gespeichert!");
+                                                                } else {
+                                                                    setErrorMsg(result.error || "Fehler beim Speichern.");
+                                                                }
+                                                            } catch (error) {
+                                                                console.error("Fehler beim Speichern der Note:", error);
+                                                                setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");
+                                                            } finally {
+                                                                setIsSavingNote(false);
                                                             }
-                                                        } catch (error) {
-                                                            console.error("Fehler beim Speichern der Note:", error);
-                                                            setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");
-                                                        } finally {
-                                                            setIsSavingNote(false);
-                                                        }
-                                                    }}
-                                                    className="w-auto p-1.5 text-xs bg-flag-red text-white font-medium rounded-xl hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
-                                                    {isSavingNote ? "..." : "Sichern"}
-                                                </button>
-                                                {/* Sichern Button */}
-                                                <button
-                                                    disabled={isSavingNote}
-                                                    onClick={async (e) => {
-                                                        e.stopPropagation();
-                                                        setIsSavingNote(true);
-                                                        setErrorMsg(null); // Alten Fehler zurücksetzen
+                                                        }}
+                                                        className="w-auto p-1.5 text-xs bg-flag-red text-white font-medium rounded-xl hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
+                                                        {isSavingNote ? "..." : "Sichern"}
+                                                    </button>
+                                                    {/* Sichern Button */}
+                                                    <button
+                                                        disabled={isSavingNote}
+                                                        onClick={async (e) => {
+                                                            e.stopPropagation();
+                                                            setIsSavingNote(true);
+                                                            setErrorMsg(null); // Alten Fehler zurücksetzen
 
-                                                        try {
-                                                            const result = await deleteGrade(handleModule(modul.modul_id));
+                                                            try {
+                                                                const result = await deleteGrade(handleModule(modul.modul_id));
 
-                                                            if (result.success) {
-                                                                console.log("Erfolgreich gelöscht!");
-                                                            } else {
-                                                                setErrorMsg(result.error || "Fehler beim Löschen.");
+                                                                if (result.success) {
+                                                                    console.log("Erfolgreich gelöscht!");
+                                                                } else {
+                                                                    setErrorMsg(result.error || "Fehler beim Löschen.");
+                                                                }
+                                                            } catch (error) {
+                                                                console.error("Fehler beim Löschen der Note:", error);
+                                                                setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");
+                                                            } finally {
+                                                                setIsSavingNote(false);
                                                             }
-                                                        } catch (error) {
-                                                            console.error("Fehler beim Löschen der Note:", error);
-                                                            setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");
-                                                        } finally {
-                                                            setIsSavingNote(false);
-                                                        }
-                                                    }}
-                                                    className="w-auto p-1.5 text-xs bg-flag-red text-white font-medium rounded-xl hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
-                                                    {isSavingNote ? "..." : "Note löschen"}
-                                                </button>
+                                                        }}
+                                                        className="w-auto p-1.5 text-xs bg-flag-red text-white font-medium rounded-xl hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
+                                                        {isSavingNote ? "..." : "Note löschen"}
+                                                    </button>
                                                 </div>
                                             </div>
                                         )}
