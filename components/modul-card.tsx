@@ -21,7 +21,10 @@ const ModulCard = (props: modulInfo) => {
             setLoadingDetails(true);
             const data = await ladeDetailedModulAction(handleModule(modul_id));
             if (data) {
-                setDetails(data);
+                setDetails({
+                    ...data,
+                    benotet: data.benotet ?? undefined,
+                });
             }
             setLoadingDetails(false);
         }
@@ -86,11 +89,11 @@ const ModulCard = (props: modulInfo) => {
                         </div>
 
                         {/* Prüfungselemente falls vorhanden */}
-                        {p && pruefungselemente.length > 0 && (
+                        {Array.isArray(pruefungsform) && pruefungsform.length > 0 && (
                             <div>
                                 <h2 className='font-semibold text-lg'>Prüfungselemente</h2>
                                 <ul className='list-disc list-inside opacity-80'>
-                                    {pruefungselemente.map((el, i) => (
+                                    {pruefungsform.map((el, i) => (
                                         <li key={i}>{el}</li>
                                     ))}
                                 </ul>
