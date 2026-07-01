@@ -6,7 +6,7 @@ import {CSS} from "@dnd-kit/utilities";
 import {SquareArrowOutUpRight, Grip, Trash2, ChevronDown, ChevronUp, Circle, CircleCheckBig} from 'lucide-react';
 import {useState, useEffect} from "react";
 import {ladeDetailedModulAction} from "@/app/protected/modules/actions";
-import {getTries, saveTries, saveGrade, saveStatus} from "@/app/protected/planner/actions";
+import {getTries, saveTries, saveGrade, saveStatus, deleteGrade} from "@/app/protected/planner/actions";
 
 type Props = {
     modul: modulInfo;
@@ -52,7 +52,7 @@ const SemesterModulCard = ({modul}: Props) => {
         if (nextOpenState && !details) {
             setLoadingDetails(true);
             setErrorMsg(null);
-            const data = await ladeDetailedModulAction(modul.modul_id);
+            const data = await ladeDetailedModulAction(handleModule(modul.modul_id));
             if (data) {
                 setDetails(data);
             }
@@ -65,7 +65,7 @@ const SemesterModulCard = ({modul}: Props) => {
         setErrorMsg(null);
         if (counter < 4) {
             const nextValue = counter + 1;
-            const result = await saveTries(modul.modul_id, nextValue);
+            const result = await saveTries(handleModule(modul.modul_id), nextValue);
             if (result.success) {
                 setCount(nextValue);
             } else {
@@ -79,7 +79,7 @@ const SemesterModulCard = ({modul}: Props) => {
         setErrorMsg(null);
         if (counter > 0) {
             const nextValue = counter - 1;
-            const result = await saveTries(modul.modul_id, nextValue);
+            const result = await saveTries(handleModule(modul.modul_id), nextValue);
             if (result.success) {
                 setCount(nextValue);
             } else {
@@ -105,7 +105,7 @@ const SemesterModulCard = ({modul}: Props) => {
     // Lädt die Daten zum Modul, sobald die Karte geöffnet wird
     useEffect(() => {
         const fetchVersuche = async () => {
-            const gespeicherteVersuche = await getTries(modul.modul_id);
+            const gespeicherteVersuche = await getTries(handleModule(modul.modul_id));
             setCount(gespeicherteVersuche ?? 0);
         };
 
@@ -324,6 +324,7 @@ const SemesterModulCard = ({modul}: Props) => {
                                                     </div>
                                                 </div>
 
+                                                <div className="flex flex-row gap-2">
                                                 {/* Sichern Button */}
                                                 <button
                                                     disabled={isSavingNote}
@@ -333,7 +334,7 @@ const SemesterModulCard = ({modul}: Props) => {
                                                         setErrorMsg(null); // Alten Fehler zurücksetzen
 
                                                         try {
-                                                            const result = await saveGrade(modul.modul_id, noteInput, gewichtung);
+                                                            const result = await saveGrade(handleModule(modul.modul_id), noteInput, gewichtung);
 
                                                             if (result.success) {
                                                                 console.log("Erfolgreich gespeichert!");
@@ -350,6 +351,33 @@ const SemesterModulCard = ({modul}: Props) => {
                                                     className="w-auto p-1.5 text-xs bg-flag-red text-white font-medium rounded-xl hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
                                                     {isSavingNote ? "..." : "Sichern"}
                                                 </button>
+                                                {/* Sichern Button */}
+                                                <button
+                                                    disabled={isSavingNote}
+                                                    onClick={async (e) => {
+                                                        e.stopPropagation();
+                                                        setIsSavingNote(true);
+                                                        setErrorMsg(null); // Alten Fehler zurücksetzen
+
+                                                        try {
+                                                            const result = await deleteGrade(handleModule(modul.modul_id));
+
+                                                            if (result.success) {
+                                                                console.log("Erfolgreich gelöscht!");
+                                                            } else {
+                                                                setErrorMsg(result.error || "Fehler beim Löschen.");
+                                                            }
+                                                        } catch (error) {
+                                                            console.error("Fehler beim Löschen der Note:", error);
+                                                            setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");
+                                                        } finally {
+                                                            setIsSavingNote(false);
+                                                        }
+                                                    }}
+                                                    className="w-auto p-1.5 text-xs bg-flag-red text-white font-medium rounded-xl hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
+                                                    {isSavingNote ? "..." : "Note löschen"}
+                                                </button>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
@@ -367,7 +395,7 @@ const SemesterModulCard = ({modul}: Props) => {
                                         setErrorMsg(null);
 
                                         try {
-                                            const result = await saveStatus(modul.modul_id, nextCheckedState);
+                                            const result = await saveStatus(handleModule(modul.modul_id), nextCheckedState);
                                             if (!result.success) {
                                                 setChecked(checked);
                                                 setErrorMsg(result.error || "Status konnte nicht gespeichert werden.");

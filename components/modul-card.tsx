@@ -1,26 +1,21 @@
 "use client";
 
-import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight} from 'lucide-react';
+import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight, CalendarPlus} from 'lucide-react';
 import {ladeDetailedModulAction} from '@/app/protected/modules/actions';
 import Link from "next/link";
 import {useState} from 'react';
+import ModulFeedback from "./modul-feedback";
 
-interface modulInfo {
-    modul_id: string;
-    name: string;
-    leistungspunkte: number;
-    turnus?: string | number;
-    modulArt: string;
-    link: string;
-    beschreibung?: string;
-    lernergebnisse?: string;
-    voraussetzungen?: string;
-    pruefungsform?: string;
-    pruefungselemente?: string[];
-    benotet?: boolean | null;
-    pruefungsBeschreibung?: string;
-    lehrlernformen?: string;
-}
+
+// Placeholder – später aus Supabase laden
+const SEMESTER_LISTE = [
+    {nummer: 1, name: "1. Semester", typ: "Wintersemester"},
+    {nummer: 2, name: "2. Semester", typ: "Sommersemester"},
+    {nummer: 3, name: "3. Semester", typ: "Wintersemester"},
+    {nummer: 4, name: "4. Semester", typ: "Sommersemester"},
+    {nummer: 5, name: "5. Semester", typ: "Wintersemester"},
+    {nummer: 6, name: "6. Semester", typ: "Sommersemester"},
+];
 
 const ModulCard = (props: modulInfo) => {
 
@@ -28,15 +23,20 @@ const ModulCard = (props: modulInfo) => {
     const [open, setOpen] = useState(false);
     const [details, setDetails] = useState<Partial<modulInfo> | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
+    const [plannerOpen, setPlannerOpen] = useState(false);
+    const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
 
 
     async function handleAusklappen() {
         setOpen(!open);
         if (!open && !details) {
             setLoadingDetails(true);
-            const data = await ladeDetailedModulAction(modul_id);
+            const data = await ladeDetailedModulAction(handleModule(modul_id));
             if (data) {
-                setDetails(data);
+                setDetails({
+                    ...data,
+                    benotet: data.benotet ?? undefined,
+                });
             }
             setLoadingDetails(false);
         }
@@ -47,16 +47,18 @@ const ModulCard = (props: modulInfo) => {
         name,
         leistungspunkte,
         turnus,
-        modulArt,
+        bereichpfad,
         link,
-        beschreibung,
         lernergebnisse,
         voraussetzungen,
         pruefungsform,
-        pruefungselemente,
         benotet,
-        pruefungsBeschreibung,
     } = props;
+    function handleSemesterWahl(nummer: number) {
+        setSelectedSemester(nummer);
+        // TODO: Supabase insert hier einfügen
+        setPlannerOpen(false);
+    }
 
     const detailBoxen = [
         {name: "Prüfungsform", value: details?.pruefungsform ?? "—"},
@@ -64,7 +66,7 @@ const ModulCard = (props: modulInfo) => {
         {name: "Voraussetzungen", value: details?.voraussetzungen ?? "—"},
     ];
 
-    const isWahlpflicht = modulArt.toLowerCase().includes("wahlpflicht");
+    const isWahlpflicht = bereichpfad.toLowerCase().includes("wahlpflicht");
     const moduleBorderClass = isWahlpflicht
         ? "border-l-flag-red border-r-flag-red dark:border-l-emerald-400 dark:border-r-emerald-400"
         : "border-l-flag-red border-r-flag-red dark:border-l-flag-red dark:border-r-flag-red";
@@ -81,8 +83,10 @@ const ModulCard = (props: modulInfo) => {
                         <h1 className='font-bold md:text-2xl text-xl'>{name}</h1>
                         <div className='flex gap-2'>
                             <div>{leistungspunkte} ECTS</div>
-                            <span>• {turnus} •</span>
-                            <p className='text-blue-bell dark:text-violet-ray'>{modulArt}</p>
+                            <div>•</div>
+                            <span> {turnus}</span>
+                            <div>•</div>
+                            <p className='text-blue-bell dark:text-violet-ray'>{bereichpfad}</p>
                         </div>
                     </div>
                 </div>
@@ -95,18 +99,18 @@ const ModulCard = (props: modulInfo) => {
                 className={`grid transition-all duration-700 ease-in-expo ${open ? 'grid-rows-[1fr] mt-5' : 'grid-rows-[0fr] mb-0'}`}>
                 <div className='overflow-hidden'>
                     <div className='flex flex-col gap-y-5'>
-                        {/* Beschreibung / Lernergebnisse */}
+                        {/* Lernergebnisse */}
                         <div>
                             <h2 className='font-semibold text-lg'>Lernergebnisse</h2>
-                            <p className='opacity-80'>{details?.lernergebnisse ?? beschreibung ?? "—"}</p>
+                            <p className='opacity-80'>{details?.lernergebnisse ?? lernergebnisse ?? "—"}</p>
                         </div>
 
                         {/* Prüfungselemente falls vorhanden */}
-                        {pruefungselemente && pruefungselemente.length > 0 && (
+                        {Array.isArray(pruefungsform) && pruefungsform.length > 0 && (
                             <div>
                                 <h2 className='font-semibold text-lg'>Prüfungselemente</h2>
                                 <ul className='list-disc list-inside opacity-80'>
-                                    {pruefungselemente.map((el, i) => (
+                                    {pruefungsform.map((el, i) => (
                                         <li key={i}>{el}</li>
                                     ))}
                                 </ul>
@@ -125,17 +129,74 @@ const ModulCard = (props: modulInfo) => {
                             ))}
                         </div>
 
-                        <div className='flex rounded-lg gap-2'>
-                            <button
-                                className='bg-violet-ray hover:bg-blue-bell text-white px-4 py-2 rounded-lg w-5/6 transition-colors'>
-                                Zum Planer hinzufügen
-                            </button>
+                        {/* Aktionen */}
+                        <div className='flex items-start rounded-lg gap-2'>
+                            {/* Planer-Button mit Semester-Picker */}
+                            <div className='flex-1 flex flex-col gap-2'>
+                                <button
+                                    onClick={() => setPlannerOpen(!plannerOpen)}
+                                    className='w-full bg-foreground text-background px-4 py-2.5 rounded-xl flex items-center justify-between gap-2 transition-colors hover:opacity-90 dark:bg-[#35AE80]'
+                                >
+                                    <div className='flex items-center gap-2'>
+                                        <CalendarPlus className='w-5 h-5'/>
+                                        <span className='font-medium'>
+                    {selectedSemester
+                        ? `${selectedSemester}. Semester gewählt`
+                        : 'Zum Planer hinzufügen'}
+                </span>
+                                    </div>
+                                    {plannerOpen ? <ChevronUp className='w-4 h-4'/> :
+                                        <ChevronDown className='w-4 h-4'/>}
+                                </button>
+
+                                {/* Semester-Picker Dropdown */}
+                                <div
+                                    className={`grid transition-all duration-300 ease-in-out ${plannerOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                                    <div className='overflow-hidden'>
+                                        <div
+                                            className='bg-background dark:bg-card border border-border rounded-xl p-3 flex flex-col gap-1'>
+                                            <p className='text-xs font-semibold text-muted-foreground tracking-widest uppercase px-2 pb-1'>
+                                                Semester wählen
+                                            </p>
+                                            {SEMESTER_LISTE.map((sem) => {
+                                                const isWinter = sem.typ === "Wintersemester";
+                                                return (
+                                                    <button
+                                                        key={sem.nummer}
+                                                        onClick={() => handleSemesterWahl(sem.nummer)}
+                                                        className={`flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-[#E3E6EA] dark:hover:bg-[#16081f] transition-colors text-left ${selectedSemester === sem.nummer ? 'bg-[#E3E6EA] dark:bg-[#16081f]' : ''}`}
+                                                    >
+                                                        <div className='flex items-center gap-3'>
+                                                            {/*<span*/}
+                                                            {/*    className='w-7 h-7 rounded-full bg-[#E3E6EA] dark:bg-[#16081f] flex items-center justify-center text-sm font-semibold text-foreground'>*/}
+                                                            {/*    {sem.nummer}*/}
+                                                            {/*</span>*/}
+                                                            <span
+                                                                className='font-medium text-foreground'>{sem.name}</span>
+                                                        </div>
+                                                        <span
+                                                            className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
+                                                                isWinter
+                                                                    ? 'text-blue-bell border-blue-bell/30 bg-blue-bell/10'
+                                                                    : 'text-amber-500 border-amber-400/30 bg-amber-50 dark:bg-amber-500/10'
+                                                            }`}>
+                                    {sem.typ}
+                                </span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Moses Link — nur so breit wie nötig */}
                             {details?.link ? (
                                 <Link
                                     href={details.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className='bg-flag-red text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2'
+                                    className='shrink-0 bg-flag-red text-white px-4 py-2.5 rounded-xl flex items-center gap-2 whitespace-nowrap'
                                 >
                                     zu Moses
                                     <SquareArrowOutUpRight className='justify-self-end'/>
@@ -148,11 +209,12 @@ const ModulCard = (props: modulInfo) => {
                                 </span>
                             )}
                         </div>
+                        <ModulFeedback modulId = {handleModule(modul_id)} modulName={name}/>
                     </div>
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
 export default ModulCard;
