@@ -275,3 +275,71 @@ export async function saveStatus(modulId: string, isChecked: boolean) {
 
     return {success: true};
 }
+
+// Fügt ein Modul aus der Suche zu einem Semester im Planer hinzu.
+// Schritt 1: Modul in die `module`-Tabelle schreiben.
+// Schritt 2: Verknüpfung in die `planner`-Tabelle schreiben.
+export async function moduleZuPlanerHinzufuegen(
+    semesterId: string,          // die uuid der Semesterzeile (semester.id)
+    modul: {
+        moses_id: number;
+        name: string;
+        turnus: string;
+        bereichpfad: string;
+        ects: number;
+        lernergebnisse: string;
+        pruefungsform: string;
+        benotet: boolean;
+        voraussetzungen?: string;
+        moseslink: string;
+    }
+) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { success: false, error: "Du bist nicht eingeloggt." };
+
+    // Arbeitsaufwand berechnen: ects * 30 Stunden pro Semester
+    const arbeitsaufwand = (modul.ects ?? 0) * 30;
+
+    // Schritt 1: Modul in die module-Tabelle einfügen
+    const { data: modulData, error: modulError } = await supabase
+        .from("module")
+        .insert({
+            moses_id: String(modul.moses_id),        // Spalte ist text
+            name: modul.name,
+            turnus: modul.turnus ?? "",
+            bereichpfad: [modul.bereichpfad ?? ""],  // Spalte ist ein Array (_text)
+            ects: modul.ects ?? 0,
+            lernergebnisse: modul.lernergebnisse ?? "",
+            pruefungsform: modul.pruefungsform ?? "",
+            benotet: modul.benotet ?? false,
+            voraussetzungen: modul.voraussetzungen ?? "",
+            moseslink: modul.moseslink ?? "",
+            arbeitsaufwand: arbeitsaufwand,
+            user_id: user.id,
+        })
+        .select()
+        .single();
+
+    if (modulError) {
+        console.error("Fehler beim Speichern des Moduls:", modulError);
+        return { success: false, error: "Modul konnte nicht gespeichert werden." };
+    }
+
+    // Schritt 2: Verknüpfung in die planner-Tabelle einfügen
+    const { error: plannerError } = await supabase
+        .from("planner")
+        .insert({
+            group_id: semesterId,        // verweist auf semester.id
+            modul_id: modulData.id,      // die neue uuid aus Schritt 1
+            user_id: user.id,
+        });
+
+    if (plannerError) {
+        console.error("Fehler beim Verknüpfen mit dem Semester:", plannerError);
+        return { success: false, error: "Modul konnte dem Semester nicht zugeordnet werden." };
+    }
+
+    return { success: true, modulId: modulData.id };
+}
