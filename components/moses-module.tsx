@@ -21,7 +21,6 @@ import {useState} from 'react';
 import ModulCard from '@/components/modul-card';
 import ModulSearch from './modulsearch';
 import {ladeModulBasisAction, ModulBasis} from '@/app/protected/modules/actions';
-import {handleModule} from "@/lib/utils";
 
 interface Props {
     // studiengangId wird von page.tsx weitergegeben
@@ -180,7 +179,7 @@ export default function MosesModulsuche({studiengangId}: Props) {
                              */
                             <ModulCard
                                 key={`${modul.id}-${index}`}
-                                modul_id={handleModule(modul.id)}
+                                modul_id={modul.id}
                                 name={modul.name}
                                 leistungspunkte={modul.lp}
                                 bereichpfad={modul.bereichPfad[0] ?? "—"} link={''}

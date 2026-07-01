@@ -97,7 +97,6 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
         modullisteIds = abbildungDetail.bolognamodullisteList ?? [];
         isBologna = true;
     }
-    ;
     if (modullisteIds.length === 0) return [];
 
     const neuesteModullisteId = modullisteIds.reduce(
