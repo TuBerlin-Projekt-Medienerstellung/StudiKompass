@@ -1,5 +1,6 @@
-import { Plus } from "lucide-react";
-import { getUserStudiengangId } from "./actions";
+import MosesModulsuche from "@/components/moses-module";
+import CustomModulButton from "@/components/modul-custom-button";
+import { getUserStudiengangId } from "@/app/protected/modules/actions";
 
 export default async function ModulesPage() {
   const studiengangId = await getUserStudiengangId();
@@ -13,26 +14,15 @@ export default async function ModulesPage() {
             Durchsuche und verwalte verfügbare Module.
           </p>
         </div>
-        <button className="hidden h-11 w-64 items-center justify-center gap-2 rounded-2xl bg-flag-red px-3 font-bold text-white md:flex">
-          <Plus className="h-5 w-5" />
-          Custom-Modul erstellen
-        </button>
 
-        <button className="flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-flag-red px-3 font-bold text-white md:hidden">
-          <Plus className="h-5 w-5" />
-          Custom-Modul erstellen
-        </button>
+        <CustomModulButton />
       </header>
 
       <div className="rounded-2xl border border-border bg-white p-4 dark:bg-card sm:p-5 lg:p-6">
         {studiengangId ? (
-          <div className="mx-auto max-w-xl rounded-2xl border-2 border-dashed border-gray-300 p-6 text-center sm:p-10 dark:border-border">
-            <p className="text-sm text-muted-foreground sm:text-base">
-              Der Modulkatalog wird später hier geladen.
-            </p>
-          </div>
+          <MosesModulsuche studiengangId={studiengangId} />
         ) : (
-          <div className="mx-auto max-w-xl rounded-2xl border-2 border-dashed border-gray-300 p-6 text-center sm:p-10 dark:border-border">
+          <div className="mx-auto max-w-xl rounded-2xl border-2 border-dashed border-gray-300 p-6 text-center dark:border-border sm:p-10">
             <p className="text-sm text-muted-foreground sm:text-base">
               Bitte wähle zuerst einen Studiengang in deinen Einstellungen aus,
               um den Modulkatalog zu laden.

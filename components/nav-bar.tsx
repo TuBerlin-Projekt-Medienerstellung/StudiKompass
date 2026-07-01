@@ -10,15 +10,16 @@ import {X, Menu} from "lucide-react"
 import {usePathname} from "next/navigation";
 import {useState, useEffect, useCallback} from "react";
 import {createClient} from '@/lib/supabase/client'
+import InitialsAvatar from "@/components/initials-avatar";
 
 //Things to fix:
 
-// 1) bug with navbar in mobile mode (profile + studiengangwahl shouldn't cover content or be interactive -> dowpdown should disable current page functions) 
+// 1) bug with navbar in mobile mode (profile + Studiengangwahl shouldn't cover content or be interactive -> dropdown should disable current page functions)
 // 2) bug with navbar in mobile mode, can't be transparent 
 
 // Possible approaches:
 // >If it's component client/server side caused -> check div wrappers
-// >maybe freeze the page so it isnt interactive while dropdown menue is open
+// >maybe freeze the page so it isn't interactive while dropdown menu is open
 // -> can be solved to adding an absolute z coordinate?
 // >add another event listener to check whether it is mobile to lock scroll?
 // -> but mobile event listener exists, maybe incorp?
@@ -33,6 +34,7 @@ const NavBar = () => {
     const pathname = usePathname();
     const [mobileOpen, setMobileOpen] = useState(false);
     const [profile, setProfile] = useState<Profile | null>(null);
+    const [email, setEmail] = useState<string | null>("")
 
     const fetchProfileData = useCallback(async () => {
         const supabase = createClient()
@@ -46,11 +48,14 @@ const NavBar = () => {
             .single()
 
         setProfile(data)
+        setEmail(user?.email ?? null)
     }, [])
+
     useEffect(() => {
         fetchProfileData()
     }, [fetchProfileData])
-    //omfg I knew I had to add an Eventlistener with fetch as I did with avatar, AI aint gonna replace me muhahah
+
+    //omfg I knew I had to add an Eventlistener with fetch as I did with avatar, AI ain't gonna replace me muhahah
     useEffect(() => {
         window.addEventListener("avatar-updated", fetchProfileData)
         window.addEventListener("studiengang-updated", fetchProfileData)
@@ -132,15 +137,26 @@ const NavBar = () => {
                         })}
                     </div>
                     <div className="w-full flex flex-col gap-3 pt-4">
-                        <div className="flex flex-col">
+                        <div className="flex flex-col pb-3">
                             <div className="flex flex-row gap-4 md:justify-start justify-center items-center">
                                 <div className="relative size-10">
-                                    <Image
-                                        src={profile?.avatar_url || "/default-avatar.png"}
-                                        alt="placeholder"
-                                        fill
-                                        className="rounded-4xl"
-                                    />
+
+                                    {/* Initialien Avatar / Profilbild */}
+                                    {profile?.avatar_url ? (
+                                        <div className="relative size-12 shrink-0 rounded-full overflow-hidden">
+                                            <Image
+                                                src={profile.avatar_url}
+                                                alt="Profile"
+                                                fill
+                                                className="object-cover"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div
+                                            className="size-12 bg-flag-red rounded-full flex items-center justify-center text-white text-sm font-bold">
+                                            <InitialsAvatar email={email}/>
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex flex-col">
                                     <h3 className="text-sm font-semibold text-foreground">{profile?.username ?? '...'}</h3>
