@@ -41,6 +41,12 @@ const ModulCard = (props: modulInfo) => {
         modulArt,
         link,
         beschreibung,
+        lernergebnisse,
+        voraussetzungen,
+        pruefungsform,
+        pruefungselemente,
+        benotet,
+        pruefungsBeschreibung,
     } = props;
 
     const [liked, setLiked] = useState(true);
@@ -138,7 +144,7 @@ const ModulCard = (props: modulInfo) => {
                             <div className='flex-1 flex flex-col gap-2'>
                                 <button
                                     onClick={() => setPlannerOpen(!plannerOpen)}
-                                    className='w-full bg-foreground text-background px-4 py-2.5 rounded-xl flex items-center justify-between gap-2 transition-colors hover:opacity-90'
+                                    className='w-full bg-foreground text-background px-4 py-2.5 rounded-xl flex items-center justify-between gap-2 transition-colors hover:opacity-90 dark:bg-[#35AE80]'
                                 >
                                     <div className='flex items-center gap-2'>
                                         <CalendarPlus className='w-5 h-5'/>
@@ -170,10 +176,10 @@ const ModulCard = (props: modulInfo) => {
                                                         className={`flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-[#E3E6EA] dark:hover:bg-[#16081f] transition-colors text-left ${selectedSemester === sem.nummer ? 'bg-[#E3E6EA] dark:bg-[#16081f]' : ''}`}
                                                     >
                                                         <div className='flex items-center gap-3'>
-                                    <span
-                                        className='w-7 h-7 rounded-full bg-[#E3E6EA] dark:bg-[#16081f] flex items-center justify-center text-sm font-semibold text-foreground'>
-                                        {sem.nummer}
-                                    </span>
+                                                            {/*<span*/}
+                                                            {/*    className='w-7 h-7 rounded-full bg-[#E3E6EA] dark:bg-[#16081f] flex items-center justify-center text-sm font-semibold text-foreground'>*/}
+                                                            {/*    {sem.nummer}*/}
+                                                            {/*</span>*/}
                                                             <span
                                                                 className='font-medium text-foreground'>{sem.name}</span>
                                                         </div>
