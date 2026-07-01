@@ -1,5 +1,5 @@
 "use server";
-import { createClient } from "@/lib/supabase/server";
+import {createClient} from "@/lib/supabase/server";
 
 export async function getUserStudiengangId() {
     const supabase = await createClient();
@@ -48,14 +48,16 @@ async function getBereichPfad(bereichId: number): Promise<string[]> {
 // (Die vollen MOSES-Antwortobjekte bleiben bewusst untypisiert)
 interface MosesRef {
     id: number;
+    name?: string;
 }
 
 export interface ModulBasis {
-    id: number;
+    id: string;
     name: string;
     lp: number;
     bereichPfad: string[]; 
     semester: string;
+    turnus?: string;
 }
 // Baut die MOSES-Modul-URL.
 // Fehlt die Version, öffnet auf MOSES automatisch die aktuellste Version des Moduls.
@@ -74,68 +76,172 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
     if (stupoList.length === 0) return [];
     const neuesteStupo = stupoList.reduce((max, s) => s.id > max.id ? s : max);
 
+    //.reduce((max, s) => s.id > max.id ? s : max);
+
     const abbildungListeDaten = await fetchMoses(`/studiengangsabbildung?stupoId=${neuesteStupo.id}`);
+    console.log("stupo: ", neuesteStupo.id);
+    console.log("abbilldungsdaten: ", abbildungListeDaten);
     const abbildungRef = abbildungListeDaten?.data?.[0];
     if (!abbildungRef) return [];
-
+    console.log("Ist die Liste schon da?", abbildungRef?.modullisteList);
     const abbildungDetailDaten = await fetchMoses(`/studiengangsabbildung/${abbildungRef.id}`);
     const abbildungDetail = abbildungDetailDaten?.data?.[0];
     if (!abbildungDetail) return [];
 
-    const modullisteIds: MosesRef[] = abbildungDetail.modullisteList ?? [];   // ← MosesRef statt inline-Typ
+    let modullisteIds: MosesRef[] = abbildungDetail.modullisteList ?? []; 
+    let isBologna= false; 
+    if (modullisteIds.length === 0) { modullisteIds= abbildungDetail.bolognamodullisteList ?? []; isBologna = true;};
     if (modullisteIds.length === 0) return [];
 
     const neuesteModullisteId = modullisteIds.reduce(
         (max, ml) => ml.id > max.id ? ml : max
     ).id;
 
-    const modullisteDaten = await fetchMoses(`/modulliste/${neuesteModullisteId}`);
-    const aktuelleModulliste = modullisteDaten?.data?.[0];
-    if (!aktuelleModulliste) return [];
 
-    const zuordnungen: MosesRef[] = aktuelleModulliste.studiengangszuordnungList ?? [];   // ← typisiert
-    if (zuordnungen.length === 0) return [];
+    if (!isBologna){
+        const modullisteDaten = await fetchMoses(`/modulliste/${neuesteModullisteId}`);
+        const aktuelleModulliste = modullisteDaten?.data?.[0];
+        if (!aktuelleModulliste) return [];
+        const zuordnungen: MosesRef[] = aktuelleModulliste.studiengangszuordnungList ?? [];   // ← typisiert
+        if (zuordnungen.length === 0) return [];
+        //there are duplicate elements in studiengangszuordnungList..so gotta get the newest vers
+        const uniquezuordnungen = new Map<string, MosesRef>()
+        for (const z of zuordnungen){
+            const moduleName = z.name || z.id.toString();
+            const existing = uniquezuordnungen.get(moduleName);
+            if (!existing || z.id >existing.id){
+                uniquezuordnungen.set(moduleName, z);
+            }
+        }const filteredzuordnungen = Array.from(uniquezuordnungen.values());
 
-    const BATCH_SIZE = 30;
-    const moduleRoh: ModulBasis[] = [];
 
-    for (let i = 0; i < zuordnungen.length; i += BATCH_SIZE) {
-        const batch = zuordnungen.slice(i, i + BATCH_SIZE);
-        const batchErgebnisse = await Promise.all(
-            batch.map(async (z) => {   // ← z wird automatisch als MosesRef erkannt, kein any mehr
+        const BATCH_SIZE = 30;
+        const moduleRoh: ModulBasis[] = [];
+
+        for (let i = 0; i < filteredzuordnungen.length; i += BATCH_SIZE) {
+            const batch = filteredzuordnungen.slice(i, i + BATCH_SIZE);
+            const batchErgebnisse = await Promise.all(
+                batch.map(async (z) => {   // ← z wird automatisch als MosesRef erkannt, kein any mehr
+                    try {
+                        const zuordnungRaw = await fetchMoses(`/studiengangszuordnung/${z.id}`);
+                        const zuordnung = zuordnungRaw?.data?.[0];
+                        if (!zuordnung) return null;
+
+                        const bereichPfad = zuordnung?.studiengangsbereich?.id
+                            ? await getBereichPfad(zuordnung.studiengangsbereich.id)
+                            : [];
+                        const actualModulId = zuordnung?.bolognamodul?.id ||
+                            zuordnung?.bolognamodulVersion?.bolognamodul?.id ||
+                            z.id;
+
+                        return {
+                            id: actualModulId,
+                            name: zuordnung?.name ?? "",                       // ← Fallback
+                            lp: zuordnung?.modullp ?? 0,                       // ← Fallback
+                            bereichPfad,
+                            semester: zuordnung?.makroturnus?.name ?? ""       // ← ?. + Fallback (war makroturnus.name)
+                        } as ModulBasis;}
+   
+                    catch {
+                        return null;
+                    }
+                })
+            );
+            moduleRoh.push(...batchErgebnisse.filter(Boolean) as ModulBasis[]);
+        }
+
+        return moduleRoh;
+    }
+    // ->/studiengang-> stupoid-> get fields from reference in /studiengangabbildung -> if modulliste exists: isBologna stays false -> /studiengangzuordnung->Module
+    // if isBologna is true: -> /bolognamodulliste -> get group ids-> /bolognamodullistengruppe -> /bolognamodullistenzuordnung/{id}
+    else{
+        const bolognaDaten = await fetchMoses(`/bolognamodulliste/${neuesteModullisteId}`);
+        const aktuelleBolognaListe = bolognaDaten?.data?.[0];
+        if (!aktuelleBolognaListe) return [];
+        console.log("Aktuelle Bolognamodulliste: ", aktuelleBolognaListe);
+
+        const gruppenRefs: MosesRef[] = aktuelleBolognaListe.bolognamodulListengruppeList ?? [];
+        if (gruppenRefs.length === 0) return [];
+          const uniquegroups = new Map<string, MosesRef>()
+            for (const x of gruppenRefs){
+                const moduleName = x.name || x.id.toString();
+                const existing = uniquegroups.get(moduleName);
+                if (!existing || x.id >existing.id){
+                    uniquegroups.set(moduleName, x);
+                }
+            }const filteredgroups = Array.from(uniquegroups.values());
+        // loop through groups basically
+        const gruppenErgebnisse = await Promise.all(
+            filteredgroups.map(async (gruppe) => {
                 try {
-                    const zuordnungRaw = await fetchMoses(`/studiengangszuordnung/${z.id}`);
-                    const zuordnung = zuordnungRaw?.data?.[0];
-                    if (!zuordnung) return null;
-
-                    const bereichPfad = zuordnung?.studiengangsbereich?.id
-                        ? await getBereichPfad(zuordnung.studiengangsbereich.id)
-                        : [];
-                    const actualModulId = zuordnung?.bolognamodul?.id ||
-                          zuordnung?.bolognamodulVersion?.bolognamodul?.id ||
-                          z.id;
-
-                    return {
-                        id: actualModulId,
-                        name: zuordnung?.name ?? "",                       // ← Fallback
-                        lp: zuordnung?.modullp ?? 0,                       // ← Fallback
-                        bereichPfad,
-                        semester: zuordnung?.makroturnus?.name ?? ""       // ← ?. + Fallback (war makroturnus.name)
-                    } as ModulBasis;
+                    const gruppenRaw = await fetchMoses(`/bolognamodullistengruppe/${gruppe.id}`);
+                    const gruppeDetail = gruppenRaw?.data?.[0];
+                    return gruppeDetail?.bolognamodulListenzuordnungList ?? [];
                 } catch {
-                    return null;
+                    return [];
                 }
             })
         );
-        moduleRoh.push(...batchErgebnisse.filter(Boolean) as ModulBasis[]);
-    }
+        console.log("GruppenErgebnisse sind da: ", gruppenErgebnisse)
 
-    return moduleRoh;
-}
+        // the array needs to be 1 dim
+        const alleBolognaZuordnungen: MosesRef[] = gruppenErgebnisse.flat();
+        if (alleBolognaZuordnungen.length === 0) return [];
+        //#removed duplicates like above and below
+        const uniqueBolognaMap = new Map<string, MosesRef>()
+        for (const z of alleBolognaZuordnungen){
+            const moduleName = z.name || z.id.toString();
+            const existing = uniqueBolognaMap.get(moduleName);
+            if (!existing || z.id >existing.id){
+                uniqueBolognaMap.set(moduleName, z);
+            }
+        }const filteredbolognazuordnungen = Array.from(uniqueBolognaMap.values());
+   
+        const BATCH_SIZE = 30;
+        const moduleRoh: ModulBasis[] = [];
+
+        for (let i = 0; i < filteredbolognazuordnungen.length; i += BATCH_SIZE) {
+            const batch = filteredbolognazuordnungen.slice(i, i + BATCH_SIZE);
+            const batchErgebnisse = await Promise.all(
+                batch.map(async (z) => {
+                    try {
+                        // Bolognasystem has a different endpoint
+                        const zuordnungRaw = await fetchMoses(`/bolognamodullistenzuordnung/${z.id}`);
+                        const zuordnung = zuordnungRaw?.data?.[0];
+                        if (!zuordnung) return null;
+
+                        // ID-Fallback (identisch zum alten System)
+                        const actualModulId = zuordnung?.bolognamodulVersion?.bolognamodul?.id ||
+                                              zuordnung?.bolognamodul?.id || 
+                                              z.id;
+
+                        // BereichsPfad in zuordnung 
+                        const gruppenName = zuordnung?.bolognamodulListengruppe?.name;
+                        const bereichPfad = gruppenName ? [gruppenName] : [];
+
+                        return {
+                            id: actualModulId,
+                            // modultitel instead of name in /bolognamodullistenzuordnung/{id}
+                            name: zuordnung?.modultitel ?? zuordnung?.bolognamodulVersion?.name ?? "",
+                            lp: zuordnung?.modullp ?? 0,
+                            bereichPfad,
+                            semester: zuordnung?.makroturnus?.name ?? "" 
+                        } as ModulBasis;
+                    } catch {
+                        return null;
+                    }
+                })
+            );
+            moduleRoh.push(...batchErgebnisse.filter(Boolean) as ModulBasis[]);
+        }
+
+        return moduleRoh;
+    }
+    }
 
 // Verlagerung der detailedmodules Komponente, da client komponenten keine server action/Komponente wrappen/einbetten oder aufrufen können..
 
-export async function ladeDetailedModulAction(modul_id: number) {
+export async function ladeDetailedModulAction(modul_id: string) {
     const supabase = await createClient();
     const {data: {user}} = await supabase.auth.getUser();
     if (!user) return null;
@@ -154,11 +260,17 @@ export async function ladeDetailedModulAction(modul_id: number) {
     }
 
     try {
-        // Schritt 1 (sequenziell): zuordnung → version
+
         // fetchMoses hat bereits try/catch + null-Fallback eingebaut
-        const zuordnungRaw = await fetchMoses(`/studiengangszuordnung/${modul_id}`);
-        const zuordnung = zuordnungRaw?.data?.[0];
-        if (!zuordnung) return details;  // Fallback: leere Details zurückgeben
+        let zuordnungRaw = await fetchMoses(`/studiengangszuordnung/${modul_id}`);
+        let zuordnung = zuordnungRaw?.data?.[0];
+        if (!zuordnung) {
+            zuordnungRaw = await fetchMoses(`/bolognamodullistenzuordnung/${modul_id}`); //new fallback
+            zuordnung = zuordnungRaw?.data?.[0];
+        }
+          
+        if (!zuordnung) return details;// Fallback: leere Details zurückgeben
+
 
         const versionId = zuordnung?.bolognamodulVersion?.id;
 
@@ -172,7 +284,7 @@ export async function ladeDetailedModulAction(modul_id: number) {
         const beschreibungId = version?.bolognamodulBeschreibung?.id;
         const versionsnummer = version?.versionsnummer;
 
-        // Schritt 2 (parallel): Nummer, Beschreibung und Prüfung gleichzeitig
+        // Nummer, Beschreibung und Prüfung gleichzeitig
         // fetchMoses gibt null zurück bei Fehler — kein Absturz mehr
         const [bolognamodulData, beschreibungData, pruefungData] = await Promise.all([
             bolognamodulId
@@ -207,4 +319,97 @@ export async function ladeDetailedModulAction(modul_id: number) {
 
     return details;
 }
+         
 
+
+//Custom Modul in Supabase speichern:
+//Wird immer in current Semester hinzugefügt
+
+export async function getCurrentSemester() {
+    const supabase = await createClient();
+    const {data: {user}} = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const {data, error} = await supabase
+        .from('profiles')
+        .select("current_semester")
+        .eq("id", user.id)
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Fehler beim Aktualisieren:', error)
+        throw error
+    }
+
+
+    return data.current_semester;
+}
+
+export async function createCustomModul(modulname: string,
+                                        bereichspfad: string,
+                                        ects: number,
+                                        turnus: string,
+                                        beschreibung: string,
+                                        pruefungsform: string,
+                                        benotet: boolean | null,
+                                        arbeitsaufwand: number) {
+
+    const supabase = await createClient();
+    const {data: {user}} = await supabase.auth.getUser();
+    if (!user) return null;
+
+    const modul_id = crypto.randomUUID();
+    const {data, error} = await supabase
+        .from('module')
+        .insert({
+            id: modul_id,
+            name: modulname,
+            turnus: turnus,
+            bereichpfad: bereichspfad,
+            ects: ects,
+            lernergebnisse: beschreibung,
+            pruefungsform: pruefungsform,
+            benotet: benotet,
+            voraussetzungen: null,
+            moseslink: null,
+            note: null,
+            gewichtung: null,
+            versuche: 1,
+            arbeitsaufwand: arbeitsaufwand,
+            user_id: user.id,
+        })
+        .select()
+        .single();
+
+    if (error) {
+        console.error('Fehler beim Aktualisieren:', error)
+        throw error
+    }
+
+    return data.id;
+}
+
+export async function addCustomModultoPlanner() {
+    const supabase = await createClient();
+    const {
+        data: {user},
+    } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    const modul_id = crypto.randomUUID();
+    const groupId = crypto.randomUUID();
+
+    const {error} = await supabase
+        .from("planner")
+        .insert({
+            group_id: groupId,   //Woher nehme ich die GroupID?
+            user_id: user.id,
+            modul_id: modul_id,
+        })
+        .select()
+        .single();
+
+    if (error) throw error;
+}
