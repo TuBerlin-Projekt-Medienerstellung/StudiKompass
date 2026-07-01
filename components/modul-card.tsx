@@ -1,6 +1,6 @@
 "use client";
 
-import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight} from 'lucide-react';
+import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight, CalendarPlus} from 'lucide-react';
 import {ladeDetailedModulAction} from '@/app/protected/modules/actions';
 import Link from "next/link";
 import {useState} from 'react';
@@ -62,7 +62,9 @@ const ModulCard = (props: modulInfo) => {
         if (!open && !details) {
             setLoadingDetails(true);
             const data = await ladeDetailedModulAction(modul_id);
-            if (data) setDetails(data);
+            if (data) {
+                setDetails(data);
+            }
             setLoadingDetails(false);
         }
     }
