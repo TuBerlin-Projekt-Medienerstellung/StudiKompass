@@ -1,11 +1,21 @@
 "use client";
 
-import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight} from 'lucide-react';
+import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight, CalendarPlus} from 'lucide-react';
 import {ladeDetailedModulAction} from '@/app/protected/modules/actions';
 import Link from "next/link";
 import {useState} from 'react';
 import ModulFeedback from "./modul-feedback";
 
+
+// Placeholder – später aus Supabase laden
+const SEMESTER_LISTE = [
+    {nummer: 1, name: "1. Semester", typ: "Wintersemester"},
+    {nummer: 2, name: "2. Semester", typ: "Sommersemester"},
+    {nummer: 3, name: "3. Semester", typ: "Wintersemester"},
+    {nummer: 4, name: "4. Semester", typ: "Sommersemester"},
+    {nummer: 5, name: "5. Semester", typ: "Wintersemester"},
+    {nummer: 6, name: "6. Semester", typ: "Sommersemester"},
+];
 
 const ModulCard = (props: modulInfo) => {
 
@@ -13,6 +23,8 @@ const ModulCard = (props: modulInfo) => {
     const [open, setOpen] = useState(false);
     const [details, setDetails] = useState<Partial<modulInfo> | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
+    const [plannerOpen, setPlannerOpen] = useState(false);
+    const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
 
 
     async function handleAusklappen() {
@@ -42,6 +54,11 @@ const ModulCard = (props: modulInfo) => {
         pruefungsform,
         benotet,
     } = props;
+    function handleSemesterWahl(nummer: number) {
+        setSelectedSemester(nummer);
+        // TODO: Supabase insert hier einfügen
+        setPlannerOpen(false);
+    }
 
     const detailBoxen = [
         {name: "Prüfungsform", value: details?.pruefungsform ?? "—"},
@@ -82,7 +99,7 @@ const ModulCard = (props: modulInfo) => {
                 className={`grid transition-all duration-700 ease-in-expo ${open ? 'grid-rows-[1fr] mt-5' : 'grid-rows-[0fr] mb-0'}`}>
                 <div className='overflow-hidden'>
                     <div className='flex flex-col gap-y-5'>
-                        {/* Beschreibung / Lernergebnisse */}
+                        {/* Lernergebnisse */}
                         <div>
                             <h2 className='font-semibold text-lg'>Lernergebnisse</h2>
                             <p className='opacity-80'>{details?.lernergebnisse ?? lernergebnisse ?? "—"}</p>
@@ -112,17 +129,75 @@ const ModulCard = (props: modulInfo) => {
                             ))}
                         </div>
 
-                        <div className='flex rounded-lg gap-2'>
-                            <button
-                                className='bg-violet-ray hover:bg-blue-bell text-white px-4 py-2 rounded-lg w-5/6 transition-colors'>
-                                Zum Planer hinzufügen
-                            </button>
+                        {/* Aktionen */}
+                        <div className='flex items-start rounded-lg gap-2'>
+                            {/* Planer-Button mit Semester-Picker */}
+                            <div className='flex-1 flex flex-col gap-2'>
+                                <button
+                                    onClick={() => setPlannerOpen(!plannerOpen)}
+                                    className='w-full bg-foreground text-background px-4 py-2.5 rounded-xl flex items-center justify-between gap-2 transition-colors hover:opacity-90 dark:bg-[#35AE80]'
+                                >
+                                    <div className='flex items-center gap-2'>
+                                        <CalendarPlus className='w-5 h-5'/>
+                                        <span className='font-medium'>
+                    {selectedSemester
+                        ? `${selectedSemester}. Semester gewählt`
+                        : 'Zum Planer hinzufügen'}
+                </span>
+                                    </div>
+                                    {plannerOpen ? <ChevronUp className='w-4 h-4'/> :
+                                        <ChevronDown className='w-4 h-4'/>}
+                                </button>
+
+                                {/* Semester-Picker Dropdown */}
+                                <div
+                                    className={`grid transition-all duration-300 ease-in-out ${plannerOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`}>
+                                    <div className='overflow-hidden'>
+                                        <div
+                                            className='bg-background dark:bg-card border border-border rounded-xl p-3 flex flex-col gap-1'>
+                                            <p className='text-xs font-semibold text-muted-foreground tracking-widest uppercase px-2 pb-1'>
+                                                Semester wählen
+                                            </p>
+                                            {SEMESTER_LISTE.map((sem) => {
+                                                const isWinter = sem.typ === "Wintersemester";
+                                                return (
+                                                    <button
+                                                        key={sem.nummer}
+                                                        onClick={() => handleSemesterWahl(sem.nummer)}
+                                                        className={`flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-[#E3E6EA] dark:hover:bg-[#16081f] transition-colors text-left ${selectedSemester === sem.nummer ? 'bg-[#E3E6EA] dark:bg-[#16081f]' : ''}`}
+                                                    >
+                                                        <div className='flex items-center gap-3'>
+                                                            {/*<span*/}
+                                                            {/*    className='w-7 h-7 rounded-full bg-[#E3E6EA] dark:bg-[#16081f] flex items-center justify-center text-sm font-semibold text-foreground'>*/}
+                                                            {/*    {sem.nummer}*/}
+                                                            {/*</span>*/}
+                                                            <span
+                                                                className='font-medium text-foreground'>{sem.name}</span>
+                                                        </div>
+                                                        <span
+                                                            className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
+                                                                isWinter
+                                                                    ? 'text-blue-bell border-blue-bell/30 bg-blue-bell/10'
+                                                                    : 'text-amber-500 border-amber-400/30 bg-amber-50 dark:bg-amber-500/10'
+                                                            }`}>
+                                    {sem.typ}
+                                </span>
+                                                    </button>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Moses Link — nur so breit wie nötig */}
                             {details?.link ? (
                                 <Link
                                     href={details.link}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className='bg-flag-red text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2'>
+                                    className='shrink-0 bg-flag-red text-white px-4 py-2.5 rounded-xl flex items-center gap-2 whitespace-nowrap'
+                                >
                                     zu Moses
                                     <SquareArrowOutUpRight className='justify-self-end'/>
                                 </Link>
@@ -139,7 +214,7 @@ const ModulCard = (props: modulInfo) => {
                 </div>
             </div>
         </div>
-    )
-}
+    );
+};
 
 export default ModulCard;
