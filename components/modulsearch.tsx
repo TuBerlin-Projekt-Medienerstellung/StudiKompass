@@ -54,7 +54,7 @@ export default function ModulSearch({modules, query, onQueryChange}:Props){
                                             key={m?.id?.toString() || index}
                                             onClick={() => {
                                                 onQueryChange(m.name);   // Input zeigt den Namen
-                                                setSelected({id: m.id ,name : displayName}) // merkt sich die Auswahl für handleSave
+                                                setSelected({id: m.id.value.toString() ,name : displayName}) // merkt sich die Auswahl für handleSave
                                             }}
                                             className="px-4 py-2 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700"
                                         >
