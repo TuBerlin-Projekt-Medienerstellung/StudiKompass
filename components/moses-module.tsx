@@ -123,7 +123,7 @@ export default function MosesModulsuche({studiengangId}: Props) {
                         className={`min-w-0 rounded-2xl border-2 px-2 py-2 text-xs font-medium transition-colors sm:px-4 sm:text-sm lg:text-base ${
                             filter === btn.value
                                 ? "bg-flag-red text-white border-flag-red"
-                                : "bg-white text-black border-gray-200 hover:border-flag-red"
+                                : "bg-white dark:bg-card text-black dark:text-white border-gray-200 hover:border-flag-red"
                         }`}
                     >
                         <span className="sm:hidden">{btn.shortLabel}</span>

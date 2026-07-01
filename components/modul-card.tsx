@@ -8,12 +8,12 @@ import {
     SquareArrowOutUpRight,
     BookOpen
 } from 'lucide-react';
-import { ladeDetailedModulAction } from '@/app/protected/modules/actions';
+import {ladeDetailedModulAction} from '@/app/protected/modules/actions';
 import Link from "next/link";
-import { useState } from 'react';
+import {useState} from 'react';
 
 interface modulInfo {
-    modul_id: number;
+    modul_id: string;
     name: string;
     leistungspunkte: number;
     semester?: string | number;
@@ -51,11 +51,11 @@ const ModulCard = (props: modulInfo) => {
 
     const angezeigterTurnus = turnus ?? semester;
 
-const kurzerTurnus = angezeigterTurnus
-    ?.toString()
-    .replaceAll("Winter- und Sommersemester", "WiSe & SoSe")
-    .replaceAll("Wintersemester", "WiSe")
-    .replaceAll("Sommersemester", "SoSe");
+    const kurzerTurnus = angezeigterTurnus
+        ?.toString()
+        .replaceAll("Winter- und Sommersemester", "WiSe & SoSe")
+        .replaceAll("Wintersemester", "WiSe")
+        .replaceAll("Sommersemester", "SoSe");
 
     async function handleAusklappen() {
         setOpen(!open);
@@ -70,22 +70,23 @@ const kurzerTurnus = angezeigterTurnus
     }
 
     const detailBoxen = [
-        { name: "Prüfungsform", value: details?.pruefungsform ?? "—" },
-        { name: "Benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—" },
-        { name: "Voraussetzungen", value: details?.voraussetzungen ?? "—" },
+        {name: "Prüfungsform", value: details?.pruefungsform ?? "—"},
+        {name: "Benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—"},
+        {name: "Voraussetzungen", value: details?.voraussetzungen ?? "—"},
     ];
 
     const isWahlpflicht = modulArt.toLowerCase().includes("wahlpflicht");
     const moduleBorderClass = isWahlpflicht
-        ? "border-l-flag-red border-r-flag-red dark:border-l-emerald-400 dark:border-r-emerald-400"
-        : "border-l-flag-red border-r-flag-red dark:border-l-flag-red dark:border-r-flag-red";
+        ? "border-l-mint-leaf border-r-mint-leaf"
+        : "border-l-flag-red border-r-flag-red";
 
     return (
-        <div className={`w-full min-w-0 flex flex-col border-y-2 border-x-4 border-border ${moduleBorderClass} bg-background dark:bg-card rounded-xl px-4 sm:px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
+        <div
+            className={`w-full min-w-0 flex flex-col border-y-2 border-x-4 border-border ${moduleBorderClass} bg-background dark:bg-card rounded-xl px-4 sm:px-6 pt-4 transition-all duration-700 ${open ? 'pb-6' : 'pb-4'}`}>
             <header className='flex w-full items-start justify-between gap-3'>
                 <div className='flex min-w-0 flex-1 gap-3'>
                     <button onClick={() => setLiked(!liked)} className="mt-1 shrink-0">
-                        {liked ? <CircleCheckBig className="text-mint-leaf" /> : <Circle />}
+                        {liked ? <CircleCheckBig className="text-mint-leaf"/> : <Circle/>}
                     </button>
 
                     <div className='flex min-w-0 flex-1 flex-col gap-2 md:flex-row md:items-center md:gap-6'>
@@ -122,11 +123,12 @@ const kurzerTurnus = angezeigterTurnus
                 </div>
 
                 <div className="shrink-0 cursor-pointer pt-1" onClick={handleAusklappen}>
-                    {open ? <ChevronUp /> : <ChevronDown />}
+                    {open ? <ChevronUp/> : <ChevronDown/>}
                 </div>
             </header>
 
-            <div className={`grid transition-all duration-700 ease-in-expo ${open ? 'grid-rows-[1fr] mt-5' : 'grid-rows-[0fr] mb-0'}`}>
+            <div
+                className={`grid transition-all duration-700 ease-in-expo ${open ? 'grid-rows-[1fr] mt-5' : 'grid-rows-[0fr] mb-0'}`}>
                 <div className='overflow-hidden'>
                     <div className='flex flex-col gap-y-5'>
                         {/* Beschreibung / Lernergebnisse */}
@@ -143,11 +145,11 @@ const kurzerTurnus = angezeigterTurnus
                             <div className="md:hidden">
                                 <button
                                     onClick={() => setShowLernergebnisse(!showLernergebnisse)}
-                                    className="w-full rounded-xl bg-[#E3E6EA] border-2 border-border px-4 py-3 text-left"
+                                    className="w-full rounded-xl bg-[#E3E6EA] dark:bg-card border-2 border-border px-4 py-3 text-left"
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <BookOpen className="text-flag-red shrink-0" size={20} />
+                                            <BookOpen className="text-flag-red shrink-0" size={20}/>
 
                                             <span className="font-medium">
                                                 {showLernergebnisse
@@ -157,9 +159,9 @@ const kurzerTurnus = angezeigterTurnus
                                         </div>
 
                                         {showLernergebnisse ? (
-                                            <ChevronUp size={18} />
+                                            <ChevronUp size={18}/>
                                         ) : (
-                                            <ChevronDown size={18} />
+                                            <ChevronDown size={18}/>
                                         )}
                                     </div>
 
@@ -187,7 +189,8 @@ const kurzerTurnus = angezeigterTurnus
                         {/* Detail Boxen */}
                         <div className='grid grid-cols-1 gap-2 sm:grid-cols-3'>
                             {detailBoxen.map((detail, index) => (
-                                <div key={index} className='bg-[#E3E6EA] dark:bg-[#16081f] flex border-2 border-border rounded-xl w-full items-center p-4 flex-col text-center'>
+                                <div key={index}
+                                     className='bg-[#E3E6EA] dark:bg-[#16081f] flex border-2 border-border rounded-xl w-full items-center p-4 flex-col text-center'>
                                     <span className="text-xs opacity-80 sm:text-sm">{detail.name}</span>
                                     <p className='break-words text-sm font-bold sm:text-base'>{detail.value}</p>
                                 </div>
@@ -195,7 +198,8 @@ const kurzerTurnus = angezeigterTurnus
                         </div>
 
                         <div className='flex flex-col rounded-lg gap-2 md:flex-row'>
-                            <button className='bg-violet-ray hover:bg-blue-bell text-white px-4 py-2 rounded-lg w-full md:w-5/6 transition-colors'>
+                            <button
+                                className='bg-violet-ray hover:bg-blue-bell text-white px-4 py-2 rounded-lg w-full md:w-5/6 transition-colors'>
                                 Zum Planer hinzufügen
                             </button>
                             {details?.link ? (
@@ -206,12 +210,13 @@ const kurzerTurnus = angezeigterTurnus
                                     className='bg-flag-red text-white w-full md:w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2'
                                 >
                                     zu Moses
-                                    <SquareArrowOutUpRight className='justify-self-end shrink-0' />
+                                    <SquareArrowOutUpRight className='justify-self-end shrink-0'/>
                                 </Link>
                             ) : (
-                                <span className='bg-gray-300 text-white w-full md:w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed'>
+                                <span
+                                    className='bg-gray-300 text-white w-full md:w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed'>
                                     zu Moses
-                                    <SquareArrowOutUpRight className="shrink-0" />
+                                    <SquareArrowOutUpRight className="shrink-0"/>
                                 </span>
                             )}
                         </div>
