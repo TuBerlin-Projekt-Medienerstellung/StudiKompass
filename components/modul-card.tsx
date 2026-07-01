@@ -8,7 +8,6 @@ import ModulFeedback from "./modul-feedback";
 import { handleModule } from "@/lib/utils";
 
 
-// Placeholder – später aus Supabase laden
 const SEMESTER_LISTE = [
     { nummer: 1, name: "1. Semester", typ: "Wintersemester" },
     { nummer: 2, name: "2. Semester", typ: "Sommersemester" },
@@ -26,7 +25,6 @@ const ModulCard = (props: modulInfo) => {
     const [loadingDetails, setLoadingDetails] = useState(false);
     const [plannerOpen, setPlannerOpen] = useState(false);
     const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
-
 
     async function handleAusklappen() {
         setOpen(!open);
@@ -169,12 +167,7 @@ const ModulCard = (props: modulInfo) => {
                                                         className={`flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-[#E3E6EA] dark:hover:bg-[#16081f] transition-colors text-left ${selectedSemester === sem.nummer ? 'bg-[#E3E6EA] dark:bg-[#16081f]' : ''}`}
                                                     >
                                                         <div className='flex items-center gap-3'>
-                                                            {/*<span*/}
-                                                            {/*    className='w-7 h-7 rounded-full bg-[#E3E6EA] dark:bg-[#16081f] flex items-center justify-center text-sm font-semibold text-foreground'>*/}
-                                                            {/*    {sem.nummer}*/}
-                                                            {/*</span>*/}
-                                                            <span
-                                                                className='font-medium text-foreground'>{sem.name}</span>
+                                                            <span className='font-medium text-foreground'>{sem.name}</span>
                                                         </div>
                                                         <span
                                                             className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${isWinter
