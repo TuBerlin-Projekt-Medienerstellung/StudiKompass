@@ -5,23 +5,8 @@ import {ladeDetailedModulAction} from '@/app/protected/modules/actions';
 import Link from "next/link";
 import {useState} from 'react';
 import ModulFeedback from "./modul-feedback";
+import {handleModule} from "@/lib/utils";
 
-interface modulInfo {
-    modul_id: number;
-    name: string;
-    leistungspunkte: number;
-    semester?: string | number;
-    modulArt: string;
-    link: string;
-    beschreibung?: string;
-    lernergebnisse?: string;
-    voraussetzungen?: string;
-    pruefungsform?: string;
-    pruefungselemente?: string[];
-    benotet?: boolean | null;
-    pruefungsBeschreibung?: string;
-    lehrlernformen?: string;
-}
 
 // Placeholder – später aus Supabase laden
 const SEMESTER_LISTE = [
@@ -34,21 +19,6 @@ const SEMESTER_LISTE = [
 ];
 
 const ModulCard = (props: modulInfo) => {
-    const {
-        modul_id,
-        name,
-        leistungspunkte,
-        semester,
-        modulArt,
-        link,
-        beschreibung,
-        lernergebnisse,
-        voraussetzungen,
-        pruefungsform,
-        pruefungselemente,
-        benotet,
-        pruefungsBeschreibung,
-    } = props;
 
     const [liked, setLiked] = useState(true);
     const [open, setOpen] = useState(false);
@@ -57,17 +27,34 @@ const ModulCard = (props: modulInfo) => {
     const [plannerOpen, setPlannerOpen] = useState(false);
     const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
 
+
     async function handleAusklappen() {
         setOpen(!open);
         if (!open && !details) {
             setLoadingDetails(true);
-            const data = await ladeDetailedModulAction(modul_id);
+            const data = await ladeDetailedModulAction(handleModule(modul_id));
             if (data) {
-                setDetails(data);
+                setDetails({
+                    ...data,
+                    benotet: data.benotet ?? undefined,
+                });
             }
             setLoadingDetails(false);
         }
     }
+
+    const {
+        modul_id,
+        name,
+        leistungspunkte,
+        turnus,
+        bereichpfad,
+        link,
+        lernergebnisse,
+        voraussetzungen,
+        pruefungsform,
+        benotet,
+    } = props;
 
     function handleSemesterWahl(nummer: number) {
         setSelectedSemester(nummer);
@@ -81,7 +68,7 @@ const ModulCard = (props: modulInfo) => {
         {name: "Voraussetzungen", value: details?.voraussetzungen ?? "—"},
     ];
 
-    const isWahlpflicht = modulArt.toLowerCase().includes("wahlpflicht");
+    const isWahlpflicht = bereichpfad.toLowerCase().includes("wahlpflicht");
     const moduleBorderClass = isWahlpflicht
         ? "border-l-flag-red border-r-flag-red dark:border-l-emerald-400 dark:border-r-emerald-400"
         : "border-l-flag-red border-r-flag-red dark:border-l-flag-red dark:border-r-flag-red";
@@ -98,8 +85,10 @@ const ModulCard = (props: modulInfo) => {
                         <h1 className='font-bold md:text-2xl text-xl'>{name}</h1>
                         <div className='flex gap-2'>
                             <div>{leistungspunkte} ECTS</div>
-                            <span>• {semester} •</span>
-                            <p className='text-blue-bell dark:text-violet-ray'>{modulArt}</p>
+                            <div>•</div>
+                            <span> {turnus}</span>
+                            <div>•</div>
+                            <p className='text-blue-bell dark:text-violet-ray'>{bereichpfad}</p>
                         </div>
                     </div>
                 </div>
@@ -115,15 +104,15 @@ const ModulCard = (props: modulInfo) => {
                         {/* Lernergebnisse */}
                         <div>
                             <h2 className='font-semibold text-lg'>Lernergebnisse</h2>
-                            <p className='opacity-80'>{details?.lernergebnisse ?? beschreibung ?? "—"}</p>
+                            <p className='opacity-80'>{details?.lernergebnisse ?? lernergebnisse ?? "—"}</p>
                         </div>
 
-                        {/* Prüfungselemente */}
-                        {props.pruefungselemente && props.pruefungselemente.length > 0 && (
+                        {/* Prüfungselemente falls vorhanden */}
+                        {Array.isArray(pruefungsform) && pruefungsform.length > 0 && (
                             <div>
                                 <h2 className='font-semibold text-lg'>Prüfungselemente</h2>
                                 <ul className='list-disc list-inside opacity-80'>
-                                    {props.pruefungselemente.map((el, i) => (
+                                    {pruefungsform.map((el, i) => (
                                         <li key={i}>{el}</li>
                                     ))}
                                 </ul>
@@ -132,6 +121,7 @@ const ModulCard = (props: modulInfo) => {
 
                         {/* Detail Boxen */}
                         <div className='flex justify-between gap-2 md:flex-row flex-col'>
+                            {/** Hier fetchen für die Details, gerade werden dummy daten von constants gefetchtet **/}
                             {detailBoxen.map((detail, index) => (
                                 <div key={index}
                                      className='bg-[#E3E6EA] dark:bg-[#16081f] flex border-2 border-border rounded-xl w-full items-center p-4 flex-col'>

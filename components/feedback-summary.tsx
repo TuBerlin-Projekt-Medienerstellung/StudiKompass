@@ -36,7 +36,7 @@ const FeedbackSummary = ({
                 <RatingVerteilung verteilung={verteilung} gesamtAnzahl={anzahlBewertungen}/>
             </div>
 
-            <div className="bg-[#E3E6EA] rounded-2xl p-5 w-full md:w-3/5 flex flex-col justify-center gap-3">
+            <div className="bg-[#E3E6EA] dark:bg-card dark:border-2 rounded-2xl p-5 w-full md:w-3/5 flex flex-col justify-center gap-3">
                 <span className="text-xs font-semibold tracking-wide text-gray-500">NACH KATEGORIEN</span>
                 {kategorieLabels.map(({key, label}) => (
                     <KategorieBar key={key} label={label} wert={kategorieDurchschnitt[key]}/>

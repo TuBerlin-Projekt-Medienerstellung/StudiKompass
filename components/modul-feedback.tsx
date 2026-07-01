@@ -14,7 +14,7 @@ import {
 } from "./ui/feedback-utlis";
 
 interface ModulFeedbackProps {
-    modulId: number;
+    modulId: ModuleId;
     modulName: string;
 }
 
@@ -78,7 +78,7 @@ const ModulFeedback = ({modulId, modulName}: ModulFeedbackProps) => {
         <div className="flex flex-col">
             <button
                 onClick={() => setOpen(!open)}
-                className="w-full flex items-center justify-between bg-[#E3E6EA] rounded-xl px-4 py-3 hover:opacity-90 transition-opacity"
+                className="w-full flex items-center justify-between bg-[#E3E6EA] dark:bg-blue-bell rounded-xl px-4 py-3 hover:opacity-90 transition-opacity"
             >
                 <div className="flex items-center gap-3">
                     <div className="bg-black text-white rounded-full p-1.5">
@@ -86,7 +86,7 @@ const ModulFeedback = ({modulId, modulName}: ModulFeedbackProps) => {
                     </div>
                     <div className="flex flex-col items-start">
                         <span className="font-semibold text-sm">Studierenden-Feedback</span>
-                        <span className="text-xs text-gray-500">
+                        <span className="text-xs text-gray-500 dark:text-gray-100">
                             {bewertungen.length} Bewertung{bewertungen.length !== 1 ? "en" : ""} ansehen
                         </span>
                     </div>
