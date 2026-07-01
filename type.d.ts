@@ -17,8 +17,21 @@ declare global {
         value: string
     }
 
+    type ModuleId =
+    | { type: "moses"; value: number }
+    | { type: "uuid"; value: string };
+
+    function handleModule(id: ModuleId) {
+        if (id.type === 'moses') {
+            return fetchMoses(`/module/${id.value}`);
+        } else {
+            return supabase.from('module').select('*').eq('id', id.value);
+        }
+    }
+
+
     interface modulInfo {
-        modul_id: string, //später zu UUID
+        modul_id: ModuleId, //später zu UUID
         name: string,
         turnus: string,
         bereichpfad: string,
@@ -28,7 +41,7 @@ declare global {
         benotet: boolean,
         voraussetzungen?: string,
         link: string,
-        note?: number,
+        note?: number | null,
         gewichtung?: number,
         abgeschlossen?: boolean,
         versuche?: number;

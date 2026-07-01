@@ -62,7 +62,7 @@ export async function createSemester() {
 //erstellt neue Zeile in Tabelle Semester
 export async function updateSemesterTable(semesterzahl: number) {
     const supabase = await createClient();
-    const semester_id = crypto.randomUUID();
+
 
     const {
         data: {user},
@@ -73,7 +73,6 @@ export async function updateSemesterTable(semesterzahl: number) {
     const {data, error} = await supabase
         .from("semester")
         .insert({
-            id: semester_id,
             name: semesterzahl + ". Semester",
             semesterzahl: semesterzahl,
             user_id: user.id,
@@ -156,6 +155,18 @@ export async function getTries(modulId: string) {
         return 0;
     }
 
+    if (!data){
+        return 0;
+    }
+
+    if (data?.versuche <= 0){
+        throw new Error ("Versuche dürfen nicht negativ sein.");
+    }
+
+    if (data?.versuche > 4){
+        throw new Error ("Du hast maximal 4 Prüfungsversuche.");
+    }
+
     return data?.versuche ?? 0;
 }
 
@@ -190,17 +201,46 @@ export async function saveGrade(modulId: string, note: number, gewichtung: boole
     const supabase = await createClient();
     const {data: {user}} = await supabase.auth.getUser();
 
-    if (!user) return {success: false, error: "Du bist nicht eingeloggt."};
+    if (!user){
+        return {success: false, error: "Du bist nicht eingeloggt."};
+    } 
 
     const {data, error} = await supabase
         .from("module")
         .update({
             note: note,
-            gewichtung: +gewichtung
+            gewichtung: gewichtung ? 1 : 0
         })
         .eq("user_id", user.id)
         .eq("id", modulId)
-        .select();
+        .select()
+
+    if (error) {
+        console.error("Datenbank-Fehler beim Update der Note:", error);
+        return {success: false, error: "Datenbankfehler aufgetreten."};
+    }
+
+    if (!data || data.length === 0) {
+        return {success: false, error: "Modul nicht in deiner Planung gefunden."};
+    }
+
+    return {success: true};
+}
+
+export async function deleteGrade (modulId: string){
+    const supabase = await createClient();
+    const {data: {user}} = await supabase.auth.getUser();
+
+    if (!user) return {success: false, error: "Du bist nicht eingeloggt."};
+
+    const {data, error} = await supabase
+        .from("module")
+        .update({
+            note: null,
+        })
+        .eq("user_id", user.id)
+        .eq("id", modulId)
+        .select()
 
     if (error) {
         console.error("Datenbank-Fehler beim Update der Note:", error);

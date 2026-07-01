@@ -1,5 +1,6 @@
 "use server";
 import {createClient} from "@/lib/supabase/server";
+import { UUID } from "crypto";
 
 export async function getUserStudiengangId() {
     const supabase = await createClient();
@@ -52,7 +53,7 @@ interface MosesRef {
 }
 
 export interface ModulBasis {
-    id: string;
+    id: ModuleId;
     name: string;
     lp: number;
     bereichPfad: string[]; 
@@ -337,10 +338,19 @@ export async function getCurrentSemester() {
         .select()
         .single();
 
+    if (data.current_Semester <= 0) {
+        throw new Error("Das aktuelle Semester muss größer als 0 sein.");
+    }
+
+    if (data.maxSemester <= 0) {
+    throw new Error("Das maximale Semester muss größer als 0 sein.");
+    }
+
     if (error) {
         console.error('Fehler beim Aktualisieren:', error)
         throw error
     }
+
 
 
     return data.current_semester;
@@ -359,11 +369,10 @@ export async function createCustomModul(modulname: string,
     const {data: {user}} = await supabase.auth.getUser();
     if (!user) return null;
 
-    const modul_id = crypto.randomUUID();
+    
     const {data, error} = await supabase
         .from('module')
         .insert({
-            id: modul_id,
             name: modulname,
             turnus: turnus,
             bereichpfad: bereichspfad,
@@ -390,7 +399,7 @@ export async function createCustomModul(modulname: string,
     return data.id;
 }
 
-export async function addCustomModultoPlanner() {
+export async function addCustomModultoPlanner(groupId: UUID, modul_id: ModuleId ) {
     const supabase = await createClient();
     const {
         data: {user},
@@ -398,15 +407,13 @@ export async function addCustomModultoPlanner() {
 
     if (!user) return null;
 
-    const modul_id = crypto.randomUUID();
-    const groupId = crypto.randomUUID();
-
     const {error} = await supabase
         .from("planner")
         .insert({
-            group_id: groupId,   //Woher nehme ich die GroupID?
-            user_id: user.id,
             modul_id: modul_id,
+            group_id: groupId,   
+            user_id: user.id,
+            
         })
         .select()
         .single();

@@ -26,41 +26,9 @@ const Page = () => {
             const data = await getSemesters();
 
             setSemesterList(
-                data.map((s, index) => ({
+                data.map((s) => ({
                     nummer: s.semesterzahl,
-                    modules:
-                        index === 0
-                            ? [
-                                {
-                                    modul_id: "d39ef5d3-5e87-4be6-8a1b-6d70227e3117",
-                                    name: "Mathematik 1",
-                                    turnus: "WiSe, SoSe",
-                                    bereichpfad: "Pflicht",
-                                    leistungspunkte: 6,
-                                    lernergebnisse: "blah blah blah",
-                                    pruefungsform: "Klausur",
-                                    benotet: true,
-                                    link: "#",
-                                    note: 0.7,
-                                    gewichtung: 1.0,
-                                    abgeschlossen: true,
-                                    arbeitsaufwand: 180
-                                },
-                                {
-                                    modul_id: "m2",
-                                    name: "Einführung in die Programmierung",
-                                    turnus: "WiSe",
-                                    bereichpfad: "Pflicht",
-                                    leistungspunkte: 6,
-                                    lernergebnisse: "blah blah blah",
-                                    pruefungsform: "Portfolioprüfung",
-                                    benotet: true,
-                                    link: "#",
-                                    note: 1.3,
-                                    arbeitsaufwand: 180
-                                },
-                            ]
-                            : [],
+                    modules: s.modules ?? [],
                 }))
             );
         }
@@ -97,7 +65,7 @@ const Page = () => {
     }
 
     const findSemesterByModulId = (modulId: string) => {
-        return semesterList.find(s => s.modules.some(m => m.modul_id === modulId)
+        return semesterList.find(s => s.modules.some(m => m.modul_id.value === modulId)
         );
     };
 
@@ -105,7 +73,9 @@ const Page = () => {
         const activeId = String(event.active.id);
         // Durchsuche alle Semester nach dem Modul mit dieser ID
         for (const sem of semesterList) {
-            const gefunden = sem.modules.find(m => m.modul_id === activeId);
+            const gefunden = sem.modules.find(
+                m => String(m.modul_id.value ?? m.modul_id) === activeId
+            );
             if (gefunden) {
                 setActiveModul(gefunden);
                 break;
@@ -129,7 +99,7 @@ const Page = () => {
             targetSemesterNummer = Number(String(over.id).replace('semester-', ''));
         } else {
             const overModulId = String(over.id);
-            const targetSem = semesterList.find(s => s.modules.some(m => m.modul_id === overModulId));
+            const targetSem = semesterList.find(s => s.modules.some(m => m.modul_id.value === overModulId));
             if (!targetSem) return;
             targetSemesterNummer = targetSem.nummer;
         }
@@ -145,7 +115,7 @@ const Page = () => {
         // FALL 1: Innerhalb desselben Semesters verschieben (Reihenfolge ändern)
         if (sourceSemester.nummer === targetSemesterNummer) {
             const sem = newSemesters[sourceSemIndex];
-            const oldIndex = sem.modules.findIndex(m => m.modul_id === activeModulId);
+            const oldIndex = sem.modules.findIndex(m => m.modul_id.value === activeModulId);
             let newIndex = sem.modules.findIndex(m => String(m.modul_id) === String(over.id));
             if (newIndex === -1) newIndex = sem.modules.length - 1;
 
@@ -157,7 +127,7 @@ const Page = () => {
             const sourceSem = newSemesters[sourceSemIndex];
             const targetSem = newSemesters[targetSemIndex];
 
-            const modulIndex = sourceSem.modules.findIndex(m => m.modul_id === activeModulId);
+            const modulIndex = sourceSem.modules.findIndex(m => m.modul_id.value === activeModulId);
             const [movedModul] = sourceSem.modules.splice(modulIndex, 1);
 
             let newIndex = targetSem.modules.findIndex(m => String(m.modul_id) === String(over.id));

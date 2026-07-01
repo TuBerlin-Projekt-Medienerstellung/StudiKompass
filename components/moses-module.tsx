@@ -180,11 +180,15 @@ export default function MosesModulsuche({studiengangId}: Props) {
                              */
                             <ModulCard
                                 key={`${modul.id}-${index}`}
-                                modul_id={modul.id}
+                                modul_id={handleModule(modul.id)}
                                 name={modul.name}
                                 leistungspunkte={modul.lp}
-                                modulArt={modul.bereichPfad[0] ?? "—"} link={''}
+                                bereichpfad={modul.bereichPfad[0] ?? "—"} link={''}
                                 turnus={modul.semester}
+                                lernergebnisse=''
+                                pruefungsform=''
+                                benotet
+                                arbeitsaufwand={0}
                             />
                         ))
                     )}

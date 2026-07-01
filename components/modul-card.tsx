@@ -6,22 +6,6 @@ import Link from "next/link";
 import {useState} from 'react';
 import ModulFeedback from "./modul-feedback";
 
-interface modulInfo {
-    modul_id: string;
-    name: string;
-    leistungspunkte: number;
-    turnus?: string | number;
-    modulArt: string;
-    link: string;
-    beschreibung?: string;
-    lernergebnisse?: string;
-    voraussetzungen?: string;
-    pruefungsform?: string;
-    pruefungselemente?: string[];
-    benotet?: boolean | null;
-    pruefungsBeschreibung?: string;
-    lehrlernformen?: string;
-}
 
 const ModulCard = (props: modulInfo) => {
 
@@ -35,7 +19,7 @@ const ModulCard = (props: modulInfo) => {
         setOpen(!open);
         if (!open && !details) {
             setLoadingDetails(true);
-            const data = await ladeDetailedModulAction(modul_id);
+            const data = await ladeDetailedModulAction(handleModule(modul_id));
             if (data) {
                 setDetails(data);
             }
@@ -48,15 +32,12 @@ const ModulCard = (props: modulInfo) => {
         name,
         leistungspunkte,
         turnus,
-        modulArt,
+        bereichpfad,
         link,
-        beschreibung,
         lernergebnisse,
         voraussetzungen,
         pruefungsform,
-        pruefungselemente,
         benotet,
-        pruefungsBeschreibung,
     } = props;
 
     const detailBoxen = [
@@ -65,7 +46,7 @@ const ModulCard = (props: modulInfo) => {
         {name: "Voraussetzungen", value: details?.voraussetzungen ?? "—"},
     ];
 
-    const isWahlpflicht = modulArt.toLowerCase().includes("wahlpflicht");
+    const isWahlpflicht = bereichpfad.toLowerCase().includes("wahlpflicht");
     const moduleBorderClass = isWahlpflicht
         ? "border-l-flag-red border-r-flag-red dark:border-l-emerald-400 dark:border-r-emerald-400"
         : "border-l-flag-red border-r-flag-red dark:border-l-flag-red dark:border-r-flag-red";
@@ -85,7 +66,7 @@ const ModulCard = (props: modulInfo) => {
                             <div>•</div>
                             <span> {turnus}</span>
                             <div>•</div>
-                            <p className='text-blue-bell dark:text-violet-ray'>{modulArt}</p>
+                            <p className='text-blue-bell dark:text-violet-ray'>{bereichpfad}</p>
                         </div>
                     </div>
                 </div>
@@ -101,11 +82,11 @@ const ModulCard = (props: modulInfo) => {
                         {/* Beschreibung / Lernergebnisse */}
                         <div>
                             <h2 className='font-semibold text-lg'>Lernergebnisse</h2>
-                            <p className='opacity-80'>{details?.lernergebnisse ?? beschreibung ?? "—"}</p>
+                            <p className='opacity-80'>{details?.lernergebnisse ?? lernergebnisse ?? "—"}</p>
                         </div>
 
                         {/* Prüfungselemente falls vorhanden */}
-                        {pruefungselemente && pruefungselemente.length > 0 && (
+                        {p && pruefungselemente.length > 0 && (
                             <div>
                                 <h2 className='font-semibold text-lg'>Prüfungselemente</h2>
                                 <ul className='list-disc list-inside opacity-80'>
@@ -150,7 +131,7 @@ const ModulCard = (props: modulInfo) => {
                                 </span>
                             )}
                         </div>
-                        <ModulFeedback modulId={modul_id} modulName={name}/>
+                        <ModulFeedback modulId = {handleModule(modul_id)} modulName={name}/>
                     </div>
                 </div>
             </div>
