@@ -45,7 +45,7 @@ export default function PlannerTitleEasterEgg() {
                     onClick={() => setZeigeCredits(false)}
                 >
                     <div
-                        className="bg-white dark:bg-zinc-900 rounded-2xl p-8 max-w-md mx-4 shadow-xl"
+                        className="bg-white dark:bg-zinc-900 rounded-2xl p-6 sm:p-8 w-full max-w-md mx-4 shadow-xl max-h-[85vh] overflow-y-auto"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <h2 className="text-2xl font-bold text-flag-red mb-4">
