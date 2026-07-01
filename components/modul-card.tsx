@@ -1,9 +1,10 @@
 "use client";
 
-import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight, CalendarPlus} from 'lucide-react';
+import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight} from 'lucide-react';
 import {ladeDetailedModulAction} from '@/app/protected/modules/actions';
 import Link from "next/link";
 import {useState} from 'react';
+import ModulFeedback from "./modul-feedback";
 
 interface modulInfo {
     modul_id: number;
@@ -202,16 +203,17 @@ const ModulCard = (props: modulInfo) => {
                                     className='shrink-0 bg-flag-red text-white px-4 py-2.5 rounded-xl flex items-center gap-2 whitespace-nowrap'
                                 >
                                     zu Moses
-                                    <SquareArrowOutUpRight className='w-4 h-4'/>
+                                    <SquareArrowOutUpRight className='justify-self-end'/>
                                 </Link>
                             ) : (
                                 <span
-                                    className='shrink-0 bg-gray-300 text-white px-4 py-2.5 rounded-xl flex items-center gap-2 opacity-50 cursor-not-allowed whitespace-nowrap'>
-            zu Moses
-            <SquareArrowOutUpRight className='w-4 h-4'/>
-        </span>
+                                    className='bg-gray-300 text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed'>
+                                    zu Moses
+                                    <SquareArrowOutUpRight/>
+                                </span>
                             )}
                         </div>
+                        <ModulFeedback modulId={modul_id} modulName={name}/>
                     </div>
                 </div>
             </div>
