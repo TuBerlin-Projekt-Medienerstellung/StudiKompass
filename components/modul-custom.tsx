@@ -71,8 +71,8 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
         />
 
         {/**Modal */}
-        <div className='fixed left-0 md:left-72 right-0 bottom-0 flex justify-items-stretch bg-white  z-50 gap-6 border-y-2 border-x-2 rounded-t-xl flex-col p-8'>
-            <header className='flex w-full bg-white flex-row gap-6 items-center justify-between'>
+        <div className='fixed left-0 md:left-72 right-0 bottom-0 flex justify-items-stretch bg-white dark:bg-card z-50 gap-2 border-y-2 border-x-2 rounded-t-xl flex-col p-8'>
+            <header className='flex w-full flex-row gap-2 items-center justify-between'>
                 <h1 className='flex font-bold md:text-2xl text-xl'>Custom Modul erstellen</h1>
                 <button onClick={onClose}>
                     <X className='flex flex-none w-4 h-4'></X>
