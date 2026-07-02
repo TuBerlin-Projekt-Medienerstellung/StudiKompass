@@ -71,8 +71,8 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
         />
 
         {/**Modal */}
-        <div className='fixed left-0 md:left-72 right-0 bottom-0 flex justify-items-stretch bg-white  z-50 gap-6 border-y-2 border-x-2 rounded-t-xl flex-col p-8'>
-            <header className='flex w-full bg-white flex-row gap-6 items-center justify-between'>
+        <div className="fixed left-0 right-0 bottom-0 z-50 flex flex-col gap-6 rounded-t-xl border-x-2 border-y-2 border-border bg-white p-8 text-gray-900 dark:bg-[#16081f] dark:text-white md:left-72">
+            <header className="flex w-full flex-row items-center justify-between gap-6 bg-white dark:bg-[#16081f]">
                 <h1 className='flex font-bold md:text-2xl text-xl'>Custom Modul erstellen</h1>
                 <button onClick={onClose}>
                     <X className='flex flex-none w-4 h-4'></X>
@@ -114,9 +114,9 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
         {mode === "modul" ? (
             <>
                 {/** Modulname */}
-                <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg'>
+                <div className="flex rounded-lg border-x-2 border-y-2 border-border bg-white px-4 py-3 dark:bg-[#24112f]">
                     <input
-                        className="w-full outline-none"
+                        className="w-full bg-transparent text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-gray-500"
                         placeholder="Wie heißt dein Modul?"
                         value={formData.modulname}
                         onChange={(e) =>
@@ -131,9 +131,9 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                 {/** Prüfungsform */}
                 <div className='flex gap-2 flex-col'>
                     <p className='font-bold text-[14px]'>Prüfungsform</p>
-                    <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg'>
+                    <div className="flex rounded-lg border-x-2 border-y-2 border-border bg-white px-4 py-3 dark:bg-[#24112f]">
                         <input
-                            className="w-full outline-none"
+                            className="w-full bg-transparent text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-gray-500"
                             placeholder="Wie wird das Modul geprüft?"
                             value={formData.pruefungsform}
                             onChange={(e) =>
@@ -153,7 +153,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                         <p className='font-bold text-[14px]'>ECTS</p>
                         <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between'>
                             <input
-                                className="flex-1 appearance-none leading-none outline-none w-full outline-none"
+                                className="flex-1 w-full appearance-none bg-transparent leading-none text-gray-900 outline-none dark:text-white"
                                 type='number'
                                 value={formData.ects}
                                 onChange={(e) =>
@@ -178,7 +178,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                     turnus: e.target.value,
                                     })
                                 }
-                                className="flex-1 w-full bg-transparent outline-none">
+                                className="flex-1 w-full bg-transparent text-gray-900 outline-none dark:text-white">
                                     <option value="">Bitte wählen</option>
                                     <option value="WiSe">WiSe</option>
                                     <option value="SoSe">SoSe</option>
@@ -199,7 +199,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                 bereichspfad: e.target.value,
                                 })
                             }
-                            className="w-full bg-transparent outline-none">
+                            className="w-full bg-transparent text-gray-900 outline-none dark:text-white">
                                 <option value="">Bitte wählen</option>
                                 <option value="1">Pflicht</option>
                                 <option value="2">Wahlpflicht</option>
@@ -223,7 +223,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                     : e.target.value === "true",
                                 })
                             }
-                            className="w-full bg-transparent outline-none">
+                            className="w-full bg-transparent text-gray-900 outline-none dark:text-white">
                                 <option value="">Bitte wählen</option>
                                 <option value="true">Ja</option>
                                 <option value="false">Nein</option>
@@ -236,9 +236,9 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
             {/** Beschreibung */}
             <div className='flex gap-2 flex-col'>
                 <p className='font-bold text-[14px]'>Beschreibung</p>
-                <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg'>
+                <div className="flex rounded-lg border-x-2 border-y-2 border-border bg-white px-4 py-3 dark:bg-[#24112f]">
                     <input
-                            className="w-full outline-none"
+                            className="w-full bg-transparent text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-gray-500"
                             placeholder="Hier kannst du dein Modul beschreiben"
                             value={formData.beschreibung}
                             onChange={(e) =>
@@ -261,7 +261,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
             {/** Buttons zum Schließen und speichern */}
             <div className='flex gap-2 flex-col md:flex-row items-center align-items self-stretch'>
                 <button onClick={onClose}
-                        className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg font-bold w-full md:w-1/3 items-center justify-center'>
+                        className="flex w-full items-center justify-center rounded-lg border-x-2 border-y-2 border-border bg-white px-4 py-3 font-bold text-gray-900 dark:bg-[#24112f] dark:text-white md:w-1/3">
                     abbrechen
                 </button>
                 <button className='flex px-4 py-3 rounded-lg bg-violet-ray text-white w-full md:w-2/3 items-center justify-center'

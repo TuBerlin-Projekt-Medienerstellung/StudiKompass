@@ -99,16 +99,20 @@ const { data: plannedModules } = user
 
   const modules = userModules ?? [];
 
-  const gesamtEcts = modules.reduce(
-  (sum, modul) => sum + (modul.ects ?? 0),
-    0
-  );
+  const gesamtEcts = 180;
 
   const aktuelleEcts = modules
   .filter((modul) => modul.abgeschlossen)
   .reduce((sum, modul) => sum + (modul.ects ?? 0), 0);
 
-  const aktuellesSemester = profile?.current_semester ?? 1;
+  const aktuellesSemester = profile?.current_semester ?? null;
+
+  const maxSemesterRaw = Number(profile?.max_semester);
+
+  const maxSemester =
+  Number.isFinite(maxSemesterRaw) && maxSemesterRaw > 0
+    ? maxSemesterRaw
+    : null;
 
   const gesamtfortschritt =
   gesamtEcts > 0
@@ -191,7 +195,7 @@ const meilensteine: Meilenstein[] = [
 
 
 
-      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
         <div className="rounded-2xl bg-[#C40D1F] p-4 text-white">
           <div className="flex items-center justify-between gap-4">
             <Award className="h-6 w-6" />
@@ -224,7 +228,7 @@ const meilensteine: Meilenstein[] = [
             <Calendar className="h-6 w-6 text-[#C40D1F]" />
             <div>
               <h2 className="text-xl font-bold">
-                {aktuellesSemester}
+                {aktuellesSemester ? `${aktuellesSemester}.` : "Noch nicht gesetzt"}
               </h2>
               <p className="text-sm text-muted-foreground">Semester</p>
             </div>
@@ -236,7 +240,7 @@ const meilensteine: Meilenstein[] = [
             <Clock className="h-6 w-6 text-[#C40D1F]" />
             <div>
               <h2 className="text-xl font-bold">
-                {profile?.max_semester ? `${profile.max_semester}. Semester` : "Noch offen"}
+                {maxSemester ? `${maxSemester}. Semester` : "Noch offen"}
               </h2>
               <p className="text-sm text-muted-foreground">Voraussichtlich</p>
             </div>
