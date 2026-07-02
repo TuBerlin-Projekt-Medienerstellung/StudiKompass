@@ -1,21 +1,23 @@
 "use client";
 
 import SemesterModulCard from "@/components/semester-modul-card";
-import {Plus} from 'lucide-react';
+import { Plus } from 'lucide-react';
 import Link from "next/link";
-import {useDroppable} from "@dnd-kit/core";
-import {SortableContext, verticalListSortingStrategy} from "@dnd-kit/sortable";
+import { useDroppable } from "@dnd-kit/core";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 
 type Props = {
     semester: number;
     module: modulInfo[];
     onClick: () => void;
+    proWoche: boolean;
+    onToggleAufwand: () => void;
 };
 
-const SemesterCard = ({semester, module, onClick}: Props) => {
+const SemesterCard = ({ semester, module, onClick, proWoche, onToggleAufwand }: Props) => {
 
     const totalECTS = module.reduce((sum, modul) => sum + modul.leistungspunkte, 0);
-    const {setNodeRef} = useDroppable({id: `semester-${semester}`});
+    const { setNodeRef } = useDroppable({ id: `semester-${semester}` });
 
     return (
         <div
@@ -43,6 +45,8 @@ const SemesterCard = ({semester, module, onClick}: Props) => {
                         <SemesterModulCard
                             key={String(modul.modul_id)}
                             modul={modul}
+                            proWoche={proWoche}
+                            onToggleAufwand={onToggleAufwand}
                         />
                     ))}
                 </div>
@@ -54,7 +58,7 @@ const SemesterCard = ({semester, module, onClick}: Props) => {
                 href="/protected/modules"
                 className="border-2 border-dashed rounded-2xl flex items-center justify-center px-6 py-4 mt-2"
                 onClick={(e) => e.stopPropagation()}>
-                <Plus/>
+                <Plus />
                 <span>Modul hinzufügen</span>
             </Link>
         </div>
