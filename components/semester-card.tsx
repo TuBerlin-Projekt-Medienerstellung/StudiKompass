@@ -41,7 +41,7 @@ const SemesterCard = ({semester, module, onClick}: Props) => {
                 <div className="flex flex-col gap-2 min-h-15">
                     {module.map((modul) => (
                         <SemesterModulCard
-                            key={modul.modul_id.value}
+                            key={String(modul.modul_id)}
                             modul={modul}
                         />
                     ))}
