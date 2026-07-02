@@ -21,6 +21,7 @@ const Page = () => {
 
     const [semesterList, setSemesterList] = useState<SemesterList>([]);
     const [activeModul, setActiveModul] = useState<modulInfo | null>(null);
+    const [proWoche, setProWoche] = useState(false);
 
     useEffect(() => {
         async function loadSemesters() {
@@ -176,6 +177,8 @@ const Page = () => {
                             semester={semester.nummer}
                             module={semester.modules}
                             onClick={() => console.log(semester.nummer)}
+                            proWoche={proWoche}
+                            onToggleAufwand={() => setProWoche(!proWoche)}
                         />
                     ))}
                 </div>
@@ -194,7 +197,11 @@ const Page = () => {
 
             <DragOverlay>
                 {activeModul ? (
-                    <SemesterModulCard modul={activeModul} />
+                    <SemesterModulCard
+                        modul={activeModul}
+                        proWoche={proWoche}
+                        onToggleAufwand={() => setProWoche(!proWoche)}
+                    />
                 ) : null}
             </DragOverlay>
         </DndContext>

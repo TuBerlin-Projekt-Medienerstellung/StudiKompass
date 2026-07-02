@@ -11,14 +11,16 @@ import { getTries, saveTries, saveGrade, saveStatus, deleteGrade, loescheModul }
 
 type Props = {
     modul: modulInfo;
-}
+    proWoche: boolean;
+    onToggleAufwand: () => void;
+};
 
 type ModulDetails = {
     beschreibung?: string;
     [key: string]: unknown;
 };
 
-const SemesterModulCard = ({ modul }: Props) => {
+const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
     const [isOpen, setIsOpen] = useState(false);
     const [details, setDetails] = useState<ModulDetails | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
@@ -126,6 +128,21 @@ const SemesterModulCard = ({ modul }: Props) => {
         }
 
     }, [isOpen, modul.modul_id, modul.note, modul.gewichtung, modul.abgeschlossen]);
+
+    function berechneArbeitsaufwand(): string {
+        const aufwand = modul.arbeitsaufwand;
+        if (!aufwand || aufwand <= 0) return "—";
+
+        const istJob = modul.leistungspunkte === 0;
+
+        if (istJob) {
+            // Job: gespeichert ist Stunden/Woche
+            return proWoche ? `${aufwand} h/Woche` : `${aufwand * 15} h/Semester`;
+        } else {
+            // Modul: gespeichert ist Stunden/Semester
+            return proWoche ? `${Math.round(aufwand / 15)} h/Woche` : `${aufwand} h/Semester`;
+        }
+    }
 
     return (
         <div ref={setNodeRef} style={style}>
@@ -242,12 +259,17 @@ const SemesterModulCard = ({ modul }: Props) => {
                             {/* Infokästen */}
                             <div className="grid grid-cols-1 gap-3 md:grid-cols-4 w-full">
                                 <div
-                                    className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
+                                    className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center cursor-pointer select-none"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onToggleAufwand();
+                                    }}
+                                    title="Klicken zum Umrechnen (Semester / Woche)">
                                     <p className="text-lg opacity-70">
                                         Arbeitsaufwand
                                     </p>
                                     <p className="font-semibold text-md">
-                                        {modul.arbeitsaufwand}
+                                        {berechneArbeitsaufwand()}
                                     </p>
                                 </div>
 
