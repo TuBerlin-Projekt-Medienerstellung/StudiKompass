@@ -5,12 +5,16 @@ import {ChevronUp, ChevronDown, MessageSquare, Star, X} from "lucide-react";
 import FeedbackSummary from "./feedback-summary";
 import ReviewCard from "./review-card";
 import ReviewForm from "./review-form";
-import {initialeBewertungen} from "@/constants";
+import {
+    erstelleBewertungAction,
+    ladeBewertungenAction,
+    loescheBewertungAction,
+} from "@/app/protected/modules/feedback-actions";
+import {handleModule} from "@/lib/utils";
 import {
     berechneGesamtScore,
     berechneKategorieDurchschnitt,
     berechneVerteilung,
-    initialenAusName,
 } from "./ui/feedback-utlis";
 
 interface ModulFeedbackProps {
@@ -25,14 +29,16 @@ const sortierOptionen: { key: SortOption; label: string }[] = [
 ];
 
 const ModulFeedback = ({modulId, modulName}: ModulFeedbackProps) => {
-    // TODO: initialeBewertungen ersetzen durch echten API-Call (z.B. ladeBewertungenAction(modulId)),
-    // sobald der Backend-Endpoint für Bewertungen steht.
-    void modulId;
+    // bewertung.modul_id ist Text: speichert MOSES-Nummern und UUIDs gleichermaßen
+    const modulKey = handleModule(modulId);
 
     const [open, setOpen] = useState(false);
     const [schreibtBewertung, setSchreibtBewertung] = useState(false);
     const [sortierung, setSortierung] = useState<SortOption>("hilfreichste");
-    const [bewertungen, setBewertungen] = useState<Bewertung[]>(initialeBewertungen);
+    const [bewertungen, setBewertungen] = useState<Bewertung[]>([]);
+    const [geladen, setGeladen] = useState(false);
+    const [laedt, setLaedt] = useState(false);
+    const [fehler, setFehler] = useState<string | null>(null);
 
     const gesamtScore = useMemo(() => berechneGesamtScore(bewertungen), [bewertungen]);
     const kategorieDurchschnitt = useMemo(() => berechneKategorieDurchschnitt(bewertungen), [bewertungen]);
@@ -50,34 +56,58 @@ const ModulFeedback = ({modulId, modulName}: ModulFeedbackProps) => {
         }
     }, [bewertungen, sortierung]);
 
-    const handleAbschicken = (kategorien: KategorieBewertung, semester: string, kommentar: string) => {
-        // TODO: hier später POST an Backend statt nur lokalem State
-        const werte = Object.values(kategorien);
-        const score = werte.reduce((summe, w) => summe + w, 0) / werte.length;
-        const name = "Du";
+    // Bewertungen erst beim ersten Aufklappen laden, damit nicht jede
+    // Modulkarte direkt beim Rendern eine Anfrage abschickt
+    const handleAufklappen = async () => {
+        const wirdGeoeffnet = !open;
+        setOpen(wirdGeoeffnet);
+        if (!wirdGeoeffnet || geladen || laedt) return;
 
-        const neueBewertung: Bewertung = {
-            id: crypto.randomUUID(),
-            name,
-            initialen: initialenAusName(name),
-            semester,
-            datum: new Date().toLocaleDateString("de-DE", {day: "2-digit", month: "short", year: "numeric"}),
-            datumSort: Date.now(),
-            kategorien,
-            gesamtScore: score,
-            kommentar,
-            hilfreich: 0,
-            antworten: 0,
-        };
+        setLaedt(true);
+        setFehler(null);
+        try {
+            const daten = await ladeBewertungenAction(modulKey);
+            setBewertungen(daten);
+            setGeladen(true);
+        } catch (e) {
+            console.error("Bewertungen konnten nicht geladen werden:", e);
+            setFehler("Bewertungen konnten nicht geladen werden.");
+        } finally {
+            setLaedt(false);
+        }
+    };
 
-        setBewertungen((prev) => [neueBewertung, ...prev]);
-        setSchreibtBewertung(false);
+    const handleAbschicken = async (kategorien: KategorieBewertung, semester: string, kommentar: string) => {
+        setFehler(null);
+        try {
+            const neueBewertung = await erstelleBewertungAction(modulKey, kategorien, semester, kommentar);
+            if (neueBewertung) {
+                setBewertungen((prev) => [neueBewertung, ...prev]);
+            }
+            setSchreibtBewertung(false);
+        } catch (e) {
+            console.error("Bewertung konnte nicht gespeichert werden:", e);
+            setFehler("Bewertung konnte nicht gespeichert werden. Bitte versuche es erneut.");
+            throw e; // ReviewForm behält dadurch die Eingaben
+        }
+    };
+
+    const handleLoeschen = async (bewertungId: string) => {
+        if (!window.confirm("Möchtest du deine Bewertung wirklich löschen?")) return;
+        setFehler(null);
+        try {
+            await loescheBewertungAction(bewertungId);
+            setBewertungen((prev) => prev.filter((b) => b.id !== bewertungId));
+        } catch (e) {
+            console.error("Bewertung konnte nicht gelöscht werden:", e);
+            setFehler("Bewertung konnte nicht gelöscht werden. Bitte versuche es erneut.");
+        }
     };
 
     return (
         <div className="flex flex-col">
             <button
-                onClick={() => setOpen(!open)}
+                onClick={handleAufklappen}
                 className="w-full flex items-center justify-between bg-[#E3E6EA] dark:bg-blue-bell rounded-xl px-4 py-3 hover:opacity-90 transition-opacity"
             >
                 <div className="flex items-center gap-3">
@@ -87,7 +117,9 @@ const ModulFeedback = ({modulId, modulName}: ModulFeedbackProps) => {
                     <div className="flex flex-col items-start">
                         <span className="font-semibold text-sm">Studierenden-Feedback</span>
                         <span className="text-xs text-gray-500 dark:text-gray-100">
-                            {bewertungen.length} Bewertung{bewertungen.length !== 1 ? "en" : ""} ansehen
+                            {geladen
+                                ? `${bewertungen.length} Bewertung${bewertungen.length !== 1 ? "en" : ""} ansehen`
+                                : "Bewertungen ansehen"}
                         </span>
                     </div>
                 </div>
@@ -119,6 +151,10 @@ const ModulFeedback = ({modulId, modulName}: ModulFeedbackProps) => {
                                 )}
                             </button>
                         </div>
+
+                        {fehler && (
+                            <p className="text-sm text-flag-red bg-flag-red/10 rounded-lg px-4 py-2">{fehler}</p>
+                        )}
 
                         <FeedbackSummary
                             gesamtScore={gesamtScore}
@@ -153,8 +189,16 @@ const ModulFeedback = ({modulId, modulName}: ModulFeedbackProps) => {
                         </div>
 
                         <div className="flex flex-col gap-3">
+                            {laedt && (
+                                <p className="text-sm text-gray-400">Bewertungen werden geladen...</p>
+                            )}
+                            {geladen && bewertungen.length === 0 && (
+                                <p className="text-sm text-gray-400">
+                                    Noch keine Bewertungen – schreib die erste!
+                                </p>
+                            )}
                             {sortierteBewertungen.map((bewertung) => (
-                                <ReviewCard key={bewertung.id} bewertung={bewertung}/>
+                                <ReviewCard key={bewertung.id} bewertung={bewertung} onLoeschen={handleLoeschen}/>
                             ))}
                         </div>
                     </div>

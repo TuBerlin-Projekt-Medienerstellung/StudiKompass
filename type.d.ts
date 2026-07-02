@@ -68,6 +68,7 @@ declare global {
         kommentar: string;
         hilfreich: number;
         antworten: number;
+        istEigene?: boolean; // true, wenn die Bewertung vom eingeloggten Nutzer stammt
     }
 
     export type SortOption = "hilfreichste" | "neueste" | "beste";
