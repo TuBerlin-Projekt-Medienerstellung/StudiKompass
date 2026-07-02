@@ -4,6 +4,7 @@ import { X } from 'lucide-react';
 import { useState } from 'react';
 import { createCustomModul } from '@/app/protected/modules/actions';
 import ModulCustomJob from './modul-custom-job';
+import { Button } from './ui/button';
 
 type Props = {
   isOpen: boolean;
@@ -21,7 +22,7 @@ type FormData = {
 }
 
 export default function ModulCustom({ isOpen, onClose }: Props) {
-  if (!isOpen) return null;
+  
 
     const [mode, setMode] = useState<"modul" | "job">("modul");
 
@@ -39,6 +40,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
     
     //speichern der Eingaben aus UseState in Supabase
     const handleSubmit = async () => {
+        console.log("CLICK HANDLER RUNNING");
     try {
         const modulId = await createCustomModul(
         formData.modulname,
@@ -59,9 +61,9 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
     }
     };
 
-   
+    if (!isOpen) return null;
 
-    return (
+        return (
 
     <>
         {/**Overlay */}
@@ -265,7 +267,10 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                     abbrechen
                 </button>
                 <button className='flex px-4 py-3 rounded-lg bg-violet-ray text-white w-full md:w-2/3 items-center justify-center'
-                        onClick={handleSubmit}>
+                        onClick={() => {
+                            console.log("CLICK");
+                            handleSubmit();
+                        }}>
                     Zum Planer hinzufügen
                 </button>   
             </div>

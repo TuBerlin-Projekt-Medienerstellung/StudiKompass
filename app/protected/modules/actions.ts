@@ -378,7 +378,7 @@ export async function createCustomModul(modulname: string,
         .insert({
             name: modulname,
             turnus: turnus,
-            bereichpfad: bereichspfad,
+            bereichpfad: [bereichspfad ?? ""],
             ects: ects,
             lernergebnisse: beschreibung,
             pruefungsform: pruefungsform,
@@ -390,36 +390,20 @@ export async function createCustomModul(modulname: string,
             versuche: 1,
             arbeitsaufwand: arbeitsaufwand,
             user_id: user.id,
+            moses_id: null,
         })
         .select()
         .single();
 
+
     if (error) {
         console.error('Fehler beim Aktualisieren:', error)
+        console.log(error.code);
+        console.log(error.message);
+        console.log(error.details);
+        console.log(error.hint);
         throw error
     }
 
     return data.id;
-}
-
-export async function addCustomModultoPlanner(groupId: UUID, modul_id: ModuleId) {
-    const supabase = await createClient();
-    const {
-        data: {user},
-    } = await supabase.auth.getUser();
-
-    if (!user) return null;
-
-    const {error} = await supabase
-        .from("planner")
-        .insert({
-            modul_id: modul_id,
-            group_id: groupId,
-            user_id: user.id,
-
-        })
-        .select()
-        .single();
-
-    if (error) throw error;
 }

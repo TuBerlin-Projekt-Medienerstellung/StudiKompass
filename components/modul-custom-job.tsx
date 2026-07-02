@@ -14,6 +14,7 @@ type FormData = {
     pruefungsform: string,
     benotet: boolean | null,
     arbeitsaufwand: number,
+    
 }
 
 type Props = {
@@ -22,6 +23,8 @@ type Props = {
 };
 
 export default function ModulCustomJob({formData, setFormData}: Props) {
+
+    const [stunden, setStunden] = useState("");
 
     return (
 
@@ -51,14 +54,17 @@ export default function ModulCustomJob({formData, setFormData}: Props) {
                         <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between'>
                             <input
                                 className="flex-1 appearance-none leading-none outline-none w-full outline-none"
-                                type='number'
-                                value={formData.arbeitsaufwand}
-                                onChange={(e) =>
+                               type="number"
+                                value={stunden}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setStunden(value);
+
                                     setFormData({
-                                        ...formData,
-                                        arbeitsaufwand: Number(e.target.value),
-                                    })
-                                }
+                                    ...formData,
+                                    arbeitsaufwand: Number(value) * 15,
+                                    });
+                                }}
                             />
                         </div>
                     </div>
