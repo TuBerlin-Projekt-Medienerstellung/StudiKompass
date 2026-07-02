@@ -26,41 +26,9 @@ const Page = () => {
             const data = await getSemesters();
 
             setSemesterList(
-                data.map((s, index) => ({
+                data.map((s) => ({
                     nummer: s.semesterzahl,
-                    modules:
-                        index === 0
-                            ? [
-                                {
-                                    modul_id: "d39ef5d3-5e87-4be6-8a1b-6d70227e3117",
-                                    name: "Mathematik 1",
-                                    turnus: "WiSe, SoSe",
-                                    bereichpfad: "Pflicht",
-                                    leistungspunkte: 6,
-                                    lernergebnisse: "blah blah blah",
-                                    pruefungsform: "Klausur",
-                                    benotet: true,
-                                    link: "#",
-                                    note: 0.7,
-                                    gewichtung: 1.0,
-                                    abgeschlossen: true,
-                                    arbeitsaufwand: 180
-                                },
-                                {
-                                    modul_id: "m2",
-                                    name: "Einführung in die Programmierung",
-                                    turnus: "WiSe",
-                                    bereichpfad: "Pflicht",
-                                    leistungspunkte: 6,
-                                    lernergebnisse: "blah blah blah",
-                                    pruefungsform: "Portfolioprüfung",
-                                    benotet: true,
-                                    link: "#",
-                                    note: 1.3,
-                                    arbeitsaufwand: 180
-                                },
-                            ]
-                            : [],
+                    modules: s.modules ?? [],
                 }))
             );
         }
@@ -96,16 +64,17 @@ const Page = () => {
         );
     }
 
+    const getModuleId = (m: modulInfo) => String((m as any)?.modul_id?.value ?? (m as any)?.modul_id);
+
     const findSemesterByModulId = (modulId: string) => {
-        return semesterList.find(s => s.modules.some(m => m.modul_id === modulId)
-        );
+        return semesterList.find((s) => s.modules.some((m) => getModuleId(m) === modulId));
     };
 
     const handleDragStart = (event: DragStartEvent) => {
         const activeId = String(event.active.id);
         // Durchsuche alle Semester nach dem Modul mit dieser ID
         for (const sem of semesterList) {
-            const gefunden = sem.modules.find(m => m.modul_id === activeId);
+            const gefunden = sem.modules.find((m) => getModuleId(m) === activeId);
             if (gefunden) {
                 setActiveModul(gefunden);
                 break;
@@ -129,7 +98,7 @@ const Page = () => {
             targetSemesterNummer = Number(String(over.id).replace('semester-', ''));
         } else {
             const overModulId = String(over.id);
-            const targetSem = semesterList.find(s => s.modules.some(m => m.modul_id === overModulId));
+            const targetSem = semesterList.find((s) => s.modules.some((m) => getModuleId(m) === overModulId));
             if (!targetSem) return;
             targetSemesterNummer = targetSem.nummer;
         }
@@ -138,15 +107,14 @@ const Page = () => {
         if (!sourceSemester || !targetSemesterNummer) return;
 
         const newSemesters = [...semesterList];
-        const sourceSemIndex = newSemesters.findIndex(s => s.nummer === sourceSemester.nummer);
-        const targetSemIndex = newSemesters.findIndex(s => s.nummer === targetSemesterNummer);
-
+        const sourceSemIndex = newSemesters.findIndex((s) => s.nummer === sourceSemester.nummer);
+        const targetSemIndex = newSemesters.findIndex((s) => s.nummer === targetSemesterNummer);
 
         // FALL 1: Innerhalb desselben Semesters verschieben (Reihenfolge ändern)
         if (sourceSemester.nummer === targetSemesterNummer) {
             const sem = newSemesters[sourceSemIndex];
-            const oldIndex = sem.modules.findIndex(m => m.modul_id === activeModulId);
-            let newIndex = sem.modules.findIndex(m => String(m.modul_id) === String(over.id));
+            const oldIndex = sem.modules.findIndex((m) => getModuleId(m) === activeModulId);
+            let newIndex = sem.modules.findIndex((m) => getModuleId(m) === String(over.id));
             if (newIndex === -1) newIndex = sem.modules.length - 1;
 
             sem.modules = arrayMove(sem.modules, oldIndex, newIndex);
@@ -157,10 +125,10 @@ const Page = () => {
             const sourceSem = newSemesters[sourceSemIndex];
             const targetSem = newSemesters[targetSemIndex];
 
-            const modulIndex = sourceSem.modules.findIndex(m => m.modul_id === activeModulId);
+            const modulIndex = sourceSem.modules.findIndex((m) => getModuleId(m) === activeModulId);
             const [movedModul] = sourceSem.modules.splice(modulIndex, 1);
 
-            let newIndex = targetSem.modules.findIndex(m => String(m.modul_id) === String(over.id));
+            let newIndex = targetSem.modules.findIndex((m) => getModuleId(m) === String(over.id));
             if (newIndex === -1) newIndex = targetSem.modules.length;
 
             targetSem.modules.splice(newIndex, 0, movedModul);
@@ -197,7 +165,7 @@ const Page = () => {
                             className='flex w-full cursor-pointer items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-4 md:w-5/6'>
                         <Plus></Plus>Semester hinzufügen
                     </button>
-                    <button onClick={() => handleDeleteSemester(semesterList[semesterList.length - 1].nummer)}
+                    <button onClick={() => semesterList.length > 0 && handleDeleteSemester(semesterList[semesterList.length - 1].nummer)}
                             className='flex w-full cursor-pointer items-center justify-center rounded-2xl border-2 border-flag-red px-6 py-4 md:w-1/6'>
                         <Trash2></Trash2>
                     </button>
