@@ -11,5 +11,10 @@ export const hasEnvVars =
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
 export function handleModule(id: ModuleId) {
-    return String(id.value);
+    // ladeModulBasisAction liefert die id (noch) als rohe MOSES-Nummer statt
+    // als {type, value}-Objekt — beide Formen abfangen, sonst wird "undefined" daraus
+    if (typeof id === "object" && id !== null) {
+        return String(id.value);
+    }
+    return String(id);
 }
