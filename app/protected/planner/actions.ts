@@ -1,6 +1,6 @@
 "use server";
 
-import {createClient} from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 
 
 //Semester aus Supabase laden
@@ -8,12 +8,12 @@ export async function getSemesters() {
     const supabase = await createClient();
 
     const {
-        data: {user},
+        data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) return [];
 
-    const {data, error} = await supabase
+    const { data, error } = await supabase
         .from("semester")
         .select("*")
         .eq("user_id", user.id)
@@ -28,11 +28,11 @@ export async function getSemesters() {
 export async function createSemester() {
 
     const supabase = await createClient();
-    const {data: {user}} = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
 
-    const {data: profile, error: profileError} = await supabase
+    const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("max_semester")
         .eq("id", user.id)
@@ -42,9 +42,9 @@ export async function createSemester() {
 
     const nextSemester = (profile.max_semester ?? 0) + 1;
 
-    const {data, error} = await supabase
+    const { data, error } = await supabase
         .from('profiles')
-        .update({max_semester: nextSemester})
+        .update({ max_semester: nextSemester })
         .eq("id", user.id)
         .select()
         .single();
@@ -65,12 +65,12 @@ export async function updateSemesterTable(semesterzahl: number) {
 
 
     const {
-        data: {user},
+        data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) return null;
 
-    const {data, error} = await supabase
+    const { data, error } = await supabase
         .from("semester")
         .insert({
             name: semesterzahl + ". Semester",
@@ -91,11 +91,11 @@ export async function updateSemesterTable(semesterzahl: number) {
 //leeres Semester löschen
 export async function deleteSemester() {
     const supabase = await createClient();
-    const {data: {user}} = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
 
-    const {data: profile, error: profileError} = await supabase
+    const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("max_semester")
         .eq("id", user.id)
@@ -103,9 +103,9 @@ export async function deleteSemester() {
 
     if (profileError) throw profileError;
 
-    const {data, error} = await supabase
+    const { data, error } = await supabase
         .from('profiles')
-        .update({max_semester: profile.max_semester - 1})
+        .update({ max_semester: profile.max_semester - 1 })
         .eq("id", user.id)
         .select()
         .single();
@@ -122,12 +122,12 @@ export async function reduceSemesterTable(semesterzahl: number) {
     const supabase = await createClient();
 
     const {
-        data: {user},
+        data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) return null;
 
-    const {error} = await supabase
+    const { error } = await supabase
         .from("semester")
         .delete()
         .eq("user_id", user.id)
@@ -140,10 +140,10 @@ export async function reduceSemesterTable(semesterzahl: number) {
 //Holt die anzahl der Versuche eines bestimmten Moduls
 export async function getTries(modulId: string) {
     const supabase = await createClient();
-    const {data: {user}} = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    const {data, error} = await supabase
+    const { data, error } = await supabase
         .from("module")
         .select("versuche")
         .eq("user_id", user.id)
@@ -155,16 +155,16 @@ export async function getTries(modulId: string) {
         return 0;
     }
 
-    if (!data){
+    if (!data) {
         return 0;
     }
 
-    if (data?.versuche <= 0){
-        throw new Error ("Versuche dürfen nicht negativ sein.");
+    if (data?.versuche <= 0) {
+        throw new Error("Versuche dürfen nicht negativ sein.");
     }
 
-    if (data?.versuche > 4){
-        throw new Error ("Du hast maximal 4 Prüfungsversuche.");
+    if (data?.versuche > 4) {
+        throw new Error("Du hast maximal 4 Prüfungsversuche.");
     }
 
     return data?.versuche ?? 0;
@@ -173,39 +173,39 @@ export async function getTries(modulId: string) {
 // Speichert die Versuche nur, wenn das Modul bereits existiert
 export async function saveTries(modulId: string, counter: number) {
     const supabase = await createClient();
-    const {data: {user}} = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return {success: false, error: "Du bist nicht eingeloggt."};
+    if (!user) return { success: false, error: "Du bist nicht eingeloggt." };
 
-    const {data, error} = await supabase
+    const { data, error } = await supabase
         .from("module")
-        .update({versuche: counter})
+        .update({ versuche: counter })
         .eq("user_id", user.id)
         .eq("id", modulId)
         .select();
 
     if (error) {
         console.error("Datenbank-Fehler beim Update:", error);
-        return {success: false, error: "Datenbankfehler aufgetreten."};
+        return { success: false, error: "Datenbankfehler aufgetreten." };
     }
 
     if (!data || data.length === 0) {
-        return {success: false, error: "Modul nicht in deiner Planung gefunden."};
+        return { success: false, error: "Modul nicht in deiner Planung gefunden." };
     }
 
-    return {success: true};
+    return { success: true };
 }
 
 // speichert die eingetragene Note und Gewichtung
 export async function saveGrade(modulId: string, note: number, gewichtung: boolean) {
     const supabase = await createClient();
-    const {data: {user}} = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user){
-        return {success: false, error: "Du bist nicht eingeloggt."};
-    } 
+    if (!user) {
+        return { success: false, error: "Du bist nicht eingeloggt." };
+    }
 
-    const {data, error} = await supabase
+    const { data, error } = await supabase
         .from("module")
         .update({
             note: note,
@@ -217,23 +217,23 @@ export async function saveGrade(modulId: string, note: number, gewichtung: boole
 
     if (error) {
         console.error("Datenbank-Fehler beim Update der Note:", error);
-        return {success: false, error: "Datenbankfehler aufgetreten."};
+        return { success: false, error: "Datenbankfehler aufgetreten." };
     }
 
     if (!data || data.length === 0) {
-        return {success: false, error: "Modul nicht in deiner Planung gefunden."};
+        return { success: false, error: "Modul nicht in deiner Planung gefunden." };
     }
 
-    return {success: true};
+    return { success: true };
 }
 
-export async function deleteGrade (modulId: string){
+export async function deleteGrade(modulId: string) {
     const supabase = await createClient();
-    const {data: {user}} = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return {success: false, error: "Du bist nicht eingeloggt."};
+    if (!user) return { success: false, error: "Du bist nicht eingeloggt." };
 
-    const {data, error} = await supabase
+    const { data, error } = await supabase
         .from("module")
         .update({
             note: null,
@@ -244,36 +244,36 @@ export async function deleteGrade (modulId: string){
 
     if (error) {
         console.error("Datenbank-Fehler beim Update der Note:", error);
-        return {success: false, error: "Datenbankfehler aufgetreten."};
+        return { success: false, error: "Datenbankfehler aufgetreten." };
     }
 
     if (!data || data.length === 0) {
-        return {success: false, error: "Modul nicht in deiner Planung gefunden."};
+        return { success: false, error: "Modul nicht in deiner Planung gefunden." };
     }
 
-    return {success: true};
+    return { success: true };
 }
 
 // Speichert den Status eines Moduls: abgeschlossen true oder false
 export async function saveStatus(modulId: string, isChecked: boolean) {
     const supabase = await createClient();
-    const {data: {user}} = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return {success: false, error: "Du bist nicht eingeloggt."};
+    if (!user) return { success: false, error: "Du bist nicht eingeloggt." };
 
-    const {error} = await supabase
+    const { error } = await supabase
         .from("module")
-        .update({abgeschlossen: isChecked})
+        .update({ abgeschlossen: isChecked })
         .eq("user_id", user.id)
         .eq("id", modulId)
         .select();
 
     if (error) {
         console.error("Datenbank-Fehler beim Update:", error);
-        return {success: false, error: "Datenbankfehler."};
+        return { success: false, error: "Datenbankfehler." };
     }
 
-    return {success: true};
+    return { success: true };
 }
 
 // Fügt ein Modul aus der Suche zu einem Semester im Planer hinzu.
@@ -342,4 +342,65 @@ export async function moduleZuPlanerHinzufuegen(
     }
 
     return { success: true, modulId: modulData.id };
+}
+
+// Lädt alle Semester des Nutzers samt der zugeordneten Module.
+// Weg: semester → planner (Verknüpfung) → module
+export async function getSemestersMitModulen() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return [];
+
+    // Schritt 1: Alle Semester des Nutzers laden
+    const { data: semesterData, error: semesterError } = await supabase
+        .from("semester")
+        .select("*")
+        .eq("user_id", user.id)
+        .order("semesterzahl");
+
+    if (semesterError) {
+        console.error("Fehler beim Laden der Semester:", semesterError);
+        return [];
+    }
+
+    // Schritt 2: Für jedes Semester die verknüpften Module holen
+    const semesterMitModulen = await Promise.all(
+        (semesterData ?? []).map(async (sem) => {
+            // Alle planner-Einträge dieses Semesters holen
+            const { data: plannerEintraege, error: plannerError } = await supabase
+                .from("planner")
+                .select("modul_id")
+                .eq("group_id", sem.id)
+                .eq("user_id", user.id);
+
+            if (plannerError || !plannerEintraege) {
+                console.error("Fehler beim Laden der Verknüpfungen:", plannerError);
+                return { ...sem, modules: [] };
+            }
+
+            // Die modul_ids aus den Verknüpfungen sammeln
+            const modulIds = plannerEintraege.map((e) => e.modul_id);
+
+            // Wenn keine Module da sind, leeres Array zurück
+            if (modulIds.length === 0) {
+                return { ...sem, modules: [] };
+            }
+
+            // Schritt 3: Die eigentlichen Moduldaten holen
+            const { data: moduleData, error: moduleError } = await supabase
+                .from("module")
+                .select("*")
+                .in("id", modulIds);
+
+            if (moduleError || !moduleData) {
+                console.error("Fehler beim Laden der Module:", moduleError);
+                return { ...sem, modules: [] };
+            }
+
+            return { ...sem, modules: moduleData };
+        })
+    );
+
+    return semesterMitModulen;
 }
