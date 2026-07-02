@@ -378,7 +378,7 @@ export async function createCustomModul(modulname: string,
         .insert({
             name: modulname,
             turnus: turnus,
-            bereichpfad: bereichspfad,
+            bereichpfad: [bereichspfad],
             ects: ects,
             lernergebnisse: beschreibung,
             pruefungsform: pruefungsform,
