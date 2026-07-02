@@ -4,12 +4,13 @@ import SemesterCard from "@/components/semester-card";
 import SemesterModulCard from "@/components/semester-modul-card";
 import { useState, useEffect } from "react";
 import { Plus, Trash2 } from 'lucide-react';
-import { reduceSemesterTable, deleteSemester, updateSemesterTable, getSemesters, getSemestersMitModulen } from './actions';
+import { reduceSemesterTable, deleteSemester, updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul } from './actions';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
 
 type Semester = {
+    id: string;
     nummer: number;
     modules: modulInfo[];
 };
@@ -26,6 +27,7 @@ const Page = () => {
             const data = await getSemestersMitModulen();
             setSemesterList(
                 data.map((s) => ({
+                    id: s.id,
                     nummer: s.semesterzahl,
                     // TODO: statt any einen Typ für DB-Module definieren
                     modules: (s.modules ?? []).map((m: any) => ({
@@ -59,11 +61,12 @@ const Page = () => {
 
         const neueNummer = maxNummer + 1;
 
-        await updateSemesterTable(neueNummer);
+        const neueZeile = await updateSemesterTable(neueNummer);   // gibt die neue Zeile zurück
 
         setSemesterList((prev) => [
             ...prev,
             {
+                id: neueZeile.id,      // uuid aus der zurückgegebenen Zeile
                 nummer: neueNummer,
                 modules: [],
             },
@@ -150,6 +153,8 @@ const Page = () => {
 
             targetSem.modules.splice(newIndex, 0, movedModul);
             setSemesterList(newSemesters);
+
+            verschiebeModul(String(movedModul.modul_id), targetSem.id);
         }
     };
 
