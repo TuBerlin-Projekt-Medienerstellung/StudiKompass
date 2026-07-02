@@ -431,3 +431,24 @@ export async function verschiebeModul(modulId: string, neueSemesterId: string) {
 
     return { success: true };
 }
+
+// Löscht ein Modul aus dem Planer (und via cascade auch die planner-Verknüpfung)
+export async function loescheModul(modulId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { success: false, error: "Du bist nicht eingeloggt." };
+
+    const { error } = await supabase
+        .from("module")
+        .delete()
+        .eq("id", modulId)
+        .eq("user_id", user.id);   // Sicherheit: nur eigene Module
+
+    if (error) {
+        console.error("Fehler beim Löschen des Moduls:", error);
+        return { success: false, error: "Modul konnte nicht gelöscht werden." };
+    }
+
+    return { success: true };
+}
