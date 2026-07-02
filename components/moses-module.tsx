@@ -18,6 +18,7 @@
  */
 
 import {useState} from 'react';
+import { handleModule } from '@/lib/utils';
 import ModulCard from '@/components/modul-card';
 import ModulSearch from './modulsearch';
 import {ladeModulBasisAction, ModulBasis} from '@/app/protected/modules/actions';
@@ -95,8 +96,7 @@ export default function MosesModulsuche({studiengangId}: Props) {
 
         if (filter === "pflicht") {
             filterOk = bereich.includes("pflicht") && !bereich.includes("wahl");
-        }
-        else if (filter === "wahlpflicht") {
+        } else if (filter === "wahlpflicht") {
             filterOk = bereich.includes("wahlpflicht");
         }
 
@@ -131,6 +131,13 @@ export default function MosesModulsuche({studiengangId}: Props) {
                     </button>
 
                 ))}
+                
+                {/* Anzahl der gefilterten Module — nur sichtbar wenn geladen */}
+                {geladen && (
+                    <span className="ml-auto self-center text-sm opacity-60">
+                        {gefilterteModule.length} Module
+                    </span>
+                )}
             </div>
 
             {/* Anzahl der gefilterten Module — nur sichtbar wenn geladen */}
@@ -180,12 +187,17 @@ export default function MosesModulsuche({studiengangId}: Props) {
                              * TODO: Detail-Fetch implementieren
                              */
                             <ModulCard
-                                key={`${modul.id}-${index}`}
+                                key={`${handleModule(modul.id)}-${index}`}
                                 modul_id={modul.id}
                                 name={modul.name}
                                 leistungspunkte={modul.lp}
-                                modulArt={modul.bereichPfad[0] ?? "—"} link={''}
+                                bereichpfad={modul.bereichPfad[0] ?? "—"}
+                                link={''}
                                 turnus={modul.semester}
+                                lernergebnisse={''}
+                                pruefungsform=""
+                                benotet={false}
+                                arbeitsaufwand={0}
                             />
                         ))
                     )}

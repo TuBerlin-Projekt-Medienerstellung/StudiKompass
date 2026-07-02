@@ -5,8 +5,9 @@ import {useSortable} from "@dnd-kit/sortable";
 import {CSS} from "@dnd-kit/utilities";
 import {SquareArrowOutUpRight, Grip, Trash2, ChevronDown, ChevronUp, Circle, CircleCheckBig} from 'lucide-react';
 import {useState, useEffect} from "react";
+import {handleModule} from "@/lib/utils";
 import {ladeDetailedModulAction} from "@/app/protected/modules/actions";
-import {getTries, saveTries, saveGrade, saveStatus} from "@/app/protected/planner/actions";
+import {getTries, saveTries, saveGrade, saveStatus, deleteGrade} from "@/app/protected/planner/actions";
 
 type Props = {
     modul: modulInfo;
@@ -35,7 +36,7 @@ const SemesterModulCard = ({modul}: Props) => {
         transform,
         transition,
         isDragging
-    } = useSortable({id: String(modul.modul_id)});
+    } = useSortable({id: handleModule(modul.modul_id)});
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -52,9 +53,9 @@ const SemesterModulCard = ({modul}: Props) => {
         if (nextOpenState && !details) {
             setLoadingDetails(true);
             setErrorMsg(null);
-            const data = await ladeDetailedModulAction(modul.modul_id);
+            const data = await ladeDetailedModulAction(handleModule(modul.modul_id));
             if (data) {
-                setDetails(data);
+                setDetails(data as ModulDetails);
             }
             setLoadingDetails(false);
         }
@@ -65,7 +66,7 @@ const SemesterModulCard = ({modul}: Props) => {
         setErrorMsg(null);
         if (counter < 4) {
             const nextValue = counter + 1;
-            const result = await saveTries(modul.modul_id, nextValue);
+            const result = await saveTries(handleModule(modul.modul_id), nextValue);
             if (result.success) {
                 setCount(nextValue);
             } else {
@@ -79,7 +80,7 @@ const SemesterModulCard = ({modul}: Props) => {
         setErrorMsg(null);
         if (counter > 0) {
             const nextValue = counter - 1;
-            const result = await saveTries(modul.modul_id, nextValue);
+            const result = await saveTries(handleModule(modul.modul_id), nextValue);
             if (result.success) {
                 setCount(nextValue);
             } else {
@@ -105,7 +106,7 @@ const SemesterModulCard = ({modul}: Props) => {
     // Lädt die Daten zum Modul, sobald die Karte geöffnet wird
     useEffect(() => {
         const fetchVersuche = async () => {
-            const gespeicherteVersuche = await getTries(modul.modul_id);
+            const gespeicherteVersuche = await getTries(handleModule(modul.modul_id));
             setCount(gespeicherteVersuche ?? 0);
         };
 
@@ -127,32 +128,32 @@ const SemesterModulCard = ({modul}: Props) => {
     }, [isOpen, modul.modul_id, modul.note, modul.gewichtung, modul.abgeschlossen]);
 
     return (
-        <div ref={setNodeRef} style={style} className="w-full min-w-0">
+        <div ref={setNodeRef} style={style}>
             <div
                 onClick={handleAusklappen}
-                className={`flex w-full min-w-0 cursor-pointer flex-col gap-3 rounded-2xl border-x-4 border-y-2 border-flag-red bg-card px-4 py-4 transition-all duration-300 sm:px-6 ${
+                className={`px-6 py-4 rounded-2xl border-x-4 border-y-2 border-flag-red flex flex-col gap-2 cursor-pointer bg-card transition-all duration-300 ${
                     isOpen ? "shadow-md" : ""}`}>
 
                 {/* Eingeklappte Version des Moduls */}
-                <div className="flex w-full min-w-0 items-start gap-3">
+                <div className="flex flex-row gap-2 items-center w-full">
                     <div
                         {...attributes}
                         {...listeners}
-                        className='mt-1 shrink-0 cursor-grab pr-1 text-muted-foreground active:cursor-grabbing'
+                        className='pr-2 text-muted-foreground cursor-grab active:cursor-grabbing'
                         onClick={(e) => e.stopPropagation()}>
-                        <Grip className="h-5 w-5"/>
+                        <Grip/>
                     </div>
 
-                    <div className='flex min-w-0 flex-1 flex-col gap-1'>
-                        <h1 className="break-words text-base font-bold leading-tight sm:text-lg">
+                    <div className='flex flex-col flex-1'>
+                        <h1 className="font-bold text-lg">
                             {modul.name}
                         </h1>
 
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm opacity-80">
-                            <span className="whitespace-nowrap text-flag-red">
+                        <div className="flex flex-wrap items-center opacity-80 gap-3 text-sm">
+                            <span className="text-flag-red">
                                 {modul.leistungspunkte} ECTS
                             </span>
-                            <span className="whitespace-nowrap">
+                            <span>
                                 {modul.turnus}
                             </span>
                             <Link
@@ -166,68 +167,51 @@ const SemesterModulCard = ({modul}: Props) => {
                     </div>
 
                     {/* Pfeil rechts, zeigt den Aufklapp-Status an */}
-                    <div className="shrink-0 px-1 pt-1 text-muted-foreground">
+                    <div className="text-muted-foreground px-2">
                         {isOpen ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
                     </div>
 
                     <button
-                        className="shrink-0 px-1 pt-1 transition-colors hover:text-flag-red"
+                        className="flex pr-2 py-4 ml-2 hover:text-flag-red transition-colors"
                         onClick={(e) => {
                             e.stopPropagation();
                         }}>
-                        <Trash2 className="h-5 w-5"/>
+                        <Trash2/>
                     </button>
                 </div>
 
                 {/* Ausgeklappte Karte - Details */}
                 <div className={`grid transition-all duration-500 ease-in-out ${
-                    isOpen ? 'grid-rows-[1fr] opacity-100 mt-3 pt-4 border-t' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                    isOpen ? 'grid-rows-[1fr] opacity-100 mt-4 pt-4 border-t' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
                 }`}>
                     <div className="overflow-hidden">
-                        <div className="flex flex-col gap-6 text-card-foreground"
-                             onClick={(e) => e.stopPropagation()}>
-                            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div className="flex flex-col gap-6 text-card-foreground" onClick={(e) => e.stopPropagation()}>
+                            <div className="flex flex-col md:flex-row md:items-center justify-between gap-y-2">
                                 <div className="flex flex-row flex-wrap items-center gap-3 text-sm">
-                                    <div
-                                        className="bg-flag-red text-card rounded-xl py-1 px-2 w-fit text-xs font-semibold">
+                                    <div className="bg-flag-red text-card rounded-xl py-1 px-2 w-fit text-xs font-semibold">
                                         {modul.bereichpfad || "-"}
                                     </div>
                                     <div className="text-muted-foreground">•</div>
 
                                     {/* Counter für Fehlversuche */}
                                     <div className="flex items-center gap-2">
-                                        <p className="text-flag-red font-medium">
-                                            Versuche:
-                                        </p>
-                                        <div
-                                            className="flex items-center gap-1 px-2 py-0.5 text-xs bg-muted border rounded-xl">
-                                            <button className="px-1 font-bold hover:opacity-70" onClick={decreaseTries}>
-                                                -
-                                            </button>
-                                            <span className="font-semibold w-4 text-center">
-                                                {counter}
-                                            </span>
-                                            <button className="px-1 font-bold hover:opacity-70" onClick={increaseTries}>
-                                                +
-                                            </button>
+                                        <p className="text-flag-red font-medium">Versuche:</p>
+                                        <div className="flex items-center gap-1 px-2 py-0.5 text-xs bg-muted border rounded-xl">
+                                            <button className="px-1 font-bold hover:opacity-70" onClick={decreaseTries}>-</button>
+                                            <span className="font-semibold w-4 text-center">{counter}</span>
+                                            <button className="px-1 font-bold hover:opacity-70" onClick={increaseTries}>+</button>
                                         </div>
                                     </div>
                                 </div>
-                                {errorMsg && <p className="text-flag-red text-xs">
-                                    {errorMsg}
-                                </p>}
+                                {errorMsg && <p className="text-flag-red text-xs">{errorMsg}</p>}
                             </div>
 
                             {/* Beschreibung */}
                             <div>
-                                <h2 className="font-semibold text-base mb-1">
-                                    Beschreibung
-                                </h2>
+                                <h2 className="font-semibold text-base mb-1">Beschreibung</h2>
                                 <p className="text-sm opacity-80 leading-relaxed">
                                     {loadingDetails ? (
-                                        <span className="italic opacity-50">
-                                            Beschreibung wird geladen...
-                                        </span>
+                                        <span className="italic opacity-50">Beschreibung wird geladen...</span>
                                     ) : (
                                         modul.lernergebnisse || details?.beschreibung || "Keine Beschreibung vorhanden."
                                     )}
@@ -235,125 +219,108 @@ const SemesterModulCard = ({modul}: Props) => {
                             </div>
 
                             {/* Infokästen */}
-                            <div className="grid w-full grid-cols-1 gap-3 md:grid-cols-4">
-                                <div
-                                    className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-sm opacity-70 md:text-lg">
-                                        Arbeitsaufwand
-                                    </p>
-                                    <p className="font-semibold text-sm md:text-md">
-                                        {modul.arbeitsaufwand}
-                                    </p>
+                            <div className="grid grid-cols-1 gap-3 md:grid-cols-4 w-full">
+                                <div className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
+                                    <p className="text-lg opacity-70">Arbeitsaufwand</p>
+                                    <p className="font-semibold text-md">{modul.arbeitsaufwand}</p>
                                 </div>
 
-                                <div
-                                    className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-sm opacity-70 md:text-lg">
-                                        Angebot
-                                    </p>
-                                    <p className="font-semibold text-sm md:text-md">
-                                        {modul.turnus}
-                                    </p>
+                                <div className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
+                                    <p className="text-lg opacity-70">Angebot</p>
+                                    <p className="font-semibold text-md">{modul.turnus}</p>
                                 </div>
 
-                                <div
-                                    className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-sm opacity-70 md:text-lg">
-                                        Prüfungsform
-                                    </p>
-                                    <p className="font-semibold text-sm md:text-md">
-                                        {modul.pruefungsform}
-                                    </p>
+                                <div className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
+                                    <p className="text-lg opacity-70">Prüfungsform</p>
+                                    <p className="font-semibold text-md">{modul.pruefungsform}</p>
                                 </div>
 
-                                <div
-                                    className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-sm opacity-70 mb-2 md:text-lg">
-                                        Bewertung
-                                    </p>
+                                <div className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
+                                    <p className="text-lg opacity-70 mb-2">Bewertung</p>
                                     <div className="font-semibold text-sm w-full flex justify-center">
                                         {!modul.benotet ? (
-                                            <span className="text-gray-500 font-normal text-md">
-                                                nicht benotet
-                                            </span>
+                                            <span className="text-gray-500 font-normal text-md">nicht benotet</span>
                                         ) : (
-                                            <div
-                                                className="flex flex-col items-center gap-3 w-full max-w-xs md:max-w-none">
+                                            <div className="flex flex-col items-center gap-3 w-full max-w-xs md:max-w-none">
 
                                                 <div className="flex flex-col items-center gap-2 w-full justify-center">
 
                                                     {/* Noten-Auswahl */}
-                                                    <div
-                                                        className="flex items-center justify-between md:justify-center gap-2 px-3 py-1 text-xs bg-background border rounded-xl flex-1 md:flex-none">
-                                                        <button
-                                                            className="px-1 font-bold hover:opacity-70 disabled:opacity-30 text-sm"
-                                                            onClick={decreaseNote}
-                                                            disabled={noteInput <= 0.7}>
-                                                            -
-                                                        </button>
-                                                        <span className="font-semibold w-7 text-center">
-                                                            {noteInput.toFixed(1)}
-                                                        </span>
-                                                        <button
-                                                            className="px-1 font-bold hover:opacity-70 disabled:opacity-30 text-sm"
-                                                            onClick={increaseNote}
-                                                            disabled={noteInput >= 4.0}>
-                                                            +
-                                                        </button>
+                                                    <div className="flex items-center justify-between md:justify-center gap-2 px-3 py-1 text-xs bg-background border rounded-xl flex-1 md:flex-none">
+                                                        <button className="px-1 font-bold hover:opacity-70 disabled:opacity-30 text-sm" onClick={decreaseNote} disabled={noteInput <= 0.7}>-</button>
+                                                        <span className="font-semibold w-7 text-center">{noteInput.toFixed(1)}</span>
+                                                        <button className="px-1 font-bold hover:opacity-70 disabled:opacity-30 text-sm" onClick={increaseNote} disabled={noteInput >= 4.0}>+</button>
                                                     </div>
 
                                                     {/* Gewichtungs-Toggle */}
-                                                    <div
-                                                        title="Welche Noten (nicht) in den Gesamtschnitt einfließen, steht in der StuPo zum Studiengang."
-                                                        className="flex items-center justify-between md:justify-center gap-3 px-3 py-2 bg-background border rounded-xl flex-1 md:flex-none select-none">
-                                                        <span
-                                                            className="text-xs font-normal opacity-70 whitespace-nowrap">
-                                                             {gewichtung ? "normal gewichtet" : "nicht gewichtet"}
-                                                        </span>
-                                                        <button
-                                                            onClick={() => setGewichtung(!gewichtung)}
-                                                            className={`${
-                                                                gewichtung ? "bg-mint-leaf" : "bg-muted border shadow-inner"
-                                                            } relative inline-flex h-3.5 w-7 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none items-center`}>
-                                                            <span
-                                                                className={`${
-                                                                    gewichtung ? "translate-x-3.5 bg-background" : "translate-x-0.5 bg-muted-foreground/60"
-                                                                } pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full shadow transition duration-200 ease-in-out`}
-                                                            />
+                                                    <div title="Welche Noten (nicht) in den Gesamtschnitt einfließen, steht in der StuPo zum Studiengang." className="flex items-center justify-between md:justify-center gap-3 px-3 py-2 bg-background border rounded-xl flex-1 md:flex-none select-none">
+                                                        <span className="text-xs font-normal opacity-70 whitespace-nowrap">{gewichtung ? "normal gewichtet" : "nicht gewichtet"}</span>
+                                                        <button onClick={() => setGewichtung(!gewichtung)} className={`${gewichtung ? "bg-mint-leaf" : "bg-muted border shadow-inner"} relative inline-flex h-3.5 w-7 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none items-center`}>
+                                                            <span className={`${gewichtung ? "translate-x-3.5 bg-background" : "translate-x-0.5 bg-muted-foreground/60"} pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full shadow transition duration-200 ease-in-out`} />
                                                         </button>
                                                     </div>
                                                 </div>
 
-                                                {/* Sichern Button */}
-                                                <button
-                                                    disabled={isSavingNote}
-                                                    onClick={async (e) => {
-                                                        e.stopPropagation();
-                                                        setIsSavingNote(true);
-                                                        setErrorMsg(null); // Alten Fehler zurücksetzen
+                                                <div className="flex flex-row gap-2">
+                                                    {/* Sichern Button */}
+                                                    <button
+                                                        disabled={isSavingNote}
+                                                        onClick={async (e) => {
+                                                            e.stopPropagation();
+                                                            setIsSavingNote(true);
+                                                            setErrorMsg(null); // Alten Fehler zurücksetzen
 
-                                                        try {
-                                                            const result = await saveGrade(modul.modul_id, noteInput, gewichtung);
+                                                            try {
+                                                                const result = await saveGrade(handleModule(modul.modul_id), noteInput, gewichtung);
 
-                                                            if (result.success) {
-                                                                console.log("Erfolgreich gespeichert!");
-                                                            } else {
-                                                                setErrorMsg(result.error || "Fehler beim Speichern.");
+                                                                if (result.success) {
+                                                                    console.log("Erfolgreich gespeichert!");
+                                                                } else {
+                                                                    setErrorMsg(result.error || "Fehler beim Speichern.");
+                                                                }
+                                                            } catch (error) {
+                                                                console.error("Fehler beim Speichern der Note:", error);
+                                                                setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");
+                                                            } finally {
+                                                                setIsSavingNote(false);
                                                             }
-                                                        } catch (error) {
-                                                            console.error("Fehler beim Speichern der Note:", error);
-                                                            setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");
-                                                        } finally {
-                                                            setIsSavingNote(false);
-                                                        }
-                                                    }}
-                                                    className="w-auto p-1.5 text-xs bg-flag-red text-white font-medium rounded-xl hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
-                                                    {isSavingNote ? "..." : "Sichern"}
-                                                </button>
+                                                        }}
+                                                        className="w-auto p-1.5 text-xs bg-flag-red text-white font-medium rounded-xl hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
+                                                        {isSavingNote ? "..." : "Sichern"}
+                                                    </button>
+
+                                                    {/* Note löschen */}
+                                                    <button
+                                                        disabled={isSavingNote}
+                                                        onClick={async (e) => {
+                                                            e.stopPropagation();
+                                                            setIsSavingNote(true);
+                                                            setErrorMsg(null); // Alten Fehler zurücksetzen
+
+                                                            try {
+                                                                const result = await deleteGrade(handleModule(modul.modul_id));
+
+                                                                if (result.success) {
+                                                                    console.log("Erfolgreich gelöscht!");
+                                                                } else {
+                                                                    setErrorMsg(result.error || "Fehler beim Löschen.");
+                                                                }
+                                                            } catch (error) {
+                                                                console.error("Fehler beim Löschen der Note:", error);
+                                                                setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");
+                                                            } finally {
+                                                                setIsSavingNote(false);
+                                                            }
+                                                        }}
+                                                        className="w-auto p-1.5 text-xs bg-flag-red text-white font-medium rounded-xl hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
+                                                        {isSavingNote ? "..." : "Note löschen"}
+                                                    </button>
+                                                </div>
                                             </div>
                                         )}
                                     </div>
                                 </div>
+
                             </div>
 
                             {/* Buttons unten */}
@@ -367,7 +334,7 @@ const SemesterModulCard = ({modul}: Props) => {
                                         setErrorMsg(null);
 
                                         try {
-                                            const result = await saveStatus(modul.modul_id, nextCheckedState);
+                                            const result = await saveStatus(handleModule(modul.modul_id), nextCheckedState);
                                             if (!result.success) {
                                                 setChecked(checked);
                                                 setErrorMsg(result.error || "Status konnte nicht gespeichert werden.");
@@ -378,8 +345,7 @@ const SemesterModulCard = ({modul}: Props) => {
                                             setErrorMsg("Unerwarteter Fehler beim Aktualisieren.");
                                         }
                                     }}
-                                    className={`flex p-3 rounded-lg w-full md:flex-1 items-center justify-center gap-2 transition-colors ${
-                                        checked ? 'bg-mint-leaf text-white' : 'bg-mint-leaf/40 text-gray-500'}`}>
+                                    className={`flex p-3 rounded-lg w-full md:flex-1 items-center justify-center gap-2 transition-colors ${checked ? 'bg-mint-leaf text-white' : 'bg-mint-leaf/40 text-gray-500'}`}>
                                     {checked ? <CircleCheckBig className="w-4 h-4"/> : <Circle className="w-4 h-4"/>}
                                     {checked ? "Als abgeschlossen markiert" : "Als abgeschlossen markieren"}
                                 </button>

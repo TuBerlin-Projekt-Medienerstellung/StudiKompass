@@ -1,5 +1,6 @@
-"use client" ;
-import { useState } from "react"
+"use client";
+import { useState } from "react";
+import { handleModule } from "@/lib/utils";
 import { ModulBasis } from '@/app/protected/modules/actions';
 
 interface Props {
@@ -47,20 +48,20 @@ export default function ModulSearch({modules, query, onQueryChange}:Props){
                             <ul className="absolute z-10 w-full mt-1 max-h-60 overflow-y-auto bg-white dark:bg-zinc-800 border border-zinc-700 rounded-lg">
                                 {filtered.map((m, index) => {
                                     const displayName = m.name;
-                                        
-                                            
+                                    const idStr = handleModule(m.id);
+
                                     return (
                                         <li
-                                            key={m?.id?.toString() || index}
+                                            key={idStr || index}
                                             onClick={() => {
-                                                onQueryChange(m.name);   // Input zeigt den Namen
-                                                setSelected({id: m.id ,name : displayName}) // merkt sich die Auswahl für handleSave
+                                                onQueryChange(m.name); // Input zeigt den Namen
+                                                setSelected({ id: idStr, name: displayName }); // merkt sich die Auswahl für handleSave
                                             }}
                                             className="px-4 py-2 cursor-pointer hover:bg-zinc-100 dark:hover:bg-zinc-700"
                                         >
                                             {displayName}
                                         </li>
-                                    )
+                                    );
                                 })}
                             </ul>
                         )}

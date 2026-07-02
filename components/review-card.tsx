@@ -1,9 +1,10 @@
-import {ThumbsUp, MessageCircle, ChevronDown} from "lucide-react";
+import {ThumbsUp, MessageCircle, ChevronDown, Trash2} from "lucide-react";
 import StarRatingDisplay from "./ui/starrating-display";
 import {avatarFarbe} from "./ui/feedback-utlis";
 
 interface ReviewCardProps {
     bewertung: Bewertung;
+    onLoeschen?: (bewertungId: string) => void;
 }
 
 const kategorieLabels: { key: keyof KategorieBewertung; label: string }[] = [
@@ -14,7 +15,7 @@ const kategorieLabels: { key: keyof KategorieBewertung; label: string }[] = [
     {key: "organisation", label: "Organisation"},
 ];
 
-const ReviewCard = ({bewertung}: ReviewCardProps) => {
+const ReviewCard = ({bewertung, onLoeschen}: ReviewCardProps) => {
     return (
         <div className="border border-gray-200 rounded-xl p-5 flex flex-col gap-3">
             <div className="flex justify-between items-start gap-3">
@@ -60,6 +61,15 @@ const ReviewCard = ({bewertung}: ReviewCardProps) => {
                         <MessageCircle size={14}/>
                         {bewertung.antworten} Antwort{bewertung.antworten !== 1 ? "en" : ""}
                         <ChevronDown size={14}/>
+                    </button>
+                )}
+                {bewertung.istEigene && onLoeschen && (
+                    <button
+                        onClick={() => onLoeschen(bewertung.id)}
+                        className="flex items-center gap-1.5 ml-auto text-flag-red/70 hover:text-flag-red transition-colors"
+                    >
+                        <Trash2 size={14}/>
+                        Löschen
                     </button>
                 )}
             </div>
