@@ -404,3 +404,30 @@ export async function getSemestersMitModulen() {
 
     return semesterMitModulen;
 }
+
+// Verschiebt ein Modul in ein anderes Semester.
+// Aktualisiert die group_id des planner-Eintrags auf das neue Semester.
+export async function verschiebeModul(modulId: string, neueSemesterId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { success: false, error: "Du bist nicht eingeloggt." };
+
+    const { data, error } = await supabase
+        .from("planner")
+        .update({ group_id: neueSemesterId })
+        .eq("modul_id", modulId)
+        .eq("user_id", user.id)
+        .select();
+
+    if (error) {
+        console.error("Fehler beim Verschieben des Moduls:", error);
+        return { success: false, error: "Modul konnte nicht verschoben werden." };
+    }
+
+    if (!data || data.length === 0) {
+        return { success: false, error: "Verknüpfung nicht gefunden." };
+    }
+
+    return { success: true };
+}
