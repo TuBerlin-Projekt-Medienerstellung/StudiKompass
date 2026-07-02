@@ -39,7 +39,6 @@ function zuBewertung(row: BewertungRow, name: string, istEigene: boolean): Bewer
         kategorien,
         gesamtScore: werte.reduce((summe, w) => summe + w, 0) / werte.length,
         kommentar: row.kommentar ?? "",
-        // TODO: hilfreich/antworten kommen später, sobald es dafür Tabellen gibt
         hilfreich: 0,
         antworten: 0,
         istEigene,
