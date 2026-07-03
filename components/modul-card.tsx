@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useState } from 'react';
 import ModulFeedback from "./modul-feedback";
 import { handleModule } from "@/lib/utils";
-import { moduleZuPlanerHinzufuegen } from '@/app/protected/planner/actions';
+import { moduleZuPlanerHinzufuegen, istModulImPlaner } from '@/app/protected/planner/actions';
 
 
 
@@ -20,6 +20,7 @@ const ModulCard = (props: modulInfo & {
     const [loadingDetails, setLoadingDetails] = useState(false);
     const [plannerOpen, setPlannerOpen] = useState(false);
     const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
+    const [imPlaner, setImPlaner] = useState(false);
 
     async function handleAusklappen() {
         setOpen(!open);
@@ -27,11 +28,11 @@ const ModulCard = (props: modulInfo & {
             setLoadingDetails(true);
             const data = await ladeDetailedModulAction(handleModule(modul_id));
             if (data) {
-                setDetails({
-                    ...data,
-                    benotet: data.benotet ?? undefined,
-                });
+                setDetails({ ...data, benotet: data.benotet ?? undefined });
             }
+            const schonDrin = await istModulImPlaner(String(modul_id));
+            setImPlaner(schonDrin);
+
             setLoadingDetails(false);
         }
     }
@@ -156,21 +157,22 @@ const ModulCard = (props: modulInfo & {
                             {/* Planer-Button mit Semester-Picker */}
                             <div className='flex-1 flex flex-col gap-2'>
                                 <button
-                                    onClick={() => setPlannerOpen(!plannerOpen)}
-                                    disabled={!details}
-                                    className={`w-full bg-foreground text-background px-4 py-2.5 rounded-xl flex items-center justify-between gap-2 transition-colors dark:bg-[#35AE80] ${!details ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+                                    onClick={() => !imPlaner && setPlannerOpen(!plannerOpen)}
+                                    disabled={!details || imPlaner}
+                                    className={`w-full bg-foreground text-background px-4 py-2.5 rounded-xl flex items-center justify-between gap-2 transition-colors dark:bg-[#35AE80] ${(!details || imPlaner) ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
                                         }`}
                                 >
                                     <div className='flex items-center gap-2'>
                                         <CalendarPlus className='w-5 h-5' />
                                         <span className='font-medium'>
-                                            {selectedSemester
-                                                ? `${semesterListe.find(s => s.id === selectedSemester)?.name ?? "Semester"} gewählt`
-                                                : 'Zum Planer hinzufügen'}
+                                            {imPlaner
+                                                ? 'Bereits im Planer'
+                                                : selectedSemester
+                                                    ? `${semesterListe.find(s => s.id === selectedSemester)?.name ?? "Semester"} gewählt`
+                                                    : 'Zum Planer hinzufügen'}
                                         </span>
                                     </div>
-                                    {plannerOpen ? <ChevronUp className='w-4 h-4' /> :
-                                        <ChevronDown className='w-4 h-4' />}
+                                    {!imPlaner && (plannerOpen ? <ChevronUp className='w-4 h-4' /> : <ChevronDown className='w-4 h-4' />)}
                                 </button>
 
                                 {/* Semester-Picker Dropdown */}
