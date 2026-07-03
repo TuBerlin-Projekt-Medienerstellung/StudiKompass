@@ -120,11 +120,7 @@ export async function deleteSemester() {
 
 export async function reduceSemesterTable(semesterzahl: number) {
     const supabase = await createClient();
-
-    const {
-        data: { user },
-    } = await supabase.auth.getUser();
-
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
     const { error } = await supabase
@@ -448,6 +444,58 @@ export async function loescheModul(modulId: string) {
     if (error) {
         console.error("Fehler beim Löschen des Moduls:", error);
         return { success: false, error: "Modul konnte nicht gelöscht werden." };
+    }
+
+    return { success: true };
+}
+
+// Löscht ein Semester samt aller darin liegenden Module.
+// Reihenfolge: erst Module (planner-Einträge sterben via cascade), dann das Semester.
+export async function loescheSemesterMitModulen(semesterId: string) {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { success: false, error: "Du bist nicht eingeloggt." };
+
+    // Schritt 1: Alle Module dieses Semesters finden (über planner)
+    const { data: plannerEintraege, error: ladeError } = await supabase
+        .from("planner")
+        .select("modul_id")
+        .eq("group_id", semesterId)
+        .eq("user_id", user.id);
+
+    if (ladeError) {
+        console.error("Fehler beim Laden der Modul-Verknüpfungen:", ladeError);
+        return { success: false, error: "Module konnten nicht ermittelt werden." };
+    }
+
+    // Schritt 2: Diese Module aus der module-Tabelle löschen
+    // (die planner-Einträge sterben dabei via cascade)
+    const modulIds = (plannerEintraege ?? []).map((e) => e.modul_id);
+
+    if (modulIds.length > 0) {
+        const { error: modulError } = await supabase
+            .from("module")
+            .delete()
+            .in("id", modulIds)
+            .eq("user_id", user.id);
+
+        if (modulError) {
+            console.error("Fehler beim Löschen der Module:", modulError);
+            return { success: false, error: "Module konnten nicht gelöscht werden." };
+        }
+    }
+
+    // Schritt 3: Das Semester selbst löschen
+    const { error: semesterError } = await supabase
+        .from("semester")
+        .delete()
+        .eq("id", semesterId)
+        .eq("user_id", user.id);
+
+    if (semesterError) {
+        console.error("Fehler beim Löschen des Semesters:", semesterError);
+        return { success: false, error: "Semester konnte nicht gelöscht werden." };
     }
 
     return { success: true };

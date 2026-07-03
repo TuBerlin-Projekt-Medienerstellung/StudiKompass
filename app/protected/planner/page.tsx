@@ -4,7 +4,7 @@ import SemesterCard from "@/components/semester-card";
 import SemesterModulCard from "@/components/semester-modul-card";
 import { useState, useEffect } from "react";
 import { Plus, Trash2 } from 'lucide-react';
-import { reduceSemesterTable, deleteSemester, updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul } from './actions';
+import { reduceSemesterTable, deleteSemester, updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul , loescheSemesterMitModulen } from './actions';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
@@ -74,13 +74,11 @@ const Page = () => {
         ]);
     }
 
-    async function handleDeleteSemester(semesterNummer: number) {
-        await deleteSemester();
-        await reduceSemesterTable(semesterNummer);
+    async function handleDeleteSemester(semesterId: string, semesterNummer: number) {
+        await deleteSemester();                        // zieht max_semester runter (profiles)
+        await loescheSemesterMitModulen(semesterId);   // löscht Semester + Module
 
-        setSemesterList((prev) =>
-            prev.filter((sem) => sem.nummer !== semesterNummer)
-        );
+        setSemesterList((prev) => prev.filter((sem) => sem.id !== semesterId));
     }
 
     const findSemesterByModulId = (modulId: string) => {
@@ -188,7 +186,10 @@ const Page = () => {
                         className='border-2 rounded-2xl border-dashed p-4 flex cursor-pointer items-center justify-center px-6 py-4 md:w-5/6 w-full'>
                         <Plus></Plus>Semester hinzufügen
                     </button>
-                    <button onClick={() => handleDeleteSemester(semesterList[semesterList.length - 1].nummer)}
+                    <button onClick={() => {
+                        const letztes = semesterList[semesterList.length - 1];
+                        if (letztes) handleDeleteSemester(letztes.id, letztes.nummer);
+                    }}
                         className='flex border-2 rounded-2xl border-flag-red cursor-pointer md:w-1/6 w-full items-center justify-center'>
                         <Trash2></Trash2>
                     </button>
