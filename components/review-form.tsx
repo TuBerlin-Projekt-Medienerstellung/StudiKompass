@@ -7,7 +7,7 @@ import StarRatingInput from "./ui/starrating-input";
 interface ReviewFormProps {
     modulName: string;
     onAbbrechen: () => void;
-    onAbschicken: (kategorien: KategorieBewertung, semester: string, kommentar: string) => void;
+    onAbschicken: (kategorien: KategorieBewertung, semester: string, kommentar: string) => Promise<void>;
 }
 
 const semesterOptionen = ["SoSe 2026", "WiSe 2025/26", "SoSe 2025", "WiSe 2024/25", "SoSe 2024", "WiSe 2023/24"];
@@ -32,6 +32,7 @@ const ReviewForm = ({modulName, onAbbrechen, onAbschicken}: ReviewFormProps) => 
     const [kategorien, setKategorien] = useState<KategorieBewertung>(initialeKategorien);
     const [semester, setSemester] = useState(semesterOptionen[0]);
     const [kommentar, setKommentar] = useState("");
+    const [sendet, setSendet] = useState(false);
 
     const setzeKategorie = (key: keyof KategorieBewertung, wert: number) => {
         setKategorien((prev) => ({...prev, [key]: wert}));
@@ -39,12 +40,20 @@ const ReviewForm = ({modulName, onAbbrechen, onAbschicken}: ReviewFormProps) => 
 
     const istGueltig = Object.values(kategorien).every((wert) => wert > 0) && kommentar.trim().length > 0;
 
-    const handleAbschicken = () => {
-        if (!istGueltig) return;
-        onAbschicken(kategorien, semester, kommentar.trim());
-        setKategorien(initialeKategorien);
-        setSemester(semesterOptionen[0]);
-        setKommentar("");
+    const handleAbschicken = async () => {
+        if (!istGueltig || sendet) return;
+        setSendet(true);
+        try {
+            await onAbschicken(kategorien, semester, kommentar.trim());
+            // nur bei Erfolg zurücksetzen – bei Fehlern bleiben die Eingaben erhalten
+            setKategorien(initialeKategorien);
+            setSemester(semesterOptionen[0]);
+            setKommentar("");
+        } catch {
+            // Fehleranzeige übernimmt ModulFeedback
+        } finally {
+            setSendet(false);
+        }
     };
 
     return (
@@ -98,11 +107,11 @@ const ReviewForm = ({modulName, onAbbrechen, onAbschicken}: ReviewFormProps) => 
                 </button>
                 <button
                     onClick={handleAbschicken}
-                    disabled={!istGueltig}
+                    disabled={!istGueltig || sendet}
                     className="bg-flag-red disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-opacity"
                 >
                     <Send size={14}/>
-                    Bewertung abschicken
+                    {sendet ? "Wird gesendet..." : "Bewertung abschicken"}
                 </button>
             </div>
         </div>
