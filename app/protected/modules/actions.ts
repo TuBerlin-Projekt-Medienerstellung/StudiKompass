@@ -388,7 +388,9 @@ export async function createCustomModul(modulname: string,
             note: null,
             gewichtung: null,
             versuche: 1,
-            arbeitsaufwand: arbeitsaufwand,
+            arbeitsaufwand: bereichspfad === "job"
+                ? arbeitsaufwand
+                : ects * 30,
             user_id: user.id,
         })
         .select()
