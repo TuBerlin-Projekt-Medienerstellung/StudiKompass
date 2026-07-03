@@ -500,3 +500,25 @@ export async function loescheSemesterMitModulen(semesterId: string) {
 
     return { success: true };
 }
+
+// Prüft ob ein bestimmtes Modul (per moses_id) schon im Planer des Nutzers ist.
+export async function istModulImPlaner(mosesId: string): Promise<boolean> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return false;
+
+    const { data, error } = await supabase
+        .from("module")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("moses_id", mosesId)
+        .maybeSingle();
+
+    if (error) {
+        console.error("Fehler beim Prüfen ob Modul im Planer:", error);
+        return false;   // im Zweifel: erlauben (nicht blockieren)
+    }
+
+    return data !== null;   // true = schon drin, false = noch nicht
+}
