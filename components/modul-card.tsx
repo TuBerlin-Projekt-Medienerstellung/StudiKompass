@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useState } from 'react';
 import ModulFeedback from "./modul-feedback";
 import { handleModule } from "@/lib/utils";
-import { moduleZuPlanerHinzufuegen, istModulImPlaner } from '@/app/protected/planner/actions';
+import { moduleZuPlanerHinzufuegen, findeModulImPlaner } from '@/app/protected/planner/actions';
 
 
 
@@ -21,6 +21,7 @@ const ModulCard = (props: modulInfo & {
     const [plannerOpen, setPlannerOpen] = useState(false);
     const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
     const [imPlaner, setImPlaner] = useState(false);
+    const [imPlanerSemester, setImPlanerSemester] = useState<string | null>(null);
 
     async function handleAusklappen() {
         setOpen(!open);
@@ -30,8 +31,9 @@ const ModulCard = (props: modulInfo & {
             if (data) {
                 setDetails({ ...data, benotet: data.benotet ?? undefined });
             }
-            const schonDrin = await istModulImPlaner(String(modul_id));
-            setImPlaner(schonDrin);
+            const ergebnis = await findeModulImPlaner(String(modul_id));
+            setImPlaner(ergebnis.imPlaner);
+            setImPlanerSemester(ergebnis.semesterName);
 
             setLoadingDetails(false);
         }
@@ -79,7 +81,9 @@ const ModulCard = (props: modulInfo & {
             // TODO: dem Nutzer eine Fehlermeldung anzeigen
         } else {
             console.log("Modul gespeichert:", ergebnis.modulId);
-            // TODO: dem Nutzer Erfolg anzeigen
+            setImPlaner(true);
+            const gewaehltesSemester = semesterListe.find(s => s.id === semesterId);
+            setImPlanerSemester(gewaehltesSemester?.name ?? null);
         }
     }
 
@@ -166,7 +170,7 @@ const ModulCard = (props: modulInfo & {
                                         <CalendarPlus className='w-5 h-5' />
                                         <span className='font-medium'>
                                             {imPlaner
-                                                ? 'Bereits im Planer'
+                                                ? `Bereits im Planer${imPlanerSemester ? ` - ${imPlanerSemester}` : ''}`
                                                 : selectedSemester
                                                     ? `${semesterListe.find(s => s.id === selectedSemester)?.name ?? "Semester"} gewählt`
                                                     : 'Zum Planer hinzufügen'}

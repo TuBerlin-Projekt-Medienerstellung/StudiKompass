@@ -332,6 +332,10 @@ export async function moduleZuPlanerHinzufuegen(
         .single();
 
     if (modulError) {
+        // Duplikat: Modul ist schon im Planer (Unique-Constraint unique_user_moses_modul)
+        if (modulError.code === "23505") {
+            return { success: false, error: "Dieses Modul ist bereits in deinem Planer." };
+        }
         console.error("Fehler beim Speichern des Moduls:", modulError);
         return { success: false, error: "Modul konnte nicht gespeichert werden." };
     }
@@ -514,24 +518,50 @@ export async function loescheSemesterMitModulen(semesterId: string) {
     return { success: true };
 }
 
-// Prüft ob ein bestimmtes Modul (per moses_id) schon im Planer des Nutzers ist.
-export async function istModulImPlaner(mosesId: string): Promise<boolean> {
+// Prüft ob ein Modul (per moses_id) im Planer ist — und in welchem Semester.
+export async function findeModulImPlaner(
+    mosesId: string
+): Promise<{ imPlaner: boolean; semesterName: string | null }> {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return false;
+    if (!user) return { imPlaner: false, semesterName: null };
 
-    const { data, error } = await supabase
+    // Schritt 1: Modul per moses_id finden
+    const { data: modul, error: modulError } = await supabase
         .from("module")
         .select("id")
         .eq("user_id", user.id)
         .eq("moses_id", mosesId)
         .maybeSingle();
 
-    if (error) {
-        console.error("Fehler beim Prüfen ob Modul im Planer:", error);
-        return false;   // im Zweifel: erlauben (nicht blockieren)
+    if (modulError || !modul) {
+        return { imPlaner: false, semesterName: null };
     }
 
-    return data !== null;   // true = schon drin, false = noch nicht
+    // Schritt 2: planner-Eintrag finden → group_id (das Semester)
+    const { data: plannerEintrag, error: plannerError } = await supabase
+        .from("planner")
+        .select("group_id")
+        .eq("modul_id", modul.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+    if (plannerError || !plannerEintrag) {
+        // Modul existiert, aber keine Semester-Zuordnung → trotzdem "drin"
+        return { imPlaner: true, semesterName: null };
+    }
+
+    // Schritt 3: Semester-Name holen
+    const { data: semester, error: semesterError } = await supabase
+        .from("semester")
+        .select("name")
+        .eq("id", plannerEintrag.group_id)
+        .maybeSingle();
+
+    if (semesterError || !semester) {
+        return { imPlaner: true, semesterName: null };
+    }
+
+    return { imPlaner: true, semesterName: semester.name };
 }
