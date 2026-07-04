@@ -26,25 +26,31 @@ export async function getSemesters() {
 
 //leeres Semester hinzufügen
 export async function createSemester() {
-
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-
+    // current_semester MIT laden (für Regel 5 + Sonderfall)
     const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("max_semester")
+        .select("max_semester, current_semester")
         .eq("id", user.id)
         .single();
-
     if (profileError) throw profileError;
 
     const nextSemester = (profile.max_semester ?? 0) + 1;
 
+    // Sonderfall: war current 0 (alles leer), wird es beim ersten Hinzufügen 1.
+    // Sonst bleibt current stehen (Regel 5).
+    const aktuellesCurrent = profile.current_semester ?? 0;
+    const neuerCurrentWert = aktuellesCurrent === 0 ? 1 : aktuellesCurrent;
+
     const { data, error } = await supabase
         .from('profiles')
-        .update({ max_semester: nextSemester })
+        .update({
+            max_semester: nextSemester,
+            current_semester: neuerCurrentWert,   // NEU
+        })
         .eq("id", user.id)
         .select()
         .single();
@@ -53,8 +59,6 @@ export async function createSemester() {
         console.error('Fehler beim Aktualisieren:', error)
         throw error
     }
-
-
     return data.max_semester;
 }
 
@@ -94,20 +98,28 @@ export async function deleteSemester() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-
+    // current_semester MIT laden (für Regel 3)
     const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("max_semester")
+        .select("max_semester, current_semester")
         .eq("id", user.id)
         .single();
-
     if (profileError) throw profileError;
 
     const neuerMaxWert = Math.max(0, (profile.max_semester ?? 0) - 1);
 
+    // Regel 3: current darf nie größer als max sein → zieht mit
+    const aktuellesCurrent = profile.current_semester ?? 0;
+    const neuerCurrentWert = aktuellesCurrent > neuerMaxWert
+        ? neuerMaxWert
+        : aktuellesCurrent;
+
     const { data, error } = await supabase
         .from('profiles')
-        .update({ max_semester: neuerMaxWert })
+        .update({
+            max_semester: neuerMaxWert,
+            current_semester: neuerCurrentWert,   // NEU
+        })
         .eq("id", user.id)
         .select()
         .single();
@@ -116,7 +128,6 @@ export async function deleteSemester() {
         console.error('Fehler beim Löschen:', error)
         throw error
     }
-
     return data
 }
 
