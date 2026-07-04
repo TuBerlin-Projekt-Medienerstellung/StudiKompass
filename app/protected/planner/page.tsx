@@ -4,7 +4,7 @@ import SemesterCard from "@/components/semester-card";
 import SemesterModulCard from "@/components/semester-modul-card";
 import { useState, useEffect } from "react";
 import { Plus, Trash2 } from 'lucide-react';
-import { reduceSemesterTable, deleteSemester, createSemester , updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul, loescheSemesterMitModulen } from './actions';
+import { reduceSemesterTable, deleteSemester, createSemester, updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul, loescheSemesterMitModulen } from './actions';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
@@ -55,6 +55,11 @@ const Page = () => {
     }, []);
 
     async function handleAddSemester() {
+        // Grenze: maximal 20 Semester (konsistent mit den Settings)
+        if (semesterList.length >= 20) {
+            return;   // nichts tun, Grenze erreicht
+        }
+
         const maxNummer =
             semesterList.length > 0
                 ? Math.max(...semesterList.map((s) => s.nummer))
@@ -62,7 +67,7 @@ const Page = () => {
 
         const neueNummer = maxNummer + 1;
 
-        await createSemester();                          // NEU: max_semester +1 in profiles
+        await createSemester();
         const neueZeile = await updateSemesterTable(neueNummer);
 
         setSemesterList((prev) => [
@@ -184,7 +189,11 @@ const Page = () => {
 
                 <div className='flex flex-row gap-4'>
                     <button onClick={handleAddSemester}
-                        className='border-2 rounded-2xl border-dashed p-4 flex cursor-pointer items-center justify-center px-6 py-4 md:w-5/6 w-full'>
+                        disabled={semesterList.length >= 20}
+                        className={`border-2 rounded-2xl border-dashed p-4 flex items-center justify-center px-6 py-4 md:w-5/6 w-full ${semesterList.length >= 20
+                                ? 'opacity-50 cursor-not-allowed'
+                                : 'cursor-pointer'
+                            }`}>
                         <Plus></Plus>Semester hinzufügen
                     </button>
                     <button onClick={() => {
