@@ -103,9 +103,11 @@ export async function deleteSemester() {
 
     if (profileError) throw profileError;
 
+    const neuerMaxWert = Math.max(0, (profile.max_semester ?? 0) - 1);
+
     const { data, error } = await supabase
         .from('profiles')
-        .update({ max_semester: profile.max_semester - 1 })
+        .update({ max_semester: neuerMaxWert })
         .eq("id", user.id)
         .select()
         .single();

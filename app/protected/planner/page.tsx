@@ -4,7 +4,7 @@ import SemesterCard from "@/components/semester-card";
 import SemesterModulCard from "@/components/semester-modul-card";
 import { useState, useEffect } from "react";
 import { Plus, Trash2 } from 'lucide-react';
-import { reduceSemesterTable, deleteSemester, updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul , loescheSemesterMitModulen } from './actions';
+import { reduceSemesterTable, deleteSemester, createSemester , updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul, loescheSemesterMitModulen } from './actions';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
@@ -62,12 +62,13 @@ const Page = () => {
 
         const neueNummer = maxNummer + 1;
 
-        const neueZeile = await updateSemesterTable(neueNummer);   // gibt die neue Zeile zurück
+        await createSemester();                          // NEU: max_semester +1 in profiles
+        const neueZeile = await updateSemesterTable(neueNummer);
 
         setSemesterList((prev) => [
             ...prev,
             {
-                id: neueZeile.id,      // uuid aus der zurückgegebenen Zeile
+                id: neueZeile.id,
                 nummer: neueNummer,
                 modules: [],
             },
