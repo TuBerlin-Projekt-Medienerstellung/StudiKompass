@@ -17,7 +17,6 @@ export async function getUserStudiengangId() {
     return profile?.studiengang_id || null;
 }
 
-
 export async function fetchMoses(path: string) {
     try {
         const res = await fetch(`${process.env.moses_API_URL}${path}`, {
@@ -27,6 +26,7 @@ export async function fetchMoses(path: string) {
             },
             next: {revalidate: 86400}
         });
+
         if (!res.ok) return null;
         return res.json();
     } catch (e) {
@@ -39,11 +39,14 @@ export async function fetchMoses(path: string) {
 async function getBereichPfad(bereichId: number): Promise<string[]> {
     const data = await fetchMoses(`/studiengangsbereich/${bereichId}`);
     const bereich = data?.data?.[0];
+
     if (!bereich) return [];
+
     if (bereich.parent?.id) {
         const elternPfad = await getBereichPfad(bereich.parent.id);
         return [...elternPfad, bereich.name];
     }
+
     return [bereich.name];
 }
 
@@ -83,16 +86,19 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
     const abbildungListeDaten = await fetchMoses(`/studiengangsabbildung?stupoId=${neuesteStupo.id}`);
     const abbildungRef = abbildungListeDaten?.data?.[0];
     if (!abbildungRef) return [];
+
     const abbildungDetailDaten = await fetchMoses(`/studiengangsabbildung/${abbildungRef.id}`);
     const abbildungDetail = abbildungDetailDaten?.data?.[0];
     if (!abbildungDetail) return [];
 
     let modullisteIds: MosesRef[] = abbildungDetail.modullisteList ?? [];
     let isBologna = false;
+
     if (modullisteIds.length === 0) {
         modullisteIds = abbildungDetail.bolognamodullisteList ?? [];
         isBologna = true;
     }
+
     if (modullisteIds.length === 0) return [];
 
     const neuesteModullisteId = modullisteIds.reduce((max, ml) => ml.id > max.id ? ml : max).id;
@@ -102,6 +108,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
         const modullisteDaten = await fetchMoses(`/modulliste/${neuesteModullisteId}`);
         const aktuelleModulliste = modullisteDaten?.data?.[0];
         if (!aktuelleModulliste) return [];
+
         const zuordnungen: MosesRef[] = aktuelleModulliste.studiengangszuordnungList ?? [];
         if (zuordnungen.length === 0) return [];
 
@@ -113,6 +120,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
                 uniquezuordnungen.set(moduleName, z);
             }
         }
+
         const filteredzuordnungen = Array.from(uniquezuordnungen.values());
 
         const BATCH_SIZE = 30;
@@ -130,7 +138,11 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
                         const bereichPfad = zuordnung?.studiengangsbereich?.id
                             ? await getBereichPfad(zuordnung.studiengangsbereich.id)
                             : [];
-                        const actualModulId = zuordnung?.bolognamodul?.id || zuordnung?.bolognamodulVersion?.bolognamodul?.id || z.id;
+
+                        const actualModulId =
+                            zuordnung?.bolognamodul?.id ||
+                            zuordnung?.bolognamodulVersion?.bolognamodul?.id ||
+                            z.id;
 
                         return {
                             id: {type: "moses", value: actualModulId},
@@ -144,6 +156,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
                     }
                 })
             );
+
             moduleRoh.push(...(batchErgebnisse.filter(Boolean) as ModulBasis[]));
         }
 
@@ -154,6 +167,8 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
     const bolognaDaten = await fetchMoses(`/bolognamodulliste/${neuesteModullisteId}`);
     const aktuelleBolognaListe = bolognaDaten?.data?.[0];
     if (!aktuelleBolognaListe) return [];
+
+    console.log("Aktuelle Bolognamodulliste: ", aktuelleBolognaListe);
 
     const gruppenRefs: MosesRef[] = aktuelleBolognaListe.bolognamodulListengruppeList ?? [];
     if (gruppenRefs.length === 0) return [];
@@ -166,6 +181,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
             uniquegroups.set(moduleName, x);
         }
     }
+
     const filteredgroups = Array.from(uniquegroups.values());
 
     const gruppenErgebnisse = await Promise.all(
@@ -191,6 +207,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
             uniqueBolognaMap.set(moduleName, z);
         }
     }
+
     const filteredbolognazuordnungen = Array.from(uniqueBolognaMap.values());
 
     const BATCH_SIZE = 30;
@@ -205,7 +222,11 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
                     const zuordnung = zuordnungRaw?.data?.[0];
                     if (!zuordnung) return null;
 
-                    const actualModulId = zuordnung?.bolognamodulVersion?.bolognamodul?.id || zuordnung?.bolognamodul?.id || z.id;
+                    const actualModulId =
+                        zuordnung?.bolognamodulVersion?.bolognamodul?.id ||
+                        zuordnung?.bolognamodul?.id ||
+                        z.id;
+
                     const gruppenName = zuordnung?.bolognamodulListengruppe?.name;
                     const bereichPfad = gruppenName ? [gruppenName] : [];
 
@@ -222,6 +243,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
                 }
             })
         );
+
         moduleRoh.push(...(batchErgebnisse.filter(Boolean) as ModulBasis[]));
     }
 
@@ -229,8 +251,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 }
 
 // Verlagerung der detailedmodules Komponente, da client komponenten keine server action/Komponente wrappen/einbetten oder aufrufen können..
-
-export async function ladeDetailedModulAction(modul_id: string) {
+export async function ladeDetailedModulAction(modul_id: string | number) {
     const supabase = await createClient();
     const {data: {user}} = await supabase.auth.getUser();
     if (!user) return null;
@@ -249,15 +270,18 @@ export async function ladeDetailedModulAction(modul_id: string) {
     }
 
     try {
+        const id = String(modul_id);
+
         // fetchMoses hat bereits try/catch + null-Fallback eingebaut
-        let zuordnungRaw = await fetchMoses(`/studiengangszuordnung/${modul_id}`);
+        let zuordnungRaw = await fetchMoses(`/studiengangszuordnung/${id}`);
         let zuordnung = zuordnungRaw?.data?.[0];
+
         if (!zuordnung) {
-            zuordnungRaw = await fetchMoses(`/bolognamodullistenzuordnung/${modul_id}`); //new fallback
+            zuordnungRaw = await fetchMoses(`/bolognamodullistenzuordnung/${id}`); //new fallback
             zuordnung = zuordnungRaw?.data?.[0];
         }
 
-        if (!zuordnung) return details; // Fallback: leere Details zurückgeben
+        if (!zuordnung) return details;
 
         const versionId = zuordnung?.bolognamodulVersion?.id;
 
@@ -278,7 +302,7 @@ export async function ladeDetailedModulAction(modul_id: string) {
             beschreibungId
                 ? fetchMoses(`/bolognamodulbeschreibung/${beschreibungId}`)
                 : Promise.resolve(null),
-            fetchMoses(`/bolognamodulpruefung?bolognamodulId=${modul_id}`),
+            fetchMoses(`/bolognamodulpruefung?bolognamodulId=${id}`),
         ]);
 
         const nummer = bolognamodulData?.data?.[0]?.number;
@@ -297,7 +321,6 @@ export async function ladeDetailedModulAction(modul_id: string) {
             anmeldeformalitaetenDE: pruefung?.anmeldeformalitaetenDE ?? "",
             link: nummer != null ? baueMosesLink(nummer, versionsnummer) : "",
         }
-
     } catch (e) {
         console.error("Ein Problem ist beim Fetch aufgetreten:", e)
     }
@@ -307,7 +330,6 @@ export async function ladeDetailedModulAction(modul_id: string) {
 
 // Custom Modul in Supabase speichern:
 // Wird immer in current Semester hinzugefügt
-
 export async function getCurrentSemester() {
     const supabase = await createClient();
     const {data: {user}} = await supabase.auth.getUser();
@@ -335,27 +357,30 @@ export async function getCurrentSemester() {
     return data.current_semester;
 }
 
-export async function createCustomModul(modulname: string,
-                                        bereichspfad: string,
-                                        ects: number,
-                                        turnus: string,
-                                        beschreibung: string,
-                                        pruefungsform: string,
-                                        benotet: boolean | null,
-                                        arbeitsaufwand: number) {
-
+export async function createCustomModul(
+    modulname: string,
+    bereichspfad: string,
+    ects: number,
+    turnus: string,
+    beschreibung: string,
+    pruefungsform: string,
+    benotet: boolean | null,
+    arbeitsaufwand: number,
+    semesterId: string
+) {
     const supabase = await createClient();
     const {data: {user}} = await supabase.auth.getUser();
     if (!user) return null;
 
     const modul_id = crypto.randomUUID();
+
     const {data, error} = await supabase
         .from('module')
         .insert({
             id: modul_id,
             name: modulname,
             turnus: turnus,
-            bereichpfad: bereichspfad,
+            bereichpfad: [bereichspfad],
             ects: ects,
             lernergebnisse: beschreibung,
             pruefungsform: pruefungsform,
@@ -365,7 +390,9 @@ export async function createCustomModul(modulname: string,
             note: null,
             gewichtung: null,
             versuche: 1,
-            arbeitsaufwand: arbeitsaufwand,
+            arbeitsaufwand: bereichspfad === "job"
+                ? arbeitsaufwand
+                : ects * 30,
             user_id: user.id,
         })
         .select()
@@ -376,12 +403,29 @@ export async function createCustomModul(modulname: string,
         throw error
     }
 
+    // Schritt 2: Verknüpfung in planner anlegen
+    const {error: plannerError} = await supabase
+        .from("planner")
+        .insert({
+            group_id: semesterId,
+            modul_id: data.id,
+            user_id: user.id,
+        });
+
+    if (plannerError) {
+        console.error("Fehler beim Verknüpfen des Custom-Moduls:", plannerError);
+        throw plannerError;
+    }
+
     return data.id;
 }
 
-export async function addCustomModultoPlanner(groupId?: UUID, modul_id?: ModuleId) {
+export async function addCustomModulToPlanner(groupId?: UUID, modul_id?: ModuleId) {
     const supabase = await createClient();
-    const {data: {user}} = await supabase.auth.getUser();
+
+    const {
+        data: {user},
+    } = await supabase.auth.getUser();
 
     if (!user) return null;
 
