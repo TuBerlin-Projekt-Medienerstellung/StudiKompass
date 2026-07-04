@@ -1,13 +1,13 @@
 "use server";
-import {createClient} from "@/lib/supabase/server";
-import {UUID} from "crypto";
+import { createClient } from "@/lib/supabase/server";
+import { UUID } from "crypto";
 
 export async function getUserStudiengangId() {
     const supabase = await createClient();
-    const {data: {user}} = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    const {data: profile} = await supabase
+    const { data: profile } = await supabase
         .from("profiles")
         .select("studiengang_id")
         .eq("id", user.id)
@@ -24,7 +24,7 @@ export async function fetchMoses(path: string) {
                 "accept": "application/json",
                 "x-api-key": process.env.moses_API_KEY || ""
             },
-            next: {revalidate: 86400}
+            next: { revalidate: 86400 }
         });
         if (!res.ok) return null;
         return res.json();
@@ -158,7 +158,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 
         return moduleRoh;
     }
-        // ->/studiengang-> stupoid-> get fields from reference in /studiengangabbildung -> if modulliste exists: isBologna stays false -> /studiengangzuordnung->Module
+    // ->/studiengang-> stupoid-> get fields from reference in /studiengangabbildung -> if modulliste exists: isBologna stays false -> /studiengangzuordnung->Module
     // if isBologna is true: -> /bolognamodulliste -> get group ids-> /bolognamodullistengruppe -> /bolognamodullistenzuordnung/{id}
     else {
         const bolognaDaten = await fetchMoses(`/bolognamodulliste/${neuesteModullisteId}`);
@@ -251,7 +251,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 
 export async function ladeDetailedModulAction(modul_id: string) {
     const supabase = await createClient();
-    const {data: {user}} = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
     let details = {
@@ -334,10 +334,10 @@ export async function ladeDetailedModulAction(modul_id: string) {
 
 export async function getCurrentSemester() {
     const supabase = await createClient();
-    const {data: {user}} = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-    const {data, error} = await supabase
+    const { data, error } = await supabase
         .from('profiles')
         .select("current_semester, max_semester")
         .eq("id", user.id)
@@ -360,25 +360,25 @@ export async function getCurrentSemester() {
 }
 
 export async function createCustomModul(modulname: string,
-                                        bereichspfad: string,
-                                        ects: number,
-                                        turnus: string,
-                                        beschreibung: string,
-                                        pruefungsform: string,
-                                        benotet: boolean | null,
-                                        arbeitsaufwand: number) {
-
+    bereichspfad: string,
+    ects: number,
+    turnus: string,
+    beschreibung: string,
+    pruefungsform: string,
+    benotet: boolean | null,
+    arbeitsaufwand: number,
+    semesterId: string) {
     const supabase = await createClient();
-    const {data: {user}} = await supabase.auth.getUser();
+    const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-
-    const {data, error} = await supabase
+    // Schritt 1: Modul anlegen
+    const { data, error } = await supabase
         .from('module')
         .insert({
             name: modulname,
             turnus: turnus,
-            bereichpfad: bereichspfad,
+            bereichpfad: [bereichspfad],
             ects: ects,
             lernergebnisse: beschreibung,
             pruefungsform: pruefungsform,
@@ -388,7 +388,9 @@ export async function createCustomModul(modulname: string,
             note: null,
             gewichtung: null,
             versuche: 1,
-            arbeitsaufwand: arbeitsaufwand,
+            arbeitsaufwand: bereichspfad === "job"
+                ? arbeitsaufwand
+                : ects * 30,
             user_id: user.id,
         })
         .select()
@@ -399,18 +401,32 @@ export async function createCustomModul(modulname: string,
         throw error
     }
 
+    // Schritt 2: Verknüpfung in planner anlegen
+    const { error: plannerError } = await supabase
+        .from("planner")
+        .insert({
+            group_id: semesterId,
+            modul_id: data.id,
+            user_id: user.id,
+        });
+
+    if (plannerError) {
+        console.error("Fehler beim Verknüpfen des Custom-Moduls:", plannerError);
+        throw plannerError;
+    }
+
     return data.id;
 }
 
 export async function addCustomModultoPlanner(groupId: UUID, modul_id: ModuleId) {
     const supabase = await createClient();
     const {
-        data: {user},
+        data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) return null;
 
-    const {error} = await supabase
+    const { error } = await supabase
         .from("planner")
         .insert({
             modul_id: modul_id,
