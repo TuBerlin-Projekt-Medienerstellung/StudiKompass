@@ -1,7 +1,6 @@
 // components/moses-modulsuche.tsx
 "use client";
 
-
 /**
  * MosesModulsuche Komponente
  *
@@ -17,8 +16,10 @@
  * Details werden erst beim Ausklappen einer Karte gefetcht (TODO).
  */
 
-import {useState} from 'react';
-import { handleModule } from '@/lib/utils';
+import {useEffect, useState} from 'react';
+import {handleModule} from '@/lib/utils';
+import {getSemesters} from '@/app/protected/planner/actions';
+
 import ModulCard from '@/components/modul-card';
 import ModulSearch from './modulsearch';
 import {ladeModulBasisAction, ModulBasis} from '@/app/protected/modules/actions';
@@ -45,6 +46,22 @@ export default function MosesModulsuche({studiengangId}: Props) {
     const [geladen, setGeladen] = useState(false);
 
     const [query, setQuery] = useState("");
+
+    // Semester einmal laden — zentral, damit nicht jede Karte einzeln lädt
+    const [semesterListe, setSemesterListe] = useState<{ id: string; semesterzahl: number; name: string }[]>([]);
+
+    useEffect(() => {
+        async function ladeSemester() {
+            try {
+                const data = await getSemesters();
+                setSemesterListe(data ?? []);
+            } catch (e) {
+                console.error("Fehler beim Laden der Semester:", e);
+            }
+        }
+
+        ladeSemester();
+    }, []);
 
     /**
      * Wird aufgerufen wenn ein Filter-Button geklickt wird.
@@ -82,8 +99,6 @@ export default function MosesModulsuche({studiengangId}: Props) {
      * "alle": keine Filterung
      */
     const gefilterteModule = moduleList.filter((modul) => {
-
-
         const bereich = modul.bereichPfad[0]?.toLowerCase() ?? "";
         const name = modul.name?.toLowerCase() ?? "";
         const search = query.toLowerCase().trim();
@@ -99,7 +114,6 @@ export default function MosesModulsuche({studiengangId}: Props) {
         } else if (filter === "wahlpflicht") {
             filterOk = bereich.includes("wahlpflicht");
         }
-
 
         return searchOk && filterOk;
     });
@@ -129,15 +143,7 @@ export default function MosesModulsuche({studiengangId}: Props) {
                         <span className="sm:hidden">{btn.shortLabel}</span>
                         <span className="hidden sm:inline">{btn.label}</span>
                     </button>
-
                 ))}
-                
-                {/* Anzahl der gefilterten Module — nur sichtbar wenn geladen */}
-                {geladen && (
-                    <span className="ml-auto self-center text-sm opacity-60">
-                        {gefilterteModule.length} Module
-                    </span>
-                )}
             </div>
 
             {/* Anzahl der gefilterten Module — nur sichtbar wenn geladen */}
@@ -198,6 +204,7 @@ export default function MosesModulsuche({studiengangId}: Props) {
                                 pruefungsform=""
                                 benotet={false}
                                 arbeitsaufwand={0}
+                                semesterListe={semesterListe}
                             />
                         ))
                     )}

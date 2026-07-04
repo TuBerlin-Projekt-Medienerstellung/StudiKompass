@@ -1,24 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import {useSortable} from "@dnd-kit/sortable";
-import {CSS} from "@dnd-kit/utilities";
-import {SquareArrowOutUpRight, Grip, Trash2, ChevronDown, ChevronUp, Circle, CircleCheckBig} from 'lucide-react';
-import {useState, useEffect} from "react";
-import {handleModule} from "@/lib/utils";
-import {ladeDetailedModulAction} from "@/app/protected/modules/actions";
-import {getTries, saveTries, saveGrade, saveStatus, deleteGrade} from "@/app/protected/planner/actions";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { SquareArrowOutUpRight, Grip, Trash2, ChevronDown, ChevronUp, Circle, CircleCheckBig } from 'lucide-react';
+import { useState, useEffect } from "react";
+import { handleModule } from "@/lib/utils";
+import { ladeDetailedModulAction } from "@/app/protected/modules/actions";
+import { getTries, saveTries, saveGrade, saveStatus, deleteGrade, loescheModul } from "@/app/protected/planner/actions";
 
 type Props = {
     modul: modulInfo;
-}
+    proWoche: boolean;
+    onToggleAufwand: () => void;
+};
 
 type ModulDetails = {
     beschreibung?: string;
     [key: string]: unknown;
 };
 
-const SemesterModulCard = ({modul}: Props) => {
+const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
     const [isOpen, setIsOpen] = useState(false);
     const [details, setDetails] = useState<ModulDetails | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
@@ -36,7 +38,7 @@ const SemesterModulCard = ({modul}: Props) => {
         transform,
         transition,
         isDragging
-    } = useSortable({id: handleModule(modul.modul_id)});
+        } = useSortable({ id: handleModule(modul.modul_id) });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -127,65 +129,103 @@ const SemesterModulCard = ({modul}: Props) => {
 
     }, [isOpen, modul.modul_id, modul.note, modul.gewichtung, modul.abgeschlossen]);
 
+    function berechneArbeitsaufwand(): string {
+        const aufwand = modul.arbeitsaufwand;
+        if (!aufwand || aufwand <= 0) return "—";
+
+        const istJob = modul.leistungspunkte === 0;
+
+        if (istJob) {
+            // Job: gespeichert ist Stunden/Woche
+            return proWoche ? `${aufwand} h/Woche` : `${aufwand * 15} h/Semester`;
+        } else {
+            // Modul: gespeichert ist Stunden/Semester
+            return proWoche ? `${Math.round(aufwand / 15)} h/Woche` : `${aufwand} h/Semester`;
+        }
+    }
+
     return (
         <div ref={setNodeRef} style={style}>
             <div
                 onClick={handleAusklappen}
-                className={`px-6 py-4 rounded-2xl border-x-4 border-y-2 border-flag-red flex flex-col gap-2 cursor-pointer bg-card transition-all duration-300 ${
-                    isOpen ? "shadow-md" : ""}`}>
+                className={`px-6 py-4 rounded-2xl border-x-4 border-y-2 border-flag-red flex flex-col gap-2 cursor-pointer bg-card transition-all duration-300 ${isOpen ? "shadow-md" : ""}`}>
 
                 {/* Eingeklappte Version des Moduls */}
-                <div className="flex flex-row gap-2 items-center w-full">
-                    <div
+                <div className="flex w-full items-start gap-3">
+                    <button
+                        type="button"
                         {...attributes}
                         {...listeners}
-                        className='pr-2 text-muted-foreground cursor-grab active:cursor-grabbing'
-                        onClick={(e) => e.stopPropagation()}>
-                        <Grip/>
-                    </div>
+                        className="mt-2 shrink-0 text-muted-foreground cursor-grab active:cursor-grabbing touch-none"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <Grip />
+                    </button>
 
-                    <div className='flex flex-col flex-1'>
-                        <h1 className="font-bold text-lg">
+                    <div className="min-w-0 flex-1">
+                        <h1 className="break-words text-base font-bold leading-snug sm:text-lg">
                             {modul.name}
                         </h1>
 
-                        <div className="flex flex-wrap items-center opacity-80 gap-3 text-sm">
-                            <span className="text-flag-red">
-                                {modul.leistungspunkte} ECTS
-                            </span>
-                            <span>
-                                {modul.turnus}
-                            </span>
+                        <div className="mt-2 flex flex-col gap-1 text-sm opacity-80">
+
+                            {/* ECTS und Turnus immer nebeneinander */}
+                            <div className="flex items-center gap-3">
+                                <span className="text-flag-red whitespace-nowrap">
+                                    {modul.leistungspunkte} ECTS
+                                </span>
+
+                                <span className="text-xs sm:text-sm">
+                                    {modul.turnus}
+                                </span>
+                            </div>
+
+                            {/* Moses-Link immer darunter */}
                             <Link
-                                className="flex items-center gap-1 text-blue-bell hover:underline"
+                                className="flex w-fit items-center gap-1 text-blue-bell hover:underline"
                                 href={modul.link || "#"}
-                                onClick={(e) => e.stopPropagation()}>
+                                onClick={(e) => e.stopPropagation()}
+                            >
                                 Moses
-                                <SquareArrowOutUpRight size={14}/>
+                                <SquareArrowOutUpRight size={14} />
                             </Link>
                         </div>
                     </div>
 
-                    {/* Pfeil rechts, zeigt den Aufklapp-Status an */}
-                    <div className="text-muted-foreground px-2">
-                        {isOpen ? <ChevronUp size={20}/> : <ChevronDown size={20}/>}
-                    </div>
+                    <div className="flex shrink-0 items-start gap-2 pt-1">
+                        <button
+                            type="button"
+                            className="text-muted-foreground"
+                            onClick={handleAusklappen}
+                        >
+                            {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        </button>
 
-                    <button
-                        className="flex pr-2 py-4 ml-2 hover:text-flag-red transition-colors"
-                        onClick={(e) => {
-                            e.stopPropagation();
-                        }}>
-                        <Trash2/>
-                    </button>
+                        <button
+                            type="button"
+                            className="hover:text-flag-red transition-colors"
+                            onClick={async (e) => {
+                                e.stopPropagation();
+                                const result = await loescheModul(handleModule(modul.modul_id));
+                                if (result.success) {
+                                    window.location.reload();
+                                } else {
+                                    setErrorMsg(result.error || "Modul konnte nicht gelöscht werden.");
+                                }
+                            }}
+                        >
+                            <Trash2 />
+                        </button>
+                    </div>
                 </div>
 
-                {/* Ausgeklappte Karte - Details */}
-                <div className={`grid transition-all duration-500 ease-in-out ${
-                    isOpen ? 'grid-rows-[1fr] opacity-100 mt-4 pt-4 border-t' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
-                }`}>
+
+                                {/* Ausgeklappte Karte - Details */}
+                <div className={`grid transition-all duration-500 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100 mt-4 pt-4 border-t' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
+                    }`}>
                     <div className="overflow-hidden">
-                        <div className="flex flex-col gap-6 text-card-foreground" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex flex-col gap-6 text-card-foreground"
+                            onClick={(e) => e.stopPropagation()}>
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-y-2">
                                 <div className="flex flex-row flex-wrap items-center gap-3 text-sm">
                                     <div className="bg-flag-red text-card rounded-xl py-1 px-2 w-fit text-xs font-semibold">
@@ -220,9 +260,19 @@ const SemesterModulCard = ({modul}: Props) => {
 
                             {/* Infokästen */}
                             <div className="grid grid-cols-1 gap-3 md:grid-cols-4 w-full">
-                                <div className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-lg opacity-70">Arbeitsaufwand</p>
-                                    <p className="font-semibold text-md">{modul.arbeitsaufwand}</p>
+                                <div
+                                    className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center cursor-pointer select-none"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        onToggleAufwand();
+                                    }}
+                                    title="Klicken zum Umrechnen (Semester / Woche)">
+                                    <p className="text-lg opacity-70">
+                                        Arbeitsaufwand
+                                    </p>
+                                    <p className="font-semibold text-md">
+                                        {berechneArbeitsaufwand()}
+                                    </p>
                                 </div>
 
                                 <div className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
@@ -253,10 +303,18 @@ const SemesterModulCard = ({modul}: Props) => {
                                                     </div>
 
                                                     {/* Gewichtungs-Toggle */}
-                                                    <div title="Welche Noten (nicht) in den Gesamtschnitt einfließen, steht in der StuPo zum Studiengang." className="flex items-center justify-between md:justify-center gap-3 px-3 py-2 bg-background border rounded-xl flex-1 md:flex-none select-none">
-                                                        <span className="text-xs font-normal opacity-70 whitespace-nowrap">{gewichtung ? "normal gewichtet" : "nicht gewichtet"}</span>
-                                                        <button onClick={() => setGewichtung(!gewichtung)} className={`${gewichtung ? "bg-mint-leaf" : "bg-muted border shadow-inner"} relative inline-flex h-3.5 w-7 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none items-center`}>
-                                                            <span className={`${gewichtung ? "translate-x-3.5 bg-background" : "translate-x-0.5 bg-muted-foreground/60"} pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full shadow transition duration-200 ease-in-out`} />
+                                                    <div
+                                                        title="Welche Noten (nicht) in den Gesamtschnitt einfließen, steht in der StuPo zum Studiengang."
+                                                        className="flex items-center justify-between md:justify-center gap-3 px-3 py-2 bg-background border rounded-xl flex-1 md:flex-none select-none">
+                                                        <span className="text-xs font-normal opacity-70 whitespace-nowrap">
+                                                            {gewichtung ? "normal gewichtet" : "nicht gewichtet"}
+                                                        </span>
+                                                        <button
+                                                            onClick={() => setGewichtung(!gewichtung)}
+                                                            className={`${gewichtung ? "bg-mint-leaf" : "bg-muted border shadow-inner"} relative inline-flex h-3.5 w-7 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none items-center`}>
+                                                            <span
+                                                                className={`${gewichtung ? "translate-x-3.5 bg-background" : "translate-x-0.5 bg-muted-foreground/60"} pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full shadow transition duration-200 ease-in-out`}
+                                                            />
                                                         </button>
                                                     </div>
                                                 </div>
@@ -268,7 +326,7 @@ const SemesterModulCard = ({modul}: Props) => {
                                                         onClick={async (e) => {
                                                             e.stopPropagation();
                                                             setIsSavingNote(true);
-                                                            setErrorMsg(null); // Alten Fehler zurücksetzen
+                                                            setErrorMsg(null);
 
                                                             try {
                                                                 const result = await saveGrade(handleModule(modul.modul_id), noteInput, gewichtung);
@@ -295,7 +353,7 @@ const SemesterModulCard = ({modul}: Props) => {
                                                         onClick={async (e) => {
                                                             e.stopPropagation();
                                                             setIsSavingNote(true);
-                                                            setErrorMsg(null); // Alten Fehler zurücksetzen
+                                                            setErrorMsg(null);
 
                                                             try {
                                                                 const result = await deleteGrade(handleModule(modul.modul_id));
@@ -346,7 +404,7 @@ const SemesterModulCard = ({modul}: Props) => {
                                         }
                                     }}
                                     className={`flex p-3 rounded-lg w-full md:flex-1 items-center justify-center gap-2 transition-colors ${checked ? 'bg-mint-leaf text-white' : 'bg-mint-leaf/40 text-gray-500'}`}>
-                                    {checked ? <CircleCheckBig className="w-4 h-4"/> : <Circle className="w-4 h-4"/>}
+                                    {checked ? <CircleCheckBig className="w-4 h-4" /> : <Circle className="w-4 h-4" />}
                                     {checked ? "Als abgeschlossen markiert" : "Als abgeschlossen markieren"}
                                 </button>
 
@@ -361,7 +419,7 @@ const SemesterModulCard = ({modul}: Props) => {
                                     <span>
                                         zu Moses
                                     </span>
-                                    <SquareArrowOutUpRight className="w-4 h-4"/>
+                                    <SquareArrowOutUpRight className="w-4 h-4" />
                                 </Link>
                             </div>
                         </div>
