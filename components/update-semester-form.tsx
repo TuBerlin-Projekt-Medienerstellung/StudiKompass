@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import React, { useState, useEffect } from "react";
 import { CalendarDays } from "lucide-react";
+import { getSemesters, updateSemesterTable } from "@/app/protected/planner/actions";
 
 export function UpdateSemesterForm({
     className,
@@ -96,15 +97,38 @@ export function UpdateSemesterForm({
             const { data: { user } } = await supabase.auth.getUser();
             if (!user) throw new Error("Nicht eingeloggt.");
 
+            const max = Number(maxSemester);
+
+            // Prüfen wie viele Semester schon im Planer existieren
+            const vorhandeneSemester = await getSemesters();
+            const anzahlVorhanden = vorhandeneSemester?.length ?? 0;
+
+            // Fehlerfall A: mehr Semester vorhanden als max → nichts speichern
+            if (max < anzahlVorhanden) {
+                setError(
+                    `Du hast bereits ${anzahlVorhanden} Semester im Planer. ` +
+                    `Bitte lösche überzählige zuerst im Planer, bevor du die Anzahl reduzierst.`
+                );
+                setIsLoading(false);
+                return;
+            }
+
+            // profiles updaten (max + current)
             const { error } = await supabase
                 .from("profiles")
                 .update({
                     current_semester: Number(currentSemester),
-                    max_semester: Number(maxSemester),
+                    max_semester: max,
                 })
                 .eq("id", user.id);
 
             if (error) throw error;
+
+            // Fehlende Semesterzeilen anlegen (von anzahlVorhanden+1 bis max)
+            for (let nummer = anzahlVorhanden + 1; nummer <= max; nummer++) {
+                await updateSemesterTable(nummer);
+            }
+
             setIsSuccess(true);
         } catch (error: unknown) {
             setError(error instanceof Error ? error.message : "Ein Fehler ist aufgetreten.");
