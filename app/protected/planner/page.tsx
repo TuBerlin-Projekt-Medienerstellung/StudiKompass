@@ -87,6 +87,17 @@ const Page = () => {
         setSemesterList((prev) => prev.filter((sem) => sem.id !== semesterId));
     }
 
+    // Entfernt ein Modul aus dem State (nach dem Löschen aus der DB).
+    // Sucht in allen Semestern und filtert das Modul mit dieser ID raus.
+    function entferneModulAusState(modulId: string) {
+        setSemesterList((prev) =>
+            prev.map((sem) => ({
+                ...sem,
+                modules: sem.modules.filter((m) => String(m.modul_id) !== modulId),
+            }))
+        );
+    }
+
     const findSemesterByModulId = (modulId: string) => {
         return semesterList.find(s => s.modules.some(m => String(m.modul_id) === modulId)
         );
@@ -183,6 +194,7 @@ const Page = () => {
                             onClick={() => console.log(semester.nummer)}
                             proWoche={proWoche}
                             onToggleAufwand={() => setProWoche(!proWoche)}
+                            onDeleteModul={entferneModulAusState}
                         />
                     ))}
                 </div>
@@ -191,8 +203,8 @@ const Page = () => {
                     <button onClick={handleAddSemester}
                         disabled={semesterList.length >= 20}
                         className={`border-2 rounded-2xl border-dashed p-4 flex items-center justify-center px-6 py-4 md:w-5/6 w-full ${semesterList.length >= 20
-                                ? 'opacity-50 cursor-not-allowed'
-                                : 'cursor-pointer'
+                            ? 'opacity-50 cursor-not-allowed'
+                            : 'cursor-pointer'
                             }`}>
                         <Plus></Plus>Semester hinzufügen
                     </button>
@@ -212,6 +224,7 @@ const Page = () => {
                         modul={activeModul}
                         proWoche={proWoche}
                         onToggleAufwand={() => setProWoche(!proWoche)}
+                        onDeleteModul={() => { }}
                     />
                 ) : null}
             </DragOverlay>

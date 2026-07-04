@@ -13,6 +13,7 @@ type Props = {
     modul: modulInfo;
     proWoche: boolean;
     onToggleAufwand: () => void;
+    onDeleteModul: (modulId: string) => void;
 };
 
 type ModulDetails = {
@@ -20,7 +21,7 @@ type ModulDetails = {
     [key: string]: unknown;
 };
 
-const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
+const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: Props) => {
     const [isOpen, setIsOpen] = useState(false);
     const [details, setDetails] = useState<ModulDetails | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
@@ -193,7 +194,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
                             e.stopPropagation();
                             const result = await loescheModul(handleModule(modul.modul_id));
                             if (result.success) {
-                                window.location.reload();   // TODO: später ohne reload via Callback
+                                onDeleteModul(String(modul.modul_id));   // statt window.location.reload()
                             } else {
                                 setErrorMsg(result.error || "Modul konnte nicht gelöscht werden.");
                             }
