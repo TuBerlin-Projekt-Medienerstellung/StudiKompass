@@ -12,9 +12,10 @@ type Props = {
     onClick: () => void;
     proWoche: boolean;
     onToggleAufwand: () => void;
+    onDeleteModul: (modulId: string) => void;
 };
 
-const SemesterCard = ({ semester, module, onClick, proWoche, onToggleAufwand }: Props) => {
+const SemesterCard = ({ semester, module, onClick, proWoche, onToggleAufwand, onDeleteModul }: Props) => {
 
     const totalECTS = module.reduce((sum, modul) => sum + modul.leistungspunkte, 0);
     const { setNodeRef } = useDroppable({ id: `semester-${semester}` });
@@ -47,6 +48,7 @@ const SemesterCard = ({ semester, module, onClick, proWoche, onToggleAufwand }: 
                             modul={modul}
                             proWoche={proWoche}
                             onToggleAufwand={onToggleAufwand}
+                            onDeleteModul={onDeleteModul}
                         />
                     ))}
                 </div>
