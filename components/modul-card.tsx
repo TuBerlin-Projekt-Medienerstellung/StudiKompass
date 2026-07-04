@@ -1,32 +1,26 @@
 "use client";
 
-import {ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight, CalendarPlus} from 'lucide-react';
-import {ladeDetailedModulAction} from '@/app/protected/modules/actions';
+import { ChevronUp, ChevronDown, Circle, CircleCheckBig, SquareArrowOutUpRight, CalendarPlus } from 'lucide-react';
+import { ladeDetailedModulAction } from '@/app/protected/modules/actions';
 import Link from "next/link";
-import {useState} from 'react';
+import { useState } from 'react';
 import ModulFeedback from "./modul-feedback";
-import {handleModule} from "@/lib/utils";
+import { handleModule } from "@/lib/utils";
+import { moduleZuPlanerHinzufuegen, istModulImPlaner } from '@/app/protected/planner/actions';
 
 
-// Placeholder – später aus Supabase laden
-const SEMESTER_LISTE = [
-    {nummer: 1, name: "1. Semester", typ: "Wintersemester"},
-    {nummer: 2, name: "2. Semester", typ: "Sommersemester"},
-    {nummer: 3, name: "3. Semester", typ: "Wintersemester"},
-    {nummer: 4, name: "4. Semester", typ: "Sommersemester"},
-    {nummer: 5, name: "5. Semester", typ: "Wintersemester"},
-    {nummer: 6, name: "6. Semester", typ: "Sommersemester"},
-];
 
-const ModulCard = (props: modulInfo) => {
+const ModulCard = (props: modulInfo & {
+    semesterListe: { id: string; semesterzahl: number; name: string }[]
+}) => {
 
     const [liked, setLiked] = useState(true);
     const [open, setOpen] = useState(false);
     const [details, setDetails] = useState<Partial<modulInfo> | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
     const [plannerOpen, setPlannerOpen] = useState(false);
-    const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
-
+    const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
+    const [imPlaner, setImPlaner] = useState(false);
 
     async function handleAusklappen() {
         setOpen(!open);
@@ -34,11 +28,11 @@ const ModulCard = (props: modulInfo) => {
             setLoadingDetails(true);
             const data = await ladeDetailedModulAction(handleModule(modul_id));
             if (data) {
-                setDetails({
-                    ...data,
-                    benotet: data.benotet ?? undefined,
-                });
+                setDetails({ ...data, benotet: data.benotet ?? undefined });
             }
+            const schonDrin = await istModulImPlaner(String(modul_id));
+            setImPlaner(schonDrin);
+
             setLoadingDetails(false);
         }
     }
@@ -54,18 +48,45 @@ const ModulCard = (props: modulInfo) => {
         voraussetzungen,
         pruefungsform,
         benotet,
+        semesterListe,
     } = props;
 
-    function handleSemesterWahl(nummer: number) {
-        setSelectedSemester(nummer);
-        // TODO: Supabase insert hier einfügen
+    async function handleSemesterWahl(semesterId: string) {
+        // Sicherheit: ohne Details nicht speichern
+        if (!details) {
+            console.error("Details noch nicht geladen.");
+            return;
+        }
+
+        setSelectedSemester(semesterId);
         setPlannerOpen(false);
+
+        const ergebnis = await moduleZuPlanerHinzufuegen(semesterId, {
+            moses_id: Number(handleModule(modul_id)),
+            name: name,
+            turnus: turnus ?? "",
+            bereichpfad: bereichpfad ?? "",
+            ects: leistungspunkte ?? 0,
+            lernergebnisse: details.lernergebnisse ?? "",
+            pruefungsform: typeof details.pruefungsform === "string" ? details.pruefungsform : "",
+            benotet: details.benotet ?? false,
+            voraussetzungen: details.voraussetzungen ?? "",
+            moseslink: details.link ?? "",
+        });
+
+        if (!ergebnis.success) {
+            console.error("Speichern fehlgeschlagen:", ergebnis.error);
+            // TODO: dem Nutzer eine Fehlermeldung anzeigen
+        } else {
+            console.log("Modul gespeichert:", ergebnis.modulId);
+            // TODO: dem Nutzer Erfolg anzeigen
+        }
     }
 
     const detailBoxen = [
-        {name: "Prüfungsform", value: details?.pruefungsform ?? "—"},
-        {name: "Benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—"},
-        {name: "Voraussetzungen", value: details?.voraussetzungen ?? "—"},
+        { name: "Prüfungsform", value: details?.pruefungsform ?? "—" },
+        { name: "Benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—" },
+        { name: "Voraussetzungen", value: details?.voraussetzungen ?? "—" },
     ];
 
     const isWahlpflicht = bereichpfad.toLowerCase().includes("wahlpflicht");
@@ -79,7 +100,7 @@ const ModulCard = (props: modulInfo) => {
             <header className='w-full flex justify-between items-center'>
                 <div className='flex w-fit gap-2.5'>
                     <button onClick={() => setLiked(!liked)}>
-                        {liked ? <CircleCheckBig className="text-mint-leaf"/> : <Circle/>}
+                        {liked ? <CircleCheckBig className="text-mint-leaf" /> : <Circle />}
                     </button>
                     <div className='flex gap-6 items-center md:flex-row flex-col'>
                         <h1 className='font-bold md:text-2xl text-xl'>{name}</h1>
@@ -93,7 +114,7 @@ const ModulCard = (props: modulInfo) => {
                     </div>
                 </div>
                 <div className="cursor-pointer" onClick={handleAusklappen}>
-                    {open ? <ChevronUp/> : <ChevronDown/>}
+                    {open ? <ChevronUp /> : <ChevronDown />}
                 </div>
             </header>
 
@@ -124,7 +145,7 @@ const ModulCard = (props: modulInfo) => {
                             {/** Hier fetchen für die Details, gerade werden dummy daten von constants gefetchtet **/}
                             {detailBoxen.map((detail, index) => (
                                 <div key={index}
-                                     className='bg-[#E3E6EA] dark:bg-[#16081f] flex border-2 border-border rounded-xl w-full items-center p-4 flex-col'>
+                                    className='bg-[#E3E6EA] dark:bg-[#16081f] flex border-2 border-border rounded-xl w-full items-center p-4 flex-col'>
                                     <span>{detail.name}</span>
                                     <p className='font-bold'>{detail.value}</p>
                                 </div>
@@ -136,19 +157,22 @@ const ModulCard = (props: modulInfo) => {
                             {/* Planer-Button mit Semester-Picker */}
                             <div className='flex-1 flex flex-col gap-2'>
                                 <button
-                                    onClick={() => setPlannerOpen(!plannerOpen)}
-                                    className='w-full bg-foreground text-background px-4 py-2.5 rounded-xl flex items-center justify-between gap-2 transition-colors hover:opacity-90 dark:bg-[#35AE80]'
+                                    onClick={() => !imPlaner && setPlannerOpen(!plannerOpen)}
+                                    disabled={!details || imPlaner}
+                                    className={`w-full bg-foreground text-background px-4 py-2.5 rounded-xl flex items-center justify-between gap-2 transition-colors dark:bg-[#35AE80] ${(!details || imPlaner) ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+                                        }`}
                                 >
                                     <div className='flex items-center gap-2'>
-                                        <CalendarPlus className='w-5 h-5'/>
+                                        <CalendarPlus className='w-5 h-5' />
                                         <span className='font-medium'>
-                    {selectedSemester
-                        ? `${selectedSemester}. Semester gewählt`
-                        : 'Zum Planer hinzufügen'}
-                </span>
+                                            {imPlaner
+                                                ? 'Bereits im Planer'
+                                                : selectedSemester
+                                                    ? `${semesterListe.find(s => s.id === selectedSemester)?.name ?? "Semester"} gewählt`
+                                                    : 'Zum Planer hinzufügen'}
+                                        </span>
                                     </div>
-                                    {plannerOpen ? <ChevronUp className='w-4 h-4'/> :
-                                        <ChevronDown className='w-4 h-4'/>}
+                                    {!imPlaner && (plannerOpen ? <ChevronUp className='w-4 h-4' /> : <ChevronDown className='w-4 h-4' />)}
                                 </button>
 
                                 {/* Semester-Picker Dropdown */}
@@ -160,33 +184,33 @@ const ModulCard = (props: modulInfo) => {
                                             <p className='text-xs font-semibold text-muted-foreground tracking-widest uppercase px-2 pb-1'>
                                                 Semester wählen
                                             </p>
-                                            {SEMESTER_LISTE.map((sem) => {
-                                                const isWinter = sem.typ === "Wintersemester";
-                                                return (
-                                                    <button
-                                                        key={sem.nummer}
-                                                        onClick={() => handleSemesterWahl(sem.nummer)}
-                                                        className={`flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-[#E3E6EA] dark:hover:bg-[#16081f] transition-colors text-left ${selectedSemester === sem.nummer ? 'bg-[#E3E6EA] dark:bg-[#16081f]' : ''}`}
-                                                    >
-                                                        <div className='flex items-center gap-3'>
-                                                            {/*<span*/}
-                                                            {/*    className='w-7 h-7 rounded-full bg-[#E3E6EA] dark:bg-[#16081f] flex items-center justify-center text-sm font-semibold text-foreground'>*/}
-                                                            {/*    {sem.nummer}*/}
-                                                            {/*</span>*/}
-                                                            <span
-                                                                className='font-medium text-foreground'>{sem.name}</span>
-                                                        </div>
-                                                        <span
-                                                            className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
-                                                                isWinter
-                                                                    ? 'text-blue-bell border-blue-bell/30 bg-blue-bell/10'
-                                                                    : 'text-amber-500 border-amber-400/30 bg-amber-50 dark:bg-amber-500/10'
-                                                            }`}>
-                                    {sem.typ}
-                                </span>
-                                                    </button>
-                                                );
-                                            })}
+                                            {semesterListe.length === 0 ? (
+                                                <p className='text-sm text-muted-foreground px-2 py-2'>
+                                                    Noch keine Semester angelegt. Lege zuerst im Planer ein Semester an.
+                                                </p>
+                                            ) : (
+                                                semesterListe.map((sem) => {
+                                                    // TODO: Turnus korrekt aus Studienstart ableiten (aktuell nur ungerade=Winter Annahme)
+                                                    const isWinter = sem.semesterzahl % 2 === 1;
+                                                    return (
+                                                        <button
+                                                            key={sem.id}
+                                                            onClick={() => handleSemesterWahl(sem.id)}
+                                                            className={`flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-[#E3E6EA] dark:hover:bg-[#16081f] transition-colors text-left ${selectedSemester === sem.id ? 'bg-[#E3E6EA] dark:bg-[#16081f]' : ''}`}
+                                                        >
+                                                            <div className='flex items-center gap-3'>
+                                                                <span className='font-medium text-foreground'>{sem.name}</span>
+                                                            </div>
+                                                            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${isWinter
+                                                                ? 'text-blue-bell border-blue-bell/30 bg-blue-bell/10'
+                                                                : 'text-amber-500 border-amber-400/30 bg-amber-50 dark:bg-amber-500/10'
+                                                                }`}>
+                                                                {isWinter ? "Wintersemester" : "Sommersemester"}
+                                                            </span>
+                                                        </button>
+                                                    );
+                                                })
+                                            )}
                                         </div>
                                     </div>
                                 </div>
@@ -201,17 +225,17 @@ const ModulCard = (props: modulInfo) => {
                                     className='shrink-0 bg-flag-red text-white px-4 py-2.5 rounded-xl flex items-center gap-2 whitespace-nowrap'
                                 >
                                     zu Moses
-                                    <SquareArrowOutUpRight className='justify-self-end'/>
+                                    <SquareArrowOutUpRight className='justify-self-end' />
                                 </Link>
                             ) : (
                                 <span
                                     className='bg-gray-300 text-white w-1/6 px-4 py-2 rounded-lg flex items-center justify-center gap-2 opacity-50 cursor-not-allowed'>
                                     zu Moses
-                                    <SquareArrowOutUpRight/>
+                                    <SquareArrowOutUpRight />
                                 </span>
                             )}
                         </div>
-                        <ModulFeedback modulId={modul_id} modulName={name}/>
+                        <ModulFeedback modulId={modul_id} modulName={name} />
                     </div>
                 </div>
             </div>
