@@ -26,6 +26,7 @@ export function UpdateSemesterForm({
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(true);
+    const [turnus, setTurnus] = useState<string>("");
 
     useEffect(() => {
         async function ladeSemester() {
@@ -36,7 +37,7 @@ export function UpdateSemesterForm({
 
                 const { data, error } = await supabase
                     .from("profiles")
-                    .select("current_semester, max_semester")
+                    .select("current_semester, max_semester, current_turnus")
                     .eq("id", user.id)
                     .single();
 
@@ -44,6 +45,7 @@ export function UpdateSemesterForm({
 
                 if (data?.current_semester) setCurrentSemester(String(data.current_semester));
                 if (data?.max_semester) setMaxSemester(String(data.max_semester));
+                if (data?.current_turnus) setTurnus(data.current_turnus);
             } catch (e) {
                 console.error("Fehler beim Laden der Semesterdaten:", e);
             } finally {
@@ -79,6 +81,10 @@ export function UpdateSemesterForm({
         }
         if (max > 20) {
             setError("Das maximale Semester darf nicht größer als 20 sein.");
+            return false;
+        }
+        if (!turnus) {
+            setError("Bitte einen Turnus wählen.");
             return false;
         }
         return true;
@@ -119,6 +125,7 @@ export function UpdateSemesterForm({
                 .update({
                     current_semester: Number(currentSemester),
                     max_semester: max,
+                    current_turnus: turnus,
                 })
                 .eq("id", user.id);
 
@@ -168,6 +175,18 @@ export function UpdateSemesterForm({
                                         value={currentSemester}
                                         onChange={(e) => setCurrentSemester(e.target.value)}
                                     />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="turnus">Turnus des aktuellen Semesters</Label>
+                                    <select
+                                        id="turnus"
+                                        value={turnus}
+                                        onChange={(e) => setTurnus(e.target.value)}
+                                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm outline-none focus:ring-1 focus:ring-ring">
+                                        <option value="">Bitte wählen</option>
+                                        <option value="WiSe">Wintersemester (WiSe)</option>
+                                        <option value="SoSe">Sommersemester (SoSe)</option>
+                                    </select>
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="max_semester">Studiendauer / Maximale Semesteranzahl</Label>
