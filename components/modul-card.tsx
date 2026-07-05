@@ -5,13 +5,15 @@ import { ladeDetailedModulAction } from '@/app/protected/modules/actions';
 import Link from "next/link";
 import { useState } from 'react';
 import ModulFeedback from "./modul-feedback";
-import { handleModule } from "@/lib/utils";
+import { handleModule, berechneTurnus } from "@/lib/utils";
 import { moduleZuPlanerHinzufuegen, findeModulImPlaner } from '@/app/protected/planner/actions';
 
 
 
 const ModulCard = (props: modulInfo & {
-    semesterListe: { id: string; semesterzahl: number; name: string }[]
+    semesterListe: { id: string; semesterzahl: number; name: string }[];
+    currentSemester: number | null;
+    currentTurnus: string | null;
 }) => {
 
     const [liked, setLiked] = useState(true);
@@ -51,6 +53,8 @@ const ModulCard = (props: modulInfo & {
         pruefungsform,
         benotet,
         semesterListe,
+        currentSemester,
+        currentTurnus,
     } = props;
 
     async function handleSemesterWahl(semesterId: string) {
@@ -194,8 +198,8 @@ const ModulCard = (props: modulInfo & {
                                                 </p>
                                             ) : (
                                                 semesterListe.map((sem) => {
-                                                    // TODO: Turnus korrekt aus Studienstart ableiten (aktuell nur ungerade=Winter Annahme)
-                                                    const isWinter = sem.semesterzahl % 2 === 1;
+                                                    const semesterTurnus = berechneTurnus(sem.semesterzahl, currentSemester, currentTurnus);
+                                                    const isWinter = semesterTurnus === "WiSe";
                                                     return (
                                                         <button
                                                             key={sem.id}
@@ -205,12 +209,14 @@ const ModulCard = (props: modulInfo & {
                                                             <div className='flex items-center gap-3'>
                                                                 <span className='font-medium text-foreground'>{sem.name}</span>
                                                             </div>
-                                                            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${isWinter
-                                                                ? 'text-blue-bell border-blue-bell/30 bg-blue-bell/10'
-                                                                : 'text-amber-500 border-amber-400/30 bg-amber-50 dark:bg-amber-500/10'
-                                                                }`}>
-                                                                {isWinter ? "Wintersemester" : "Sommersemester"}
-                                                            </span>
+                                                            {semesterTurnus && (
+                                                                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${isWinter
+                                                                    ? 'text-blue-bell border-blue-bell/30 bg-blue-bell/10'
+                                                                    : 'text-amber-500 border-amber-400/30 bg-amber-50 dark:bg-amber-500/10'
+                                                                    }`}>
+                                                                    {isWinter ? "Wintersemester" : "Sommersemester"}
+                                                                </span>
+                                                            )}
                                                         </button>
                                                     );
                                                 })
