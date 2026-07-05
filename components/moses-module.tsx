@@ -1,6 +1,7 @@
 // components/moses-modulsuche.tsx
 "use client";
 
+
 /**
  * MosesModulsuche Komponente
  *
@@ -16,8 +17,10 @@
  * Details werden erst beim Ausklappen einer Karte gefetcht (TODO).
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getSemesters } from '@/app/protected/planner/actions';
 import ModulCard from '@/components/modul-card';
+import ModulSearch from './modulsearch';
 import { ladeModulBasisAction, ModulBasis } from '@/app/protected/modules/actions';
 
 interface Props {
@@ -41,6 +44,23 @@ export default function MosesModulsuche({ studiengangId }: Props) {
     // Ob Module bereits geladen wurden — verhindert wiederholte Fetches
     const [geladen, setGeladen] = useState(false);
 
+    const [query, setQuery] = useState("");
+
+    // Semester einmal laden — zentral, damit nicht jede Karte einzeln lädt
+    const [semesterListe, setSemesterListe] = useState<{ id: string; semesterzahl: number; name: string }[]>([]);
+
+    useEffect(() => {
+        async function ladeSemester() {
+            try {
+                const data = await getSemesters();
+                setSemesterListe(data ?? []);
+            } catch (e) {
+                console.error("Fehler beim Laden der Semester:", e);
+            }
+        }
+        ladeSemester();
+    }, []);
+
     /**
      * Wird aufgerufen wenn ein Filter-Button geklickt wird.
      * Beim ersten Klick: Server Action aufrufen und alle Module laden.
@@ -57,8 +77,8 @@ export default function MosesModulsuche({ studiengangId }: Props) {
             try {
                 // Server Action aufrufen — läuft serverseitig
                 // kein CORS Problem, API-Key bleibt sicher auf dem Server
-                const module = await ladeModulBasisAction(studiengangId);
-                setModuleList(module);
+                const modulItems = await ladeModulBasisAction(studiengangId);
+                setModuleList(modulItems);
                 setGeladen(true);
             } catch (e) {
                 console.error("Fehler beim Laden der Module:", e);
@@ -77,11 +97,26 @@ export default function MosesModulsuche({ studiengangId }: Props) {
      * "alle": keine Filterung
      */
     const gefilterteModule = moduleList.filter((modul) => {
-        if (filter === "alle") return true;
+
+
         const bereich = modul.bereichPfad[0]?.toLowerCase() ?? "";
-        if (filter === "pflicht") return bereich.includes("pflicht") && !bereich.includes("wahl");
-        if (filter === "wahlpflicht") return bereich.includes("wahlpflicht");
-        return true;
+        const name = modul.name?.toLowerCase() ?? "";
+        const search = query.toLowerCase().trim();
+
+        //filter nach name, optional
+        const searchOk = search === "" || name.includes(search);
+
+        //bereichspfad Filter
+        let filterOk = true;
+
+        if (filter === "pflicht") {
+            filterOk = bereich.includes("pflicht") && !bereich.includes("wahl");
+        } else if (filter === "wahlpflicht") {
+            filterOk = bereich.includes("wahlpflicht");
+        }
+
+
+        return searchOk && filterOk;
     });
 
     const filterButtons: { label: string; value: FilterTyp }[] = [
@@ -100,15 +135,16 @@ export default function MosesModulsuche({ studiengangId }: Props) {
                     <button
                         key={btn.value}
                         onClick={() => handleFilterClick(btn.value)}
-                        className={`px-4 py-2 rounded-2xl border-2 font-medium transition-colors ${
-                            filter === btn.value
+                        className={`px-4 py-2 rounded-2xl border-2 font-medium transition-colors ${filter === btn.value
                                 ? "bg-flag-red text-white border-flag-red"
                                 : "bg-white text-black border-gray-200 hover:border-flag-red"
-                        }`}
+                            }`}
                     >
                         {btn.label}
                     </button>
+
                 ))}
+
                 {/* Anzahl der gefilterten Module — nur sichtbar wenn geladen */}
                 {geladen && (
                     <span className="ml-auto self-center text-sm opacity-60">
@@ -129,6 +165,15 @@ export default function MosesModulsuche({ studiengangId }: Props) {
                 <p className="text-center opacity-50 py-10">
                     Wähle eine Kategorie um Module anzuzeigen.
                 </p>
+            )}
+
+            {/** Suchbar wird angezeigt nachdem ein Filter ausgewählt ist und Module geladen sind */}
+            {geladen && filter !== null && (
+                <ModulSearch
+                    modules={moduleList}
+                    query={query}
+                    onQueryChange={setQuery}
+                />
             )}
 
             {/* Modulliste — nur sichtbar wenn geladen und nicht am laden */}
@@ -152,8 +197,13 @@ export default function MosesModulsuche({ studiengangId }: Props) {
                                 modul_id={modul.id}
                                 name={modul.name}
                                 leistungspunkte={modul.lp}
-                                modulArt={modul.bereichPfad[0] ?? "—"} link={''} 
-                                semester={modul.semester}                             
+                                bereichpfad={modul.bereichPfad[0] ?? "—"} link={''}
+                                turnus={modul.semester}
+                                lernergebnisse=''
+                                pruefungsform=''
+                                benotet
+                                arbeitsaufwand={0}
+                                semesterListe={semesterListe}
                             />
                         ))
                     )}
