@@ -38,7 +38,7 @@ declare global {
         leistungspunkte: number,
         lernergebnisse: string,
         pruefungsform: string,
-        pruefungselemente: string[],
+        pruefungselemente?: string[],
         benotet: boolean,
         voraussetzungen?: string,
         link: string,
