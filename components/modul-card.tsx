@@ -8,20 +8,27 @@ import {
     SquareArrowOutUpRight,
     CalendarPlus,
     BookOpen
-} from 'lucide-react';
-import {ladeDetailedModulAction} from '@/app/protected/modules/actions';
+} from "lucide-react";
+import { ladeDetailedModulAction } from "@/app/protected/modules/actions";
 import Link from "next/link";
-import {useState} from 'react';
+import { useState } from "react";
 import ModulFeedback from "./modul-feedback";
-import {handleModule} from "@/lib/utils";
-import {moduleZuPlanerHinzufuegen, istModulImPlaner} from '@/app/protected/planner/actions';
+import { handleModule } from "@/lib/utils";
+import {
+    moduleZuPlanerHinzufuegen,
+    istModulImPlaner
+} from "@/app/protected/planner/actions";
+
+type ModulDetails = Partial<modulInfo> & {
+    pruefungselemente?: string[];
+};
 
 const ModulCard = (props: modulInfo & {
     semesterListe: { id: string; semesterzahl: number; name: string }[]
 }) => {
     const [liked, setLiked] = useState(true);
     const [open, setOpen] = useState(false);
-    const [details, setDetails] = useState<Partial<modulInfo> | null>(null);
+    const [details, setDetails] = useState<ModulDetails | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
     const [showLernergebnisse, setShowLernergebnisse] = useState(false);
     const [plannerOpen, setPlannerOpen] = useState(false);
@@ -46,6 +53,10 @@ const ModulCard = (props: modulInfo & {
         .replaceAll("Wintersemester", "WiSe")
         .replaceAll("Sommersemester", "SoSe");
 
+    const pruefungselemente = Array.isArray(details?.pruefungselemente)
+        ? details.pruefungselemente
+        : [];
+
     async function handleAusklappen() {
         setOpen(!open);
 
@@ -55,7 +66,13 @@ const ModulCard = (props: modulInfo & {
             const data = await ladeDetailedModulAction(handleModule(modul_id));
 
             if (data) {
-                setDetails({...data, benotet: data.benotet ?? undefined});
+                setDetails({
+                    ...data,
+                    benotet: data.benotet ?? undefined,
+                    pruefungselemente: Array.isArray(data.pruefungselemente)
+                        ? data.pruefungselemente
+                        : [],
+                });
             }
 
             const schonDrin = await istModulImPlaner(handleModule(modul_id));
@@ -99,9 +116,9 @@ const ModulCard = (props: modulInfo & {
     }
 
     const detailBoxen = [
-        {name: "Prüfungsform", value: details?.pruefungsform ?? "—"},
-        {name: "Benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—"},
-        {name: "Voraussetzungen", value: details?.voraussetzungen ?? "—"},
+        { name: "Prüfungsform", value: details?.pruefungsform ?? "—" },
+        { name: "Benotet", value: details?.benotet !== undefined ? (details?.benotet ? "Ja" : "Nein") : "—" },
+        { name: "Voraussetzungen", value: details?.voraussetzungen ?? "—" },
     ];
 
     const isWahlpflicht = (bereichpfad ?? "").toString().toLowerCase().includes("wahlpflicht");
@@ -114,7 +131,7 @@ const ModulCard = (props: modulInfo & {
             <header className="flex w-full items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-1 gap-3">
                     <button onClick={() => setLiked(!liked)} className="mt-1 shrink-0">
-                        {liked ? <CircleCheckBig className="text-mint-leaf"/> : <Circle/>}
+                        {liked ? <CircleCheckBig className="text-mint-leaf" /> : <Circle />}
                     </button>
 
                     <div className="flex min-w-0 flex-1 flex-col gap-2 md:flex-row md:items-center md:gap-6">
@@ -149,7 +166,7 @@ const ModulCard = (props: modulInfo & {
                 </div>
 
                 <div className="shrink-0 cursor-pointer pt-1" onClick={handleAusklappen}>
-                    {open ? <ChevronUp/> : <ChevronDown/>}
+                    {open ? <ChevronUp /> : <ChevronDown />}
                 </div>
             </header>
 
@@ -171,14 +188,14 @@ const ModulCard = (props: modulInfo & {
                                 >
                                     <div className="flex items-center justify-between">
                                         <div className="flex items-center gap-3">
-                                            <BookOpen className="text-flag-red shrink-0" size={20}/>
+                                            <BookOpen className="text-flag-red shrink-0" size={20} />
 
                                             <span className="font-medium">
                                                 {showLernergebnisse ? "Lernergebnisse" : "Lernergebnisse anzeigen"}
                                             </span>
                                         </div>
 
-                                        {showLernergebnisse ? <ChevronUp size={18}/> : <ChevronDown size={18}/>}
+                                        {showLernergebnisse ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
                                     </div>
 
                                     {showLernergebnisse && (
@@ -190,12 +207,12 @@ const ModulCard = (props: modulInfo & {
                             </div>
                         </div>
 
-                        {Array.isArray(details?.pruefungselemente) && details.pruefungselemente.length > 0 && (
+                        {pruefungselemente.length > 0 && (
                             <div>
                                 <h2 className="font-semibold text-lg">Prüfungselemente</h2>
                                 <ul className="list-disc list-inside opacity-80">
-                                    {details.pruefungselemente.map((el, i) => (
-                                        <li key={i}>{String(el)}</li>
+                                    {pruefungselemente.map((element, index) => (
+                                        <li key={index}>{element}</li>
                                     ))}
                                 </ul>
                             </div>
@@ -223,7 +240,7 @@ const ModulCard = (props: modulInfo & {
                                     }`}
                                 >
                                     <div className="flex items-center gap-2">
-                                        <CalendarPlus className="w-5 h-5"/>
+                                        <CalendarPlus className="w-5 h-5" />
                                         <span className="font-medium">
                                             {imPlaner
                                                 ? "Bereits im Planer"
@@ -234,7 +251,7 @@ const ModulCard = (props: modulInfo & {
                                     </div>
 
                                     {!imPlaner && (
-                                        plannerOpen ? <ChevronUp className="w-4 h-4"/> : <ChevronDown className="w-4 h-4"/>
+                                        plannerOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
                                     )}
                                 </button>
 
@@ -289,17 +306,17 @@ const ModulCard = (props: modulInfo & {
                                     className="shrink-0 bg-flag-red text-white px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 whitespace-nowrap"
                                 >
                                     zu Moses
-                                    <SquareArrowOutUpRight className="justify-self-end shrink-0"/>
+                                    <SquareArrowOutUpRight className="justify-self-end shrink-0" />
                                 </Link>
                             ) : (
                                 <span className="shrink-0 bg-gray-300 text-white px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 opacity-50 cursor-not-allowed whitespace-nowrap">
                                     zu Moses
-                                    <SquareArrowOutUpRight className="shrink-0"/>
+                                    <SquareArrowOutUpRight className="shrink-0" />
                                 </span>
                             )}
                         </div>
 
-                        <ModulFeedback modulId={modul_id} modulName={name}/>
+                        <ModulFeedback modulId={modul_id} modulName={name} />
                     </div>
                 </div>
             </div>
