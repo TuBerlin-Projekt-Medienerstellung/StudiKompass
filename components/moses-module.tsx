@@ -202,6 +202,7 @@ export default function MosesModulsuche({studiengangId}: Props) {
                                 turnus={modul.semester}
                                 lernergebnisse={''}
                                 pruefungsform=""
+                                pruefungselemente={[]}
                                 benotet={false}
                                 arbeitsaufwand={0}
                                 semesterListe={semesterListe}
