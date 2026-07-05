@@ -4,7 +4,16 @@ import { X } from 'lucide-react';
 import { useState } from 'react';
 import { createCustomModul } from '@/app/protected/modules/actions';
 import ModulCustomJob from './modul-custom-job';
-import { Button } from './ui/button';
+
+// Placeholder – später aus Supabase laden
+const SEMESTER_LISTE = [
+    {nummer: 1, name: "1. Semester", typ: "Wintersemester"},
+    {nummer: 2, name: "2. Semester", typ: "Sommersemester"},
+    {nummer: 3, name: "3. Semester", typ: "Wintersemester"},
+    {nummer: 4, name: "4. Semester", typ: "Sommersemester"},
+    {nummer: 5, name: "5. Semester", typ: "Wintersemester"},
+    {nummer: 6, name: "6. Semester", typ: "Sommersemester"},
+];
 
 type Props = {
   isOpen: boolean;
@@ -37,29 +46,38 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
     benotet: null,
     arbeitsaufwand: 0,
     }); 
+
+    //Für den Semesterbutton
+    const [selectedSemester, setSelectedSemester] = useState<number | null>(null);
+    const [plannerOpen, setPlannerOpen] = useState(false);
     
     //speichern der Eingaben aus UseState in Supabase
     const handleSubmit = async () => {
-        console.log("CLICK HANDLER RUNNING");
-    try {
-        const modulId = await createCustomModul(
-        formData.modulname,
-        formData.bereichspfad,
-        formData.ects,
-        formData.turnus,
-        formData.beschreibung,
-        formData.pruefungsform,
-        formData.benotet,
-        formData.arbeitsaufwand
-        );
+        try {
+            const modulId = await createCustomModul(
+            formData.modulname,
+            formData.bereichspfad,
+            formData.ects,
+            formData.turnus,
+            formData.beschreibung,
+            formData.pruefungsform,
+            formData.benotet,
+            formData.arbeitsaufwand
+            );
 
-        console.log('Erstellte Modul-ID:', modulId);
-        onClose(); // Modal schließen
+            console.log('Erstellte Modul-ID:', modulId);
+            onClose(); // Modal schließen
     
-    } catch (err) {
-        console.error('Fehler beim Speichern:', err);
+        } catch (err) {
+            console.error('Fehler beim Speichern:', err);
+        }
+        };
+
+    function handleSemesterWahl(nummer: number) {
+        setSelectedSemester(nummer);
+        // TODO: Supabase insert hier einfügen
+        setPlannerOpen(false);
     }
-    };
 
     if (!isOpen) return null;
 
