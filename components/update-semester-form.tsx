@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn, berechneTurnus } from "@/lib/utils";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
@@ -27,6 +27,8 @@ export function UpdateSemesterForm({
     const [isSuccess, setIsSuccess] = useState(false);
     const [isLoadingData, setIsLoadingData] = useState(true);
     const [turnus, setTurnus] = useState<string>("");
+    const [originalCurrent, setOriginalCurrent] = useState<number | null>(null);
+    const [originalTurnus, setOriginalTurnus] = useState<string | null>(null);
 
     useEffect(() => {
         async function ladeSemester() {
@@ -46,6 +48,10 @@ export function UpdateSemesterForm({
                 if (data?.current_semester) setCurrentSemester(String(data.current_semester));
                 if (data?.max_semester) setMaxSemester(String(data.max_semester));
                 if (data?.current_turnus) setTurnus(data.current_turnus);
+
+                // Anker für die Turnus-Automatik merken
+                setOriginalCurrent(data?.current_semester ?? null);
+                setOriginalTurnus(data?.current_turnus ?? null);
             } catch (e) {
                 console.error("Fehler beim Laden der Semesterdaten:", e);
             } finally {
@@ -137,6 +143,9 @@ export function UpdateSemesterForm({
             }
 
             setIsSuccess(true);
+
+            setOriginalCurrent(Number(currentSemester));
+            setOriginalTurnus(turnus);
         } catch (error: unknown) {
             setError(error instanceof Error ? error.message : "Ein Fehler ist aufgetreten.");
         } finally {
@@ -173,7 +182,24 @@ export function UpdateSemesterForm({
                                                 : 20
                                         }
                                         value={currentSemester}
-                                        onChange={(e) => setCurrentSemester(e.target.value)}
+                                        onChange={(e) => {
+                                            const rohWert = e.target.value;
+                                            setCurrentSemester(rohWert);
+
+                                            const neuesCurrent = Number(rohWert);
+
+                                            // Turnus nur mitwandern lassen, wenn die Eingabe gültig ist (Fallbacks)
+                                            if (
+                                                Number.isInteger(neuesCurrent) &&
+                                                neuesCurrent >= 1 &&
+                                                neuesCurrent <= 20 &&
+                                                originalCurrent !== null &&
+                                                originalTurnus !== null
+                                            ) {
+                                                const neuerTurnus = berechneTurnus(neuesCurrent, originalCurrent, originalTurnus);
+                                                if (neuerTurnus) setTurnus(neuerTurnus);
+                                            }
+                                        }}
                                     />
                                 </div>
                                 <div className="grid gap-2">
