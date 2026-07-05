@@ -17,10 +17,11 @@
  * Details werden erst beim Ausklappen einer Karte gefetcht (TODO).
  */
 
-import {useState} from 'react';
+import { useState, useEffect } from 'react';
+import { getSemesters } from '@/app/protected/planner/actions';
 import ModulCard from '@/components/modul-card';
 import ModulSearch from './modulsearch';
-import {ladeModulBasisAction, ModulBasis} from '@/app/protected/modules/actions';
+import { ladeModulBasisAction, ModulBasis } from '@/app/protected/modules/actions';
 
 interface Props {
     // studiengangId wird von page.tsx weitergegeben
@@ -30,7 +31,7 @@ interface Props {
 
 type FilterTyp = "alle" | "pflicht" | "wahlpflicht";
 
-export default function MosesModulsuche({studiengangId}: Props) {
+export default function MosesModulsuche({ studiengangId }: Props) {
     // Aktuell ausgewählter Filter — null = noch kein Button gedrückt
     const [filter, setFilter] = useState<FilterTyp | null>(null);
 
@@ -44,6 +45,21 @@ export default function MosesModulsuche({studiengangId}: Props) {
     const [geladen, setGeladen] = useState(false);
 
     const [query, setQuery] = useState("");
+
+    // Semester einmal laden — zentral, damit nicht jede Karte einzeln lädt
+    const [semesterListe, setSemesterListe] = useState<{ id: string; semesterzahl: number; name: string }[]>([]);
+
+    useEffect(() => {
+        async function ladeSemester() {
+            try {
+                const data = await getSemesters();
+                setSemesterListe(data ?? []);
+            } catch (e) {
+                console.error("Fehler beim Laden der Semester:", e);
+            }
+        }
+        ladeSemester();
+    }, []);
 
     /**
      * Wird aufgerufen wenn ein Filter-Button geklickt wird.
@@ -104,9 +120,9 @@ export default function MosesModulsuche({studiengangId}: Props) {
     });
 
     const filterButtons: { label: string; value: FilterTyp }[] = [
-        {label: "Alle Module", value: "alle"},
-        {label: "Pflichtmodule", value: "pflicht"},
-        {label: "Wahlpflichtmodule", value: "wahlpflicht"},
+        { label: "Alle Module", value: "alle" },
+        { label: "Pflichtmodule", value: "pflicht" },
+        { label: "Wahlpflichtmodule", value: "wahlpflicht" },
     ];
 
     return (
@@ -119,11 +135,10 @@ export default function MosesModulsuche({studiengangId}: Props) {
                     <button
                         key={btn.value}
                         onClick={() => handleFilterClick(btn.value)}
-                        className={`px-4 py-2 rounded-2xl border-2 font-medium transition-colors ${
-                            filter === btn.value
+                        className={`px-4 py-2 rounded-2xl border-2 font-medium transition-colors ${filter === btn.value
                                 ? "bg-flag-red text-white border-flag-red"
                                 : "bg-white text-black border-gray-200 hover:border-flag-red"
-                        }`}
+                            }`}
                     >
                         {btn.label}
                     </button>
@@ -188,6 +203,7 @@ export default function MosesModulsuche({studiengangId}: Props) {
                                 pruefungsform=''
                                 benotet
                                 arbeitsaufwand={0}
+                                semesterListe={semesterListe}
                             />
                         ))
                     )}
