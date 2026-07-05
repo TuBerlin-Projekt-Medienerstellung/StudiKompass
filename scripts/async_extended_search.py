@@ -487,14 +487,33 @@ def sparql_candidates():
 #dict to json -> supabase bucket
 async def to_json(my_dict, bucket, file_name):
     try: 
-        json_string = json.dumps(my_dict, ensure_ascii= False, indent =4)
+        # dict needs to be flat for fuse.js
+        formatted_list = []
+        for module_id, data in my_dict.items():
+            module_item = {
+                "id": str(module_id),
+                "de_name": data.get("de_name", ""),
+                "en_name": data.get("en_name", ""),
+                "studiengänge": data.get("studiengänge", []),
+                "lehrinhalt": data.get("lehrinhalt", ""),
+                "words": data.get("words", []) 
+            }
+            formatted_list.append(module_item)
+
+        # stringify array
+        json_string = json.dumps(formatted_list, ensure_ascii=False, indent=4)
         json_bytes = json_string.encode("utf-8")
-        supabase : Client= create_client(supabase_url, service_role)
-        supabase.storage.from_(bucket).upload(file_name, json_bytes, file_options={"content-type": "application/json","x-upsert": "true"})
+        supabase: Client = create_client(supabase_url, service_role)
+        await asyncio.to_thread(
+            supabase.storage.from_(bucket).upload,
+            file_name,
+            json_bytes,
+            file_options={"content-type": "application/json", "x-upsert": "true"}
+        )
         await send_status_admin(f"Successfully uploaded {file_name} to Supabase bucket {bucket}")
     except Exception as e:
-        await send_status_admin(f"CRITICAL: Failed to upload to Supabase: {e}")
-    pass
+        await send_status_admin(f"CRITICAL: Failed to upload to Supabase: {e}", "ERROR")
+
 #js needa get the logs for UX and 
 def logs_sb_sync(report_entry):
     try:
@@ -531,9 +550,21 @@ async def send_status_admin(message, level="INFO"):
     await asyncio.to_thread(logs_sb_sync, report_entry)
 
 #For testing the fetch/sorting logic and Threading
-if __name__ == "__main__":
-    print("starting dict fetch test")
-    final_dict, status = asyncio.run(module_manager())
-    print(f"\nProcess Finished with Status: {status}")
-    print(json.dumps(final_dict, indent=4, ensure_ascii=False))
+# if __name__ == "__main__":
+#     print("starting dict fetch test")
+#     final_dict, status = asyncio.run(module_manager())
+#     print(f"\nProcess Finished with Status: {status}")
+#     print(json.dumps(final_dict, indent=4, ensure_ascii=False))
 
+async def main():
+        final_dict, status = await module_manager()
+        print(f"\nProcess Finished with Status: {status}")
+        
+        if final_dict:
+            print("Uploading to Supabase...")
+            await to_json(final_dict, "module-data", "modules_dictionary.json")
+            print("Upload complete.")
+        else:
+            print("Dictionary was empty, skipping upload.")
+
+asyncio.run(main())
