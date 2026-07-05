@@ -4,7 +4,7 @@ import SemesterCard from "@/components/semester-card";
 import SemesterModulCard from "@/components/semester-modul-card";
 import { useState, useEffect } from "react";
 import { Plus, Trash2 } from 'lucide-react';
-import { reduceSemesterTable, deleteSemester, createSemester, updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul, loescheSemesterMitModulen } from './actions';
+import { reduceSemesterTable, deleteSemester, createSemester, updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul, loescheSemesterMitModulen, getProfilTurnus } from './actions';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
@@ -22,6 +22,8 @@ const Page = () => {
     const [semesterList, setSemesterList] = useState<SemesterList>([]);
     const [activeModul, setActiveModul] = useState<modulInfo | null>(null);
     const [proWoche, setProWoche] = useState(false);
+    const [currentSemester, setCurrentSemester] = useState<number | null>(null);
+    const [currentTurnus, setCurrentTurnus] = useState<string | null>(null);
 
     useEffect(() => {
         async function loadSemesters() {
@@ -51,7 +53,15 @@ const Page = () => {
                 }))
             );
         }
+
+        async function loadTurnus() {
+            const { currentSemester, currentTurnus } = await getProfilTurnus();
+            setCurrentSemester(currentSemester);
+            setCurrentTurnus(currentTurnus);
+        }
+
         loadSemesters();
+        loadTurnus();
     }, []);
 
     async function handleAddSemester() {
@@ -194,6 +204,8 @@ const Page = () => {
                             onClick={() => console.log(semester.nummer)}
                             proWoche={proWoche}
                             onToggleAufwand={() => setProWoche(!proWoche)}
+                            currentSemester={currentSemester}
+                            currentTurnus={currentTurnus}
                             onDeleteModul={entferneModulAusState}
                         />
                     ))}

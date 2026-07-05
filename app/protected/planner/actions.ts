@@ -565,3 +565,30 @@ export async function findeModulImPlaner(
 
     return { imPlaner: true, semesterName: semester.name };
 }
+
+// Lädt current_semester und current_turnus aus dem Profil des Nutzers.
+export async function getProfilTurnus(): Promise<{
+    currentSemester: number | null;
+    currentTurnus: string | null;
+}> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { currentSemester: null, currentTurnus: null };
+
+    const { data, error } = await supabase
+        .from("profiles")
+        .select("current_semester, current_turnus")
+        .eq("id", user.id)
+        .maybeSingle();
+
+    if (error || !data) {
+        console.error("Fehler beim Laden des Turnus:", error);
+        return { currentSemester: null, currentTurnus: null };
+    }
+
+    return {
+        currentSemester: data.current_semester ?? null,
+        currentTurnus: data.current_turnus ?? null,
+    };
+}

@@ -5,6 +5,7 @@ import { Plus } from 'lucide-react';
 import Link from "next/link";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { berechneTurnus } from "@/lib/utils";
 
 type Props = {
     semester: number;
@@ -13,12 +14,15 @@ type Props = {
     proWoche: boolean;
     onToggleAufwand: () => void;
     onDeleteModul: (modulId: string) => void;
+    currentSemester: number | null;
+    currentTurnus: string | null;
 };
 
-const SemesterCard = ({ semester, module, onClick, proWoche, onToggleAufwand, onDeleteModul }: Props) => {
+const SemesterCard = ({ semester, module, onClick, proWoche, onToggleAufwand, onDeleteModul, currentSemester, currentTurnus }: Props) => {
 
     const totalECTS = module.reduce((sum, modul) => sum + modul.leistungspunkte, 0);
     const { setNodeRef } = useDroppable({ id: `semester-${semester}` });
+    const turnus = berechneTurnus(semester, currentSemester, currentTurnus);
 
     return (
         <div
@@ -27,7 +31,9 @@ const SemesterCard = ({ semester, module, onClick, proWoche, onToggleAufwand, on
             className="border-2 rounded-2xl p-4 gap-4 flex flex-col cursor-pointer bg-card">
             <header className="flex justify-between">
                 <div>
-                    <h2 className="font-bold text-xl">{semester}. Semester</h2>
+                    <h2 className="font-bold text-xl">
+                        {semester}. Semester{turnus ? ` - ${turnus}` : ''}
+                    </h2>
                     <p className="opacity-70 text-sm">
                         {module.length} {module.length === 1 ? "Modul" : "Module"}
                     </p>
