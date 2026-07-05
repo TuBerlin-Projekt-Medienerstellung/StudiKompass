@@ -18,7 +18,7 @@
  */
 
 import { useState, useEffect } from 'react';
-import { getSemesters } from '@/app/protected/planner/actions';
+import { getSemesters, getProfilTurnus } from '@/app/protected/planner/actions';
 import ModulCard from '@/components/modul-card';
 import ModulSearch from './modulsearch';
 import { ladeModulBasisAction, ModulBasis } from '@/app/protected/modules/actions';
@@ -49,6 +49,10 @@ export default function MosesModulsuche({ studiengangId }: Props) {
     // Semester einmal laden — zentral, damit nicht jede Karte einzeln lädt
     const [semesterListe, setSemesterListe] = useState<{ id: string; semesterzahl: number; name: string }[]>([]);
 
+    const [currentSemester, setCurrentSemester] = useState<number | null>(null);
+
+    const [currentTurnus, setCurrentTurnus] = useState<string | null>(null);
+
     useEffect(() => {
         async function ladeSemester() {
             try {
@@ -58,7 +62,15 @@ export default function MosesModulsuche({ studiengangId }: Props) {
                 console.error("Fehler beim Laden der Semester:", e);
             }
         }
+
+        async function ladeTurnus() {
+            const { currentSemester, currentTurnus } = await getProfilTurnus();
+            setCurrentSemester(currentSemester);
+            setCurrentTurnus(currentTurnus);
+        }
+
         ladeSemester();
+        ladeTurnus();
     }, []);
 
     /**
@@ -136,8 +148,8 @@ export default function MosesModulsuche({ studiengangId }: Props) {
                         key={btn.value}
                         onClick={() => handleFilterClick(btn.value)}
                         className={`px-4 py-2 rounded-2xl border-2 font-medium transition-colors ${filter === btn.value
-                                ? "bg-flag-red text-white border-flag-red"
-                                : "bg-white text-black border-gray-200 hover:border-flag-red"
+                            ? "bg-flag-red text-white border-flag-red"
+                            : "bg-white text-black border-gray-200 hover:border-flag-red"
                             }`}
                     >
                         {btn.label}
@@ -204,6 +216,8 @@ export default function MosesModulsuche({ studiengangId }: Props) {
                                 benotet
                                 arbeitsaufwand={0}
                                 semesterListe={semesterListe}
+                                currentSemester={currentSemester}
+                                currentTurnus={currentTurnus}
                             />
                         ))
                     )}
