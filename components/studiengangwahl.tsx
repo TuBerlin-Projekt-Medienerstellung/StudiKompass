@@ -57,7 +57,7 @@ export default async function Studiengangwahl() {
         { id: "3", name: "Wirtschaftsinformatik" }
         ];
     }{/* Got this: Cannot read properties of undefined (reading 'toString')
-        that's why I added somethings when the fetch returns nothing, which it will, since I dont have a key*/}
+        that's why I added something when the fetch returns nothing, which it will, since I dont have a key*/}
 
     {/* Studiengang choice*/}
     const { data: profile } = await supabase
@@ -70,7 +70,7 @@ export default async function Studiengangwahl() {
     return (
          <StudiengangForm
             degrees={officialDegrees}
-            current={profile?.studiengang ?? ""} 
+            current={profile?.studiengang ?? ""}
                 />
             )
         }
