@@ -328,6 +328,73 @@ export async function ladeDetailedModulAction(modul_id: string) {
     return details;
 }
 
+export async function ladeModulBasisByIdsAction(modulDaten: { id: string; name: string }[]): Promise<ModulBasis[]> {
+    // Iterate through the modulIds array from supabase (fuse.js return)
+    // Fetch the basic data for each ID from the Moses API like with ladeModulBasisAction
+    // Format them into your ModulBasis[] type and return them
+  
+    if (!modulDaten || modulDaten.length === 0) return [];
+
+    const BATCH_SIZE = 10; 
+    const Basic_extended_Module: ModulBasis[] = [];
+
+    for (let i = 0; i < modulDaten.length; i += BATCH_SIZE) {
+        const batch = modulDaten.slice(i, i + BATCH_SIZE);
+        
+        const batchErgebnisse = await Promise.all(
+            batch.map(async ({ id, name }) => {
+                try {
+                    // basically for every id I get for every fuse js match I wanna grab the version_id from ../bolognamodul/${id} 
+                    const modulRaw = await fetchMoses(`/bolognamodul/${id}`);
+                    const versionen = modulRaw?.data?.[0]?.bolognamodulVersionList ?? [];
+                    console.log("Versionen:" ,versionen.length)
+                    let lp = 0;
+                    let semester = "Unbekannt";
+
+                    // 2. Apply your existing reduce logic to find the newest version object
+                    if (versionen.length > 0) {
+                        const neuesteVersion = versionen.reduce(
+                            (max: any, v: any) => v.id > max.id ? v : max
+                        );
+                        
+                        // 3. Fetch version details ONLY for LP and Turnus using the max ID
+                        if (neuesteVersion?.id) {
+                            const versionRaw = await fetchMoses(`/bolognamodulversion/${neuesteVersion.id}`);
+                            const versionDetail = versionRaw?.data?.[0];
+
+                            if (versionDetail) {
+                                const desc_id = versionDetail.bolognamodulBeschreibung?.id;
+                                const description = await fetchMoses(`/bolognamodulbeschreibung/${desc_id}`);
+                                const descriptionDetail = description?.data?.[0];
+                                if (descriptionDetail){
+                                    lp = descriptionDetail.lp ?? 0;
+                                    semester = descriptionDetail.makroturnus?.name ?? "Unbekannt";
+                                }
+
+                            }
+                        }
+                    }
+
+                    return {
+                        id: {type: "moses", value: Number(id)},
+                        name: name,         //already exists in the json, always take german name for now
+                        lp: lp,
+                        bereichPfad: [" "], // doesnt matter for extended search
+                        semester: semester
+                    } as ModulBasis;
+
+                } catch (error) {
+                    console.error(`Fehler beim Abrufen von Modul ${id}:`, error);
+                    return null;
+                }
+            })
+        );
+
+        Basic_extended_Module.push(...batchErgebnisse.filter(Boolean) as ModulBasis[]);
+    }
+
+    return Basic_extended_Module;
+}
 
 //Custom Modul in Supabase speichern:
 //Wird immer in current Semester hinzugefügt
