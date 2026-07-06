@@ -7,11 +7,12 @@ import logging
 from supabase import create_client, Client
 from datetime import datetime, timezone
 import re
-from sentence_transformers import SentenceTransformer
-import concurrent.futures
+from sentence_transformers import SentenceTransformer, util
+from keybert import KeyBERT
+#import concurrent.futures
 
-
-import uuid
+#remove after testing and getting them github actions to run
+import uuid 
 # logging for Docker stdout
 logging.basicConfig(
     level=logging.INFO,
@@ -475,15 +476,87 @@ async def module_manager():
         
         return my_dict, process_status
 
+
+
+
 #what if we use Threadpool for this and for the fetching we use asyncio?
 #start of transformers: chunking->vibe vectors ->vector mean -> compare vector mean to all candidate words in text (unique)
-def find_internal_candidates():
+model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+kw_model = KeyBERT(model=model)
+def find_internal_candidates(my_dict):
     #use model sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
     #https://www.sbert.net/docs/sentence_transformer/pretrained_models.html#multilingual-models
-    pass
+    #model.encode(text), util.cos_sim(v1, v2)
+    #kw_model.extract_keywords(text), keyphrase_ngram_range, use_mmr=True
+    disciplines = sparql_candidates()
+    if not disciplines:
+        logging.warning("No disciplines loaded. Skipping external candidate match.")
+        return
+
+    logging.info(f"Pre-encoding {len(disciplines)} discipline vectors...")
+    # encoding all disciplines in one matrix at once to represent the disciplines as one matrix instead of many smaller vectors
+    discipline_embeddings = model.encode(disciplines, convert_to_tensor=True)
+    for module_id, data in my_dict.items():
+        candidate_list= []
+        text = data.get("lehrinhalt", "")
+        if not text:
+            continue
+        keywords = kw_model.extract_keywords(text, keyphrase_ngram_range=(1, 2), stop_words=None, use_mmr=True, diversity=0.7)
+        candidate_list.extend([kw[0] for kw in keywords])
+        vibe_vector_text = model.encode(text)
+        vibe_vector = (vibe_vector_text + model.encode(data.get("de_name", "")))/2.0 #or mean in np
+        cos_scores = util.cos_sim(vibe_vector, discipline_embeddings)[0]
+        import torch
+        top_results = torch.topk(cos_scores, k=3)
+        external_keywords = []
+        for score, idx in zip(top_results.values, top_results.indices):
+            if score > 0.4: 
+                external_keywords.append(disciplines[int(idx)])
+                
+        #abt 6 words per module
+        combined_words = list(set(candidate_list[:3] + external_keywords))
+        
+        # Save it perfectly into your module data structure
+        data["words"] = combined_words[:6]
+    return my_dict
 #mean vector compared to svg file 
 def sparql_candidates():
+    #https://query.wikidata.org/sparql
+    #https://www.wikidata.org/wiki/Wikidata:SPARQL_tutorial
+    #    query = """
+    # SELECT ?disciplineLabel WHERE {
+    #   ?discipline wdt:P31/wdt:P279* wd:Q11862829.
+    #   SERVICE wikibase:label { bd:serviceParam wikibase:language "de". }
+    # }
+    # """
+    # data = response.json()
+    # candidates = []
+    # for item in data.get("results", {}).get("bindings", []):
+    #     label = item.get("disciplineLabel", {}).get("value")
+    #     if label and not label.startswith("Q"):
+    #         candidates.append(label)
+    #best to have a hardcoded file, since smth could go wrong during fetch process and the expected data shouldn't really change
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(script_dir, "academic_disciplines.json")
+    #in non local testing this wont really matter since in a docker its one folder, but this is more versatile 
+    try:
+        if os.path.exists(file_path):
+            with open(file_path, "r", encoding="utf-8") as f:
+                candidates = json.load(f)
+            logging.info(f"Loaded {len(candidates)} hardcoded candidate fields from local file.")
+            return candidates
+        else:
+            logging.warning("academic_disciplines.json missing! Falling back to empty candidates pool.")
+            return []
+    except Exception as e:
+        logging.error(f"Failed to read local disciplines file: {e}")
+        return []
     pass
+
+
+
+
 #dict to json -> supabase bucket
 async def to_json(my_dict, bucket, file_name):
     try: 
@@ -557,8 +630,9 @@ async def send_status_admin(message, level="INFO"):
 #     print(json.dumps(final_dict, indent=4, ensure_ascii=False))
 
 async def main():
-        final_dict, status = await module_manager()
+        my_dict, status = await module_manager()
         print(f"\nProcess Finished with Status: {status}")
+        final_dict = find_internal_candidates(my_dict)
         
         if final_dict:
             print("Uploading to Supabase...")
