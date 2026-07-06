@@ -117,9 +117,7 @@ const ModulFeedback = ({modulId, modulName}: ModulFeedbackProps) => {
                     <div className="flex flex-col items-start">
                         <span className="font-semibold text-sm">Studierenden-Feedback</span>
                         <span className="text-xs text-gray-500 dark:text-gray-100">
-                            {geladen
-                                ? `${bewertungen.length} Bewertung${bewertungen.length !== 1 ? "en" : ""} ansehen`
-                                : "Bewertungen ansehen"}
+                            {geladen ? `${bewertungen.length} Bewertung${bewertungen.length !== 1 ? "en" : ""} ansehen` : "Bewertungen ansehen"}
                         </span>
                     </div>
                 </div>

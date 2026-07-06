@@ -30,7 +30,7 @@ declare global {
     // }
 
 
-    interface modulInfo {
+        interface modulInfo {
         modul_id: ModuleId, //später zu UUID
         name: string,
         turnus: string,
@@ -38,6 +38,7 @@ declare global {
         leistungspunkte: number,
         lernergebnisse: string,
         pruefungsform: string,
+        pruefungselemente?: string[],
         benotet: boolean,
         voraussetzungen?: string,
         link: string,
@@ -46,7 +47,7 @@ declare global {
         abgeschlossen?: boolean,
         versuche?: number;
         arbeitsaufwand: number,
-    }
+        }
 
     export interface KategorieBewertung {
         dozent: number;
