@@ -98,7 +98,6 @@ const Page = () => {
     }
 
     // Entfernt ein Modul aus dem State (nach dem Löschen aus der DB).
-    // Sucht in allen Semestern und filtert das Modul mit dieser ID raus.
     function entferneModulAusState(modulId: string) {
         setSemesterList((prev) =>
             prev.map((sem) => ({
@@ -107,6 +106,7 @@ const Page = () => {
             }))
         );
     }
+    const getModuleId = (m: modulInfo) => String((m as any)?.modul_id?.value ?? (m as any)?.modul_id);
 
     const findSemesterByModulId = (modulId: string) => {
         return semesterList.find(s => s.modules.some(m => String(m.modul_id) === modulId)
@@ -152,9 +152,8 @@ const Page = () => {
         if (!sourceSemester || !targetSemesterNummer) return;
 
         const newSemesters = [...semesterList];
-        const sourceSemIndex = newSemesters.findIndex(s => s.nummer === sourceSemester.nummer);
-        const targetSemIndex = newSemesters.findIndex(s => s.nummer === targetSemesterNummer);
-
+        const sourceSemIndex = newSemesters.findIndex((s) => s.nummer === sourceSemester.nummer);
+        const targetSemIndex = newSemesters.findIndex((s) => s.nummer === targetSemesterNummer);
 
         // FALL 1: Innerhalb desselben Semesters verschieben (Reihenfolge ändern)
         if (sourceSemester.nummer === targetSemesterNummer) {
@@ -174,7 +173,7 @@ const Page = () => {
             const modulIndex = sourceSem.modules.findIndex(m => String(m.modul_id) === activeModulId);
             const [movedModul] = sourceSem.modules.splice(modulIndex, 1);
 
-            let newIndex = targetSem.modules.findIndex(m => String(m.modul_id) === String(over.id));
+            let newIndex = targetSem.modules.findIndex((m) => getModuleId(m) === String(over.id));
             if (newIndex === -1) newIndex = targetSem.modules.length;
 
             targetSem.modules.splice(newIndex, 0, movedModul);
@@ -189,10 +188,11 @@ const Page = () => {
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}>
-            <section className="flex flex-col gap-4 p-6">
+            <section className="flex flex-col gap-4 p-4 md:p-6">
+                {/* Responsive Header: auf Mobile etwas kleiner */}
                 <div className="flex flex-col gap-2">
-                    <h1 className="font-bold text-4xl">Studienplaner</h1>
-                    <p className="opacity-70">Plane dein Studium semesterweise</p>
+                    <h1 className="text-3xl font-bold md:text-4xl">Studienplaner</h1>
+                    <p className="text-sm opacity-70 md:text-base">Plane dein Studium semesterweise</p>
                 </div>
 
                 <div className="flex flex-col gap-6">
@@ -211,7 +211,8 @@ const Page = () => {
                     ))}
                 </div>
 
-                <div className='flex flex-row gap-4'>
+                {/* Buttons auf Mobile untereinander, auf Desktop nebeneinander */}
+                <div className='flex flex-col gap-4 md:flex-row'>
                     <button onClick={handleAddSemester}
                         disabled={semesterList.length >= 20}
                         className={`border-2 rounded-2xl border-dashed p-4 flex items-center justify-center px-6 py-4 md:w-5/6 w-full ${semesterList.length >= 20
