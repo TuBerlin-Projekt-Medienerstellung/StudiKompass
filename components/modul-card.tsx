@@ -13,18 +13,17 @@ import { ladeDetailedModulAction } from "@/app/protected/modules/actions";
 import Link from "next/link";
 import { useState } from "react";
 import ModulFeedback from "./modul-feedback";
-import { handleModule } from "@/lib/utils";
-import {
-    moduleZuPlanerHinzufuegen,
-    istModulImPlaner
-} from "@/app/protected/planner/actions";
+import { handleModule, berechneTurnus } from "@/lib/utils";
+import { moduleZuPlanerHinzufuegen, findeModulImPlaner } from '@/app/protected/planner/actions';
 
 type ModulDetails = Partial<modulInfo> & {
     pruefungselemente?: string[];
 };
 
 const ModulCard = (props: modulInfo & {
-    semesterListe: { id: string; semesterzahl: number; name: string }[]
+    semesterListe: { id: string; semesterzahl: number; name: string }[];
+    currentSemester: number | null;
+    currentTurnus: string | null;
 }) => {
     const [liked, setLiked] = useState(true);
     const [open, setOpen] = useState(false);
@@ -34,6 +33,8 @@ const ModulCard = (props: modulInfo & {
     const [plannerOpen, setPlannerOpen] = useState(false);
     const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
     const [imPlaner, setImPlaner] = useState(false);
+    const [imPlanerSemester, setImPlanerSemester] = useState<string | null>(null);
+
 
     const {
         modul_id,
@@ -43,6 +44,8 @@ const ModulCard = (props: modulInfo & {
         bereichpfad,
         lernergebnisse,
         semesterListe,
+        currentSemester,
+        currentTurnus,
     } = props;
 
     const angezeigterTurnus = turnus ?? undefined;
@@ -59,12 +62,9 @@ const ModulCard = (props: modulInfo & {
 
     async function handleAusklappen() {
         setOpen(!open);
-
         if (!open && !details) {
             setLoadingDetails(true);
-
             const data = await ladeDetailedModulAction(handleModule(modul_id));
-
             if (data) {
                 setDetails({
                     ...data,
@@ -74,10 +74,9 @@ const ModulCard = (props: modulInfo & {
                         : [],
                 });
             }
-
-            const schonDrin = await istModulImPlaner(handleModule(modul_id));
-            setImPlaner(schonDrin);
-
+            const ergebnis = await findeModulImPlaner(String(modul_id));
+            setImPlaner(ergebnis.imPlaner);
+            setImPlanerSemester(ergebnis.semesterName);
             setLoadingDetails(false);
         }
     }
@@ -112,6 +111,8 @@ const ModulCard = (props: modulInfo & {
         } else {
             console.log("Modul gespeichert:", ergebnis.modulId);
             setImPlaner(true);
+            const gewaehltesSemester = semesterListe.find(s => s.id === semesterId);
+            setImPlanerSemester(gewaehltesSemester?.name ?? null);
         }
     }
 
@@ -235,15 +236,14 @@ const ModulCard = (props: modulInfo & {
                                 <button
                                     onClick={() => !imPlaner && setPlannerOpen(!plannerOpen)}
                                     disabled={!details || imPlaner}
-                                    className={`w-full bg-foreground text-background px-4 py-2.5 rounded-xl flex items-center justify-between gap-2 transition-colors dark:bg-[#35AE80] ${
-                                        (!details || imPlaner) ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"
-                                    }`}
+                                    className={`w-full bg-foreground text-background px-4 py-2.5 rounded-xl flex items-center justify-between gap-2 transition-colors dark:bg-[#35AE80] ${(!details || imPlaner) ? "opacity-50 cursor-not-allowed" : "hover:opacity-90"
+                                        }`}
                                 >
                                     <div className="flex items-center gap-2">
                                         <CalendarPlus className="w-5 h-5" />
                                         <span className="font-medium">
                                             {imPlaner
-                                                ? "Bereits im Planer"
+                                                ? `Bereits im Planer${imPlanerSemester ? ` - ${imPlanerSemester}` : ''}`
                                                 : selectedSemester
                                                     ? `${semesterListe.find(s => s.id === selectedSemester)?.name ?? "Semester"} gewählt`
                                                     : "Zum Planer hinzufügen"}
@@ -268,59 +268,59 @@ const ModulCard = (props: modulInfo & {
                                                 </p>
                                             ) : (
                                                 semesterListe.map((sem) => {
-                                                    const isWinter = sem.semesterzahl % 2 === 1;
-
+                                                    const semesterTurnus = berechneTurnus(sem.semesterzahl, currentSemester, currentTurnus);
+                                                    const isWinter = semesterTurnus === "WiSe";
                                                     return (
                                                         <button
                                                             key={sem.id}
                                                             onClick={() => handleSemesterWahl(sem.id)}
-                                                            className={`flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-[#E3E6EA] dark:hover:bg-[#16081f] transition-colors text-left ${
-                                                                selectedSemester === sem.id ? "bg-[#E3E6EA] dark:bg-[#16081f]" : ""
-                                                            }`}
+                                                            className={`flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-[#E3E6EA] dark:hover:bg-[#16081f] transition-colors text-left ${selectedSemester === sem.id ? "bg-[#E3E6EA] dark:bg-[#16081f]" : ""
+                                                                }`}
                                                         >
                                                             <div className="flex items-center gap-3">
                                                                 <span className="font-medium text-foreground">{sem.name}</span>
                                                             </div>
-
-                                                            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${
-                                                                isWinter
-                                                                    ? "text-blue-bell border-blue-bell/30 bg-blue-bell/10"
-                                                                    : "text-amber-500 border-amber-400/30 bg-amber-50 dark:bg-amber-500/10"
-                                                            }`}>
-                                                                {isWinter ? "Wintersemester" : "Sommersemester"}
-                                                            </span>
-                                                        </button>
+                                                            {semesterTurnus && (
+                                                                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${isWinter
+                                                                    ? 'text-blue-bell border-blue-bell/30 bg-blue-bell/10'
+                                                                    : 'text-amber-500 border-amber-400/30 bg-amber-50 dark:bg-amber-500/10'
+                                                                    }`}>
+                                                                    {isWinter ? "Wintersemester" : "Sommersemester"}
+                                                                </span>
+                                                            )}
+                                                        </button >
                                                     );
                                                 })
                                             )}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                                        </div >
+                                    </div >
+                                </div >
+                            </div >
 
-                            {details?.link ? (
-                                <Link
-                                    href={details.link}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="shrink-0 bg-flag-red text-white px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 whitespace-nowrap"
-                                >
-                                    zu Moses
-                                    <SquareArrowOutUpRight className="justify-self-end shrink-0" />
-                                </Link>
-                            ) : (
-                                <span className="shrink-0 bg-gray-300 text-white px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 opacity-50 cursor-not-allowed whitespace-nowrap">
-                                    zu Moses
-                                    <SquareArrowOutUpRight className="shrink-0" />
-                                </span>
-                            )}
-                        </div>
+                            {
+                                details?.link ? (
+                                    <Link
+                                        href={details.link}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="shrink-0 bg-flag-red text-white px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 whitespace-nowrap"
+                                    >
+                                        zu Moses
+                                        <SquareArrowOutUpRight className="justify-self-end shrink-0" />
+                                    </Link>
+                                ) : (
+                                    <span className="shrink-0 bg-gray-300 text-white px-4 py-2.5 rounded-xl flex items-center justify-center gap-2 opacity-50 cursor-not-allowed whitespace-nowrap">
+                                        zu Moses
+                                        <SquareArrowOutUpRight className="shrink-0" />
+                                    </span>
+                                )}
+                        </div >
 
                         <ModulFeedback modulId={modul_id} modulName={name} />
-                    </div>
-                </div>
-            </div>
-        </div>
+                    </div >
+                </div >
+            </div >
+        </div >
     );
 };
 

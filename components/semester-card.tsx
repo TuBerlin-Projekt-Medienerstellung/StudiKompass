@@ -4,11 +4,8 @@ import SemesterModulCard from "@/components/semester-modul-card";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useDroppable } from "@dnd-kit/core";
-import {
-    SortableContext,
-    verticalListSortingStrategy,
-} from "@dnd-kit/sortable";
-import { handleModule } from "@/lib/utils";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
+import { berechneTurnus, handleModule } from "@/lib/utils";
 
 type Props = {
     semester: number;
@@ -16,23 +13,15 @@ type Props = {
     onClick: () => void;
     proWoche: boolean;
     onToggleAufwand: () => void;
+    onDeleteModul: (modulId: string) => void;
+    currentSemester: number | null;
+    currentTurnus: string | null;
 };
 
-const SemesterCard = ({
-    semester,
-    module,
-    onClick,
-    proWoche,
-    onToggleAufwand,
-}: Props) => {
-    const totalECTS = module.reduce(
-        (sum, modul) => sum + modul.leistungspunkte,
-        0
-    );
-
-    const { setNodeRef } = useDroppable({
-        id: `semester-${semester}`,
-    });
+const SemesterCard = ({ semester, module, onClick, proWoche, onToggleAufwand, onDeleteModul, currentSemester, currentTurnus }: Props) => {
+    const totalECTS = module.reduce((sum, modul) => sum + modul.leistungspunkte, 0);
+    const { setNodeRef } = useDroppable({ id: `semester-${semester}` });
+    const turnus = berechneTurnus(semester, currentSemester, currentTurnus);
 
     return (
         <div
@@ -43,13 +32,13 @@ const SemesterCard = ({
             <header className="flex justify-between">
                 <div>
                     <h2 className="font-bold text-xl">
-                        {semester}. Semester
-                    </h2>
+                        {semester}. Semester{turnus ? ` - ${turnus}` : ''}
+                    </h2 >
                     <p className="opacity-70 text-sm">
                         {module.length}{" "}
                         {module.length === 1 ? "Modul" : "Module"}
                     </p>
-                </div>
+                </div >
 
                 <div className="text-right">
                     <h2 className="font-bold text-xl text-oxblood">
@@ -57,7 +46,7 @@ const SemesterCard = ({
                     </h2>
                     <p>ECTS</p>
                 </div>
-            </header>
+            </header >
 
             <SortableContext
                 items={module.map((modul) => handleModule(modul.modul_id))}
@@ -70,6 +59,7 @@ const SemesterCard = ({
                             modul={modul}
                             proWoche={proWoche}
                             onToggleAufwand={onToggleAufwand}
+                            onDeleteModul={onDeleteModul}
                         />
                     ))}
                 </div>
@@ -83,7 +73,7 @@ const SemesterCard = ({
                 <Plus />
                 <span>Modul hinzufügen</span>
             </Link>
-        </div>
+        </div >
     );
 };
 
