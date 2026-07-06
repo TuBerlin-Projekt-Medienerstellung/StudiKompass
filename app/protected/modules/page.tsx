@@ -2,7 +2,7 @@
 import MosesModulsuche from '@/components/moses-module'; // (Passe den Pfad an, falls die Datei anders heißt)
 import CustomModulButton from '@/components/modul-custom-button';
 import { getUserStudiengangId } from '@/app/protected/modules/actions';
-
+import ModulsucheWrapper from '@/components/modulsuche-wrapper';
 // 2. Mach die Seite "async", damit wir auf die Datenbank warten können
 export default async function ModulesPage() {
     
@@ -25,7 +25,8 @@ export default async function ModulesPage() {
                   Wenn nicht, zeige eine nette Fehlermeldung.
                 */}
                 {studiengangId ? (
-                    <MosesModulsuche studiengangId={studiengangId} />
+                    <ModulsucheWrapper studiengangId={studiengangId} />
+                    //<MosesModulsuche studiengangId={studiengangId} />
                 ) : (
                     <div className="p-10 text-center border-2 border-dashed rounded-2xl border-gray-300">
                         <p className="opacity-60">
