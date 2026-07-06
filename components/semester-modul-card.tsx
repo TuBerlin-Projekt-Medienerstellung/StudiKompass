@@ -13,6 +13,7 @@ type Props = {
     modul: modulInfo;
     proWoche: boolean;
     onToggleAufwand: () => void;
+    onDeleteModul: (modulId: string) => void;
 };
 
 type ModulDetails = {
@@ -20,7 +21,7 @@ type ModulDetails = {
     [key: string]: unknown;
 };
 
-const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
+const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: Props) => {
     const [isOpen, setIsOpen] = useState(false);
     const [details, setDetails] = useState<ModulDetails | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
@@ -38,7 +39,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
         transform,
         transition,
         isDragging
-        } = useSortable({ id: handleModule(modul.modul_id) });
+    } = useSortable({ id: handleModule(modul.modul_id) });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -208,7 +209,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
                                 e.stopPropagation();
                                 const result = await loescheModul(handleModule(modul.modul_id));
                                 if (result.success) {
-                                    window.location.reload();
+                                    onDeleteModul(String(modul.modul_id));
                                 } else {
                                     setErrorMsg(result.error || "Modul konnte nicht gelöscht werden.");
                                 }
@@ -220,7 +221,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
                 </div>
 
 
-                                {/* Ausgeklappte Karte - Details */}
+                {/* Ausgeklappte Karte - Details */}
                 <div className={`grid transition-all duration-500 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100 mt-4 pt-4 border-t' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
                     }`}>
                     <div className="overflow-hidden">

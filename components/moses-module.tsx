@@ -16,13 +16,12 @@
  * Details werden erst beim Ausklappen einer Karte gefetcht (TODO).
  */
 
-import {useEffect, useState} from 'react';
-import {handleModule} from '@/lib/utils';
-import {getSemesters} from '@/app/protected/planner/actions';
-
+import { useEffect, useState } from 'react';
+import { handleModule } from '@/lib/utils';
+import { getSemesters, getProfilTurnus } from '@/app/protected/planner/actions';
 import ModulCard from '@/components/modul-card';
 import ModulSearch from './modulsearch';
-import {ladeModulBasisAction, ModulBasis} from '@/app/protected/modules/actions';
+import { ladeModulBasisAction, ModulBasis } from '@/app/protected/modules/actions';
 
 interface Props {
     // studiengangId wird von page.tsx weitergegeben
@@ -32,7 +31,7 @@ interface Props {
 
 type FilterTyp = "alle" | "pflicht" | "wahlpflicht";
 
-export default function MosesModulsuche({studiengangId}: Props) {
+export default function MosesModulsuche({ studiengangId }: Props) {
     // Aktuell ausgewählter Filter — null = noch kein Button gedrückt
     const [filter, setFilter] = useState<FilterTyp | null>(null);
 
@@ -50,6 +49,10 @@ export default function MosesModulsuche({studiengangId}: Props) {
     // Semester einmal laden — zentral, damit nicht jede Karte einzeln lädt
     const [semesterListe, setSemesterListe] = useState<{ id: string; semesterzahl: number; name: string }[]>([]);
 
+    const [currentSemester, setCurrentSemester] = useState<number | null>(null);
+
+    const [currentTurnus, setCurrentTurnus] = useState<string | null>(null);
+
     useEffect(() => {
         async function ladeSemester() {
             try {
@@ -60,7 +63,13 @@ export default function MosesModulsuche({studiengangId}: Props) {
             }
         }
 
+        async function ladeTurnus() {
+            const { currentSemester, currentTurnus } = await getProfilTurnus();
+            setCurrentSemester(currentSemester);
+            setCurrentTurnus(currentTurnus);
+        }
         ladeSemester();
+        ladeTurnus();
     }, []);
 
     /**
@@ -119,9 +128,9 @@ export default function MosesModulsuche({studiengangId}: Props) {
     });
 
     const filterButtons: { label: string; shortLabel: string; value: FilterTyp }[] = [
-        {label: "Alle Module", shortLabel: "Alle", value: "alle"},
-        {label: "Pflichtmodule", shortLabel: "Pflicht", value: "pflicht"},
-        {label: "Wahlpflichtmodule", shortLabel: "Wahlpfl.", value: "wahlpflicht"},
+        { label: "Alle Module", shortLabel: "Alle", value: "alle" },
+        { label: "Pflichtmodule", shortLabel: "Pflicht", value: "pflicht" },
+        { label: "Wahlpflichtmodule", shortLabel: "Wahlpfl.", value: "wahlpflicht" },
     ];
 
     return (
@@ -134,11 +143,10 @@ export default function MosesModulsuche({studiengangId}: Props) {
                     <button
                         key={btn.value}
                         onClick={() => handleFilterClick(btn.value)}
-                        className={`min-w-0 rounded-2xl border-2 px-2 py-2 text-xs font-medium transition-colors sm:px-4 sm:text-sm lg:text-base ${
-                            filter === btn.value
+                        className={`min-w-0 rounded-2xl border-2 px-2 py-2 text-xs font-medium transition-colors sm:px-4 sm:text-sm lg:text-base ${filter === btn.value
                                 ? "bg-flag-red text-white border-flag-red"
                                 : "bg-white dark:bg-card text-black dark:text-white border-gray-200 hover:border-flag-red"
-                        }`}
+                            }`}
                     >
                         <span className="sm:hidden">{btn.shortLabel}</span>
                         <span className="hidden sm:inline">{btn.label}</span>
@@ -206,6 +214,8 @@ export default function MosesModulsuche({studiengangId}: Props) {
                                 benotet={false}
                                 arbeitsaufwand={0}
                                 semesterListe={semesterListe}
+                                currentSemester={currentSemester}
+                                currentTurnus={currentTurnus}
                             />
                         ))
                     )}
