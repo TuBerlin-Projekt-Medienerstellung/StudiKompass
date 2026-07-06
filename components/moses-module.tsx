@@ -1,7 +1,6 @@
 // components/moses-modulsuche.tsx
 "use client";
 
-
 /**
  * MosesModulsuche Komponente
  *
@@ -17,7 +16,8 @@
  * Details werden erst beim Ausklappen einer Karte gefetcht (TODO).
  */
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { handleModule } from '@/lib/utils';
 import { getSemesters, getProfilTurnus } from '@/app/protected/planner/actions';
 import ModulCard from '@/components/modul-card';
 import ModulSearch from './modulsearch';
@@ -68,7 +68,6 @@ export default function MosesModulsuche({ studiengangId }: Props) {
             setCurrentSemester(currentSemester);
             setCurrentTurnus(currentTurnus);
         }
-
         ladeSemester();
         ladeTurnus();
     }, []);
@@ -109,8 +108,6 @@ export default function MosesModulsuche({ studiengangId }: Props) {
      * "alle": keine Filterung
      */
     const gefilterteModule = moduleList.filter((modul) => {
-
-
         const bereich = modul.bereichPfad[0]?.toLowerCase() ?? "";
         const name = modul.name?.toLowerCase() ?? "";
         const search = query.toLowerCase().trim();
@@ -127,43 +124,42 @@ export default function MosesModulsuche({ studiengangId }: Props) {
             filterOk = bereich.includes("wahlpflicht");
         }
 
-
         return searchOk && filterOk;
     });
 
-    const filterButtons: { label: string; value: FilterTyp }[] = [
-        { label: "Alle Module", value: "alle" },
-        { label: "Pflichtmodule", value: "pflicht" },
-        { label: "Wahlpflichtmodule", value: "wahlpflicht" },
+    const filterButtons: { label: string; shortLabel: string; value: FilterTyp }[] = [
+        { label: "Alle Module", shortLabel: "Alle", value: "alle" },
+        { label: "Pflichtmodule", shortLabel: "Pflicht", value: "pflicht" },
+        { label: "Wahlpflichtmodule", shortLabel: "Wahlpfl.", value: "wahlpflicht" },
     ];
 
     return (
-        <div className="flex flex-col gap-4">
+        <div className="flex w-full min-w-0 flex-col gap-4 overflow-hidden">
             {/* Filter-Buttons
                 Erster Klick → löst Server Action aus
                 Weitere Klicks → nur lokaler Filter */}
-            <div className="flex gap-2">
+            <div className="grid w-full grid-cols-3 gap-2">
                 {filterButtons.map((btn) => (
                     <button
                         key={btn.value}
                         onClick={() => handleFilterClick(btn.value)}
-                        className={`px-4 py-2 rounded-2xl border-2 font-medium transition-colors ${filter === btn.value
-                            ? "bg-flag-red text-white border-flag-red"
-                            : "bg-white text-black border-gray-200 hover:border-flag-red"
+                        className={`min-w-0 rounded-2xl border-2 px-2 py-2 text-xs font-medium transition-colors sm:px-4 sm:text-sm lg:text-base ${filter === btn.value
+                                ? "bg-flag-red text-white border-flag-red"
+                                : "bg-white dark:bg-card text-black dark:text-white border-gray-200 hover:border-flag-red"
                             }`}
                     >
-                        {btn.label}
+                        <span className="sm:hidden">{btn.shortLabel}</span>
+                        <span className="hidden sm:inline">{btn.label}</span>
                     </button>
-
                 ))}
-
-                {/* Anzahl der gefilterten Module — nur sichtbar wenn geladen */}
-                {geladen && (
-                    <span className="ml-auto self-center text-sm opacity-60">
-                        {gefilterteModule.length} Module
-                    </span>
-                )}
             </div>
+
+            {/* Anzahl der gefilterten Module — nur sichtbar wenn geladen */}
+            {geladen && (
+                <p className="text-sm opacity-60">
+                    {gefilterteModule.length} Module
+                </p>
+            )}
 
             {/* Ladezustand — sichtbar während Server Action läuft */}
             {laden && (
@@ -190,7 +186,7 @@ export default function MosesModulsuche({ studiengangId }: Props) {
 
             {/* Modulliste — nur sichtbar wenn geladen und nicht am laden */}
             {!laden && geladen && (
-                <div className="w-full flex flex-col gap-4">
+                <div className="w-full min-w-0 flex flex-col gap-4">
                     {gefilterteModule.length === 0 ? (
                         <p className="text-center opacity-50 py-10">
                             Keine Module gefunden.
@@ -205,15 +201,17 @@ export default function MosesModulsuche({ studiengangId }: Props) {
                              * TODO: Detail-Fetch implementieren
                              */
                             <ModulCard
-                                key={`${modul.id}-${index}`}
+                                key={`${handleModule(modul.id)}-${index}`}
                                 modul_id={modul.id}
                                 name={modul.name}
                                 leistungspunkte={modul.lp}
-                                bereichpfad={modul.bereichPfad[0] ?? "—"} link={''}
+                                bereichpfad={modul.bereichPfad[0] ?? "—"}
+                                link={''}
                                 turnus={modul.semester}
-                                lernergebnisse=''
-                                pruefungsform=''
-                                benotet
+                                lernergebnisse={''}
+                                pruefungsform=""
+                                pruefungselemente={[]}
+                                benotet={false}
                                 arbeitsaufwand={0}
                                 semesterListe={semesterListe}
                                 currentSemester={currentSemester}
