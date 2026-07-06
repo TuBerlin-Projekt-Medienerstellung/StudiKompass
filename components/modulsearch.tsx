@@ -1,5 +1,6 @@
-"use client" ;
-import { useState } from "react"
+"use client";
+import { useState } from "react";
+import { handleModule } from "@/lib/utils";
 import { ModulBasis } from '@/app/protected/modules/actions';
 
 interface Props {
@@ -47,11 +48,11 @@ export default function ModulSearch({modules, query, onQueryChange}:Props){
                             <ul className="absolute z-10 w-full mt-1 max-h-60 overflow-y-auto bg-white dark:bg-zinc-800 border border-zinc-700 rounded-lg">
                                 {filtered.map((m, index) => {
                                     const displayName = m.name;
-                                        
-                                            
+                                    const idStr = handleModule(m.id);
+
                                     return (
                                         <li
-                                            key={m?.id?.toString() || index}
+                                            key={idStr || index}
                                             onClick={() => {
                                                 onQueryChange(m.name);   // Input zeigt den Namen
                                                 setSelected({id: String(m.id), name: displayName}) // merkt sich die Auswahl für handleSave
@@ -60,7 +61,7 @@ export default function ModulSearch({modules, query, onQueryChange}:Props){
                                         >
                                             {displayName}
                                         </li>
-                                    )
+                                    );
                                 })}
                             </ul>
                         )}

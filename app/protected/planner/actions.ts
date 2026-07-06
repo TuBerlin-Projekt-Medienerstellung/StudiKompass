@@ -62,7 +62,7 @@ export async function createSemester() {
 //erstellt neue Zeile in Tabelle Semester
 export async function updateSemesterTable(semesterzahl: number) {
     const supabase = await createClient();
-
+    const semester_id = crypto.randomUUID();
 
     const {
         data: { user },
@@ -73,6 +73,7 @@ export async function updateSemesterTable(semesterzahl: number) {
     const { data, error } = await supabase
         .from("semester")
         .insert({
+            id: semester_id,
             name: semesterzahl + ". Semester",
             semesterzahl: semesterzahl,
             user_id: user.id,
@@ -145,7 +146,6 @@ export async function getTries(modulId: string) {
         .eq("user_id", user.id)
         .eq("id", modulId)
         .maybeSingle();
-
     if (error) {
         console.error("Fehler beim Abrufen der Versuche:", error);
         return 0;
@@ -205,11 +205,11 @@ export async function saveGrade(modulId: string, note: number, gewichtung: boole
         .from("module")
         .update({
             note: note,
-            gewichtung: gewichtung ? 1 : 0
+            gewichtung: gewichtung ? 1 : 0,
         })
         .eq("user_id", user.id)
         .eq("id", modulId)
-        .select()
+        .select();
 
     if (error) {
         console.error("Datenbank-Fehler beim Update der Note:", error);
@@ -236,7 +236,7 @@ export async function deleteGrade(modulId: string) {
         })
         .eq("user_id", user.id)
         .eq("id", modulId)
-        .select()
+        .select();
 
     if (error) {
         console.error("Datenbank-Fehler beim Update der Note:", error);
