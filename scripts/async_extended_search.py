@@ -519,7 +519,6 @@ def find_internal_candidates(my_dict):
         
         # Save it perfectly into your module data structure
         data["words"] = combined_words[:6]
-    await send_status_admin(f"Successfully updated dictionary with transformers", "SUCCESS")
     return my_dict
 #mean vector compared to svg file 
 def sparql_candidates():
@@ -637,10 +636,12 @@ async def main():
         final_dict = find_internal_candidates(my_dict)
         
         if final_dict:
-            print("Uploading to Supabase...")
+            await send_status_admin(f"Successfully updated dictionary with transformers", "SUCCESS")
+            await send_status_admin(f"Uploading to Supabase...", "PROCESSING")
             await to_json(final_dict, "module-data", "modules_dictionary.json")
-            print("Upload complete.")
+            await send_status_admin(f"Upload complete.", "SUCCESS")
         else:
-            print("Dictionary was empty, skipping upload.")
+            #print("Dictionary was empty, skipping upload.")
+            await send_status_admin(f"Dictionary was empty, skipping upload.", "ERROR")
 
 asyncio.run(main())
