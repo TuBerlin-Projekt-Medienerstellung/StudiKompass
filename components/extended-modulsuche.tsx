@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import Fuse from 'fuse.js';
 import { ladeModulBasisByIdsAction, ModulBasis } from '@/app/protected/modules/actions';
 import ModulCard from '@/components/modul-card';
-import { getSemesters } from '@/app/protected/planner/actions';
+import { getSemesters, getProfilTurnus } from '@/app/protected/planner/actions';
 
 interface DictionaryItem {
   id: string;
@@ -22,7 +22,8 @@ export default function ExtendedModulsuche() {
     
     const [displayModules, setDisplayModules] = useState<ModulBasis[]>([]);
     const [isFetchingDetails, setIsFetchingDetails] = useState(false);
-    
+    const [currentSemester, setCurrentSemester] = useState<number | null>(null);
+    const [currentTurnus, setCurrentTurnus] = useState<string | null>(null);
     const [semesterListe, setSemesterListe] = useState<{ id: string; semesterzahl: number; name: string }[]>([]);
 
     // Load semesters and python dict from supabase on mount
@@ -34,6 +35,13 @@ export default function ExtendedModulsuche() {
                 setSemesterListe(semesters ?? []);
             } catch (e) {
                 console.error(e);
+            }
+            try {
+                const { currentSemester, currentTurnus } = await getProfilTurnus();
+                setCurrentSemester(currentSemester);
+                setCurrentTurnus(currentTurnus);
+            } catch (e) {
+                console.error("Fehler beim Laden des Turnus:", e);
             }
 
             // Load Supabase json
@@ -141,6 +149,8 @@ export default function ExtendedModulsuche() {
                         benotet={false}
                         arbeitsaufwand={0}
                         semesterListe={semesterListe}
+                        currentSemester={currentSemester}
+                        currentTurnus={currentTurnus}
                     />
                 ))}
                 {displayModules.length === 0 && !isFetchingDetails && query && (
