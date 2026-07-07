@@ -32,9 +32,4 @@ export default async function ModulesPage() {
       </div>
     </section>
   );
-<<<<<<< HEAD
 }
-=======
-}
-//modify
->>>>>>> f5c9d3edb044a491372dc86e03505cd8d4dbfd0d

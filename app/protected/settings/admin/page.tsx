@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import AccessDenied from "@/components/access_denied";
-import { triggerBackupScript } from "app/protected/settings/admin/actions.tsx";
+import { triggerBackupScript } from "./actions";
 
 interface LogEntry {
   id: string;
@@ -36,7 +36,7 @@ export default function AdminPage() {
   }, [router]);
 
   const fetchLogs = useCallback(async () => {
-    const supabase = createClient();
+    const supabase = await createClient();
     const { data } = await supabase
       .from("logs")
       .select("*")
