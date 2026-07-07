@@ -1,41 +1,35 @@
-// 1. Importiere deine neue Moses-Suche und die Action!
-import MosesModulsuche from '@/components/moses-module'; // (Passe den Pfad an, falls die Datei anders heißt)
-import CustomModulButton from '@/components/modul-custom-button';
-import { getUserStudiengangId } from '@/app/protected/modules/actions';
-import ModulsucheWrapper from '@/components/modulsuche-wrapper';
-// 2. Mach die Seite "async", damit wir auf die Datenbank warten können
+import CustomModulButton from "@/components/modul-custom-button";
+import { getUserStudiengangId } from "@/app/protected/modules/actions";
+import ModulsucheWrapper from "@/components/modulsuche-wrapper";
+
 export default async function ModulesPage() {
-    
-    // 3. Hol die Studiengang-ID des eingeloggten Users
-    const studiengangId = await getUserStudiengangId();
-    return (
-        <section className="flex flex-col gap-3">
-            <header className="flex md:justify-between md:flex-row flex-col items-center md:items-start gap-6">
-                <div>
-                    <h1 className="text-2xl font-bold">Modulkatalog</h1>
-                    <p>Durchsuche und Verwalte verfügbare Module</p>
-                </div>
-                <CustomModulButton></CustomModulButton>
-            </header>
+  const studiengangId = await getUserStudiengangId();
 
-            
+  return (
+    <section className="flex flex-col gap-6 px-4 py-4 sm:px-6 lg:px-8">
+      <header className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div className="w-full text-left">
+          <h1 className="text-2xl font-bold sm:text-3xl">Modulkatalog</h1>
+          <p className="mt-1 text-sm text-muted-foreground sm:text-base">
+            Durchsuche und verwalte verfügbare Module.
+          </p>
+        </div>
 
-            <div className="mt-6">
-                {/* 4. Wenn der User eine ID hat, lade die echte Moses-Komponente.
-                  Wenn nicht, zeige eine nette Fehlermeldung.
-                */}
-                {studiengangId ? (
-                    <ModulsucheWrapper studiengangId={studiengangId} />
-                    //<MosesModulsuche studiengangId={studiengangId} />
-                ) : (
-                    <div className="p-10 text-center border-2 border-dashed rounded-2xl border-gray-300">
-                        <p className="opacity-60">
-                            Bitte wähle zuerst einen Studiengang in deinen Einstellungen aus, 
-                            um den Modulkatalog zu laden.
-                        </p>
-                    </div>
-                )}
-            </div>
-        </section>
-    );
+        <CustomModulButton />
+      </header>
+
+      <div className="rounded-2xl border border-border bg-white p-4 dark:bg-card sm:p-5 lg:p-6">
+        {studiengangId ? (
+          <ModulsucheWrapper studiengangId={studiengangId} />
+        ) : (
+          <div className="mx-auto max-w-xl rounded-2xl border-2 border-dashed border-gray-300 p-6 text-center dark:border-border sm:p-10">
+            <p className="text-sm text-muted-foreground sm:text-base">
+              Bitte wähle zuerst einen Studiengang in deinen Einstellungen aus,
+              um den Modulkatalog zu laden.
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
 }
