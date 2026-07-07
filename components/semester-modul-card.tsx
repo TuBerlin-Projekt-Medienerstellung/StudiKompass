@@ -13,6 +13,7 @@ type Props = {
     modul: modulInfo;
     proWoche: boolean;
     onToggleAufwand: () => void;
+    onDeleteModul: (modulId: string) => void;
 };
 
 type ModulDetails = {
@@ -20,7 +21,7 @@ type ModulDetails = {
     [key: string]: unknown;
 };
 
-const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
+const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: Props) => {
     const [isOpen, setIsOpen] = useState(false);
     const [details, setDetails] = useState<ModulDetails | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
@@ -38,7 +39,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
         transform,
         transition,
         isDragging
-    } = useSortable({ id: String(modul.modul_id) });
+    } = useSortable({ id: handleModule(modul.modul_id) });
 
     const style = {
         transform: CSS.Transform.toString(transform),
@@ -57,7 +58,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
             setErrorMsg(null);
             const data = await ladeDetailedModulAction(handleModule(modul.modul_id));
             if (data) {
-                setDetails(data);
+                setDetails(data as ModulDetails);
             }
             setLoadingDetails(false);
         }
@@ -151,56 +152,74 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
                 className={`px-6 py-4 rounded-2xl border-x-4 border-y-2 border-flag-red flex flex-col gap-2 cursor-pointer bg-card transition-all duration-300 ${isOpen ? "shadow-md" : ""}`}>
 
                 {/* Eingeklappte Version des Moduls */}
-                <div className="flex flex-row gap-2 items-center w-full">
-                    <div
+                <div className="flex w-full items-start gap-3">
+                    <button
+                        type="button"
                         {...attributes}
                         {...listeners}
-                        className='pr-2 text-muted-foreground cursor-grab active:cursor-grabbing'
-                        onClick={(e) => e.stopPropagation()}>
+                        className="mt-2 shrink-0 text-muted-foreground cursor-grab active:cursor-grabbing touch-none"
+                        onClick={(e) => e.stopPropagation()}
+                    >
                         <Grip />
-                    </div>
+                    </button>
 
-                    <div className='flex flex-col flex-1'>
-                        <h1 className="font-bold text-lg">
+                    <div className="min-w-0 flex-1">
+                        <h1 className="break-words text-base font-bold leading-snug sm:text-lg">
                             {modul.name}
                         </h1>
 
-                        <div className="flex flex-wrap items-center opacity-80 gap-3 text-sm">
-                            <span className="text-flag-red">
-                                {modul.leistungspunkte} ECTS
-                            </span>
-                            <span>
-                                {modul.turnus}
-                            </span>
+                        <div className="mt-2 flex flex-col gap-1 text-sm opacity-80">
+
+                            {/* ECTS und Turnus immer nebeneinander */}
+                            <div className="flex items-center gap-3">
+                                <span className="text-flag-red whitespace-nowrap">
+                                    {modul.leistungspunkte} ECTS
+                                </span>
+
+                                <span className="text-xs sm:text-sm">
+                                    {modul.turnus}
+                                </span>
+                            </div>
+
+                            {/* Moses-Link immer darunter */}
                             <Link
-                                className="flex items-center gap-1 text-blue-bell hover:underline"
+                                className="flex w-fit items-center gap-1 text-blue-bell hover:underline"
                                 href={modul.link || "#"}
-                                onClick={(e) => e.stopPropagation()}>
+                                onClick={(e) => e.stopPropagation()}
+                            >
                                 Moses
                                 <SquareArrowOutUpRight size={14} />
                             </Link>
                         </div>
                     </div>
 
-                    {/* Pfeil rechts, zeigt den Aufklapp-Status an */}
-                    <div className="text-muted-foreground px-2">
-                        {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-                    </div>
+                    <div className="flex shrink-0 items-start gap-2 pt-1">
+                        <button
+                            type="button"
+                            className="text-muted-foreground"
+                            onClick={handleAusklappen}
+                        >
+                            {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
+                        </button>
 
-                    <button
-                        className="flex pr-2 py-4 ml-2 hover:text-flag-red transition-colors"
-                        onClick={async (e) => {
-                            e.stopPropagation();
-                            const result = await loescheModul(handleModule(modul.modul_id));
-                            if (result.success) {
-                                window.location.reload();   // TODO: später ohne reload via Callback
-                            } else {
-                                setErrorMsg(result.error || "Modul konnte nicht gelöscht werden.");
-                            }
-                        }}>
-                        <Trash2 />
-                    </button>
+                        <button
+                            type="button"
+                            className="hover:text-flag-red transition-colors"
+                            onClick={async (e) => {
+                                e.stopPropagation();
+                                const result = await loescheModul(handleModule(modul.modul_id));
+                                if (result.success) {
+                                    onDeleteModul(String(modul.modul_id));
+                                } else {
+                                    setErrorMsg(result.error || "Modul konnte nicht gelöscht werden.");
+                                }
+                            }}
+                        >
+                            <Trash2 />
+                        </button>
+                    </div>
                 </div>
+
 
                 {/* Ausgeklappte Karte - Details */}
                 <div className={`grid transition-all duration-500 ease-in-out ${isOpen ? 'grid-rows-[1fr] opacity-100 mt-4 pt-4 border-t' : 'grid-rows-[0fr] opacity-0 pointer-events-none'
@@ -210,46 +229,30 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
                             onClick={(e) => e.stopPropagation()}>
                             <div className="flex flex-col md:flex-row md:items-center justify-between gap-y-2">
                                 <div className="flex flex-row flex-wrap items-center gap-3 text-sm">
-                                    <div
-                                        className="bg-flag-red text-card rounded-xl py-1 px-2 w-fit text-xs font-semibold">
+                                    <div className="bg-flag-red text-card rounded-xl py-1 px-2 w-fit text-xs font-semibold">
                                         {modul.bereichpfad || "-"}
                                     </div>
                                     <div className="text-muted-foreground">•</div>
 
                                     {/* Counter für Fehlversuche */}
                                     <div className="flex items-center gap-2">
-                                        <p className="text-flag-red font-medium">
-                                            Versuche:
-                                        </p>
-                                        <div
-                                            className="flex items-center gap-1 px-2 py-0.5 text-xs bg-muted border rounded-xl">
-                                            <button className="px-1 font-bold hover:opacity-70" onClick={decreaseTries}>
-                                                -
-                                            </button>
-                                            <span className="font-semibold w-4 text-center">
-                                                {counter}
-                                            </span>
-                                            <button className="px-1 font-bold hover:opacity-70" onClick={increaseTries}>
-                                                +
-                                            </button>
+                                        <p className="text-flag-red font-medium">Versuche:</p>
+                                        <div className="flex items-center gap-1 px-2 py-0.5 text-xs bg-muted border rounded-xl">
+                                            <button className="px-1 font-bold hover:opacity-70" onClick={decreaseTries}>-</button>
+                                            <span className="font-semibold w-4 text-center">{counter}</span>
+                                            <button className="px-1 font-bold hover:opacity-70" onClick={increaseTries}>+</button>
                                         </div>
                                     </div>
                                 </div>
-                                {errorMsg && <p className="text-flag-red text-xs">
-                                    {errorMsg}
-                                </p>}
+                                {errorMsg && <p className="text-flag-red text-xs">{errorMsg}</p>}
                             </div>
 
                             {/* Beschreibung */}
                             <div>
-                                <h2 className="font-semibold text-base mb-1">
-                                    Beschreibung
-                                </h2>
+                                <h2 className="font-semibold text-base mb-1">Beschreibung</h2>
                                 <p className="text-sm opacity-80 leading-relaxed">
                                     {loadingDetails ? (
-                                        <span className="italic opacity-50">
-                                            Beschreibung wird geladen...
-                                        </span>
+                                        <span className="italic opacity-50">Beschreibung wird geladen...</span>
                                     ) : (
                                         modul.lernergebnisse || details?.beschreibung || "Keine Beschreibung vorhanden."
                                     )}
@@ -273,77 +276,45 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
                                     </p>
                                 </div>
 
-                                <div
-                                    className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-lg opacity-70">
-                                        Angebot
-                                    </p>
-                                    <p className="font-semibold text-md">
-                                        {modul.turnus}
-                                    </p>
+                                <div className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
+                                    <p className="text-lg opacity-70">Angebot</p>
+                                    <p className="font-semibold text-md">{modul.turnus}</p>
                                 </div>
 
-                                <div
-                                    className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-lg opacity-70">
-                                        Prüfungsform
-                                    </p>
-                                    <p className="font-semibold text-md">
-                                        {modul.pruefungsform}
-                                    </p>
+                                <div className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
+                                    <p className="text-lg opacity-70">Prüfungsform</p>
+                                    <p className="font-semibold text-md">{modul.pruefungsform}</p>
                                 </div>
 
-                                <div
-                                    className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
-                                    <p className="text-lg opacity-70 mb-2">
-                                        Bewertung
-                                    </p>
+                                <div className="bg-muted flex border rounded-xl items-center p-3 flex-col text-center justify-center">
+                                    <p className="text-lg opacity-70 mb-2">Bewertung</p>
                                     <div className="font-semibold text-sm w-full flex justify-center">
                                         {!modul.benotet ? (
-                                            <span className="text-gray-500 font-normal text-md">
-                                                nicht benotet
-                                            </span>
+                                            <span className="text-gray-500 font-normal text-md">nicht benotet</span>
                                         ) : (
-                                            <div
-                                                className="flex flex-col items-center gap-3 w-full max-w-xs md:max-w-none">
+                                            <div className="flex flex-col items-center gap-3 w-full max-w-xs md:max-w-none">
 
                                                 <div className="flex flex-col items-center gap-2 w-full justify-center">
 
                                                     {/* Noten-Auswahl */}
-                                                    <div
-                                                        className="flex items-center justify-between md:justify-center gap-2 px-3 py-1 text-xs bg-background border rounded-xl flex-1 md:flex-none">
-                                                        <button
-                                                            className="px-1 font-bold hover:opacity-70 disabled:opacity-30 text-sm"
-                                                            onClick={decreaseNote}
-                                                            disabled={noteInput <= 0.7}>
-                                                            -
-                                                        </button>
-                                                        <span className="font-semibold w-7 text-center">
-                                                            {noteInput.toFixed(1)}
-                                                        </span>
-                                                        <button
-                                                            className="px-1 font-bold hover:opacity-70 disabled:opacity-30 text-sm"
-                                                            onClick={increaseNote}
-                                                            disabled={noteInput >= 4.0}>
-                                                            +
-                                                        </button>
+                                                    <div className="flex items-center justify-between md:justify-center gap-2 px-3 py-1 text-xs bg-background border rounded-xl flex-1 md:flex-none">
+                                                        <button className="px-1 font-bold hover:opacity-70 disabled:opacity-30 text-sm" onClick={decreaseNote} disabled={noteInput <= 0.7}>-</button>
+                                                        <span className="font-semibold w-7 text-center">{noteInput.toFixed(1)}</span>
+                                                        <button className="px-1 font-bold hover:opacity-70 disabled:opacity-30 text-sm" onClick={increaseNote} disabled={noteInput >= 4.0}>+</button>
                                                     </div>
 
                                                     {/* Gewichtungs-Toggle */}
                                                     <div
                                                         title="Welche Noten (nicht) in den Gesamtschnitt einfließen, steht in der StuPo zum Studiengang."
                                                         className="flex items-center justify-between md:justify-center gap-3 px-3 py-2 bg-background border rounded-xl flex-1 md:flex-none select-none">
-                                                        <span
-                                                            className="text-xs font-normal opacity-70 whitespace-nowrap">
+                                                        <span className="text-xs font-normal opacity-70 whitespace-nowrap">
                                                             {gewichtung ? "normal gewichtet" : "nicht gewichtet"}
                                                         </span>
                                                         <button
                                                             onClick={() => setGewichtung(!gewichtung)}
-                                                            className={`${gewichtung ? "bg-mint-leaf" : "bg-muted border shadow-inner"
-                                                                } relative inline-flex h-3.5 w-7 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none items-center`}>
+                                                            className={`${gewichtung ? "bg-mint-leaf" : "bg-muted border shadow-inner"} relative inline-flex h-3.5 w-7 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none items-center`}>
                                                             <span
-                                                                className={`${gewichtung ? "translate-x-3.5 bg-background" : "translate-x-0.5 bg-muted-foreground/60"
-                                                                    } pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full shadow transition duration-200 ease-in-out`}
+                                                                className={`${gewichtung ? "translate-x-3.5 bg-background" : "translate-x-0.5 bg-muted-foreground/60"} pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full shadow transition duration-200 ease-in-out`}
                                                             />
                                                         </button>
                                                     </div>
@@ -356,7 +327,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
                                                         onClick={async (e) => {
                                                             e.stopPropagation();
                                                             setIsSavingNote(true);
-                                                            setErrorMsg(null); // Alten Fehler zurücksetzen
+                                                            setErrorMsg(null);
 
                                                             try {
                                                                 const result = await saveGrade(handleModule(modul.modul_id), noteInput, gewichtung);
@@ -376,13 +347,14 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
                                                         className="w-auto p-1.5 text-xs bg-flag-red text-white font-medium rounded-xl hover:opacity-85 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm">
                                                         {isSavingNote ? "..." : "Sichern"}
                                                     </button>
-                                                    {/* Sichern Button */}
+
+                                                    {/* Note löschen */}
                                                     <button
                                                         disabled={isSavingNote}
                                                         onClick={async (e) => {
                                                             e.stopPropagation();
                                                             setIsSavingNote(true);
-                                                            setErrorMsg(null); // Alten Fehler zurücksetzen
+                                                            setErrorMsg(null);
 
                                                             try {
                                                                 const result = await deleteGrade(handleModule(modul.modul_id));
@@ -407,6 +379,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand }: Props) => {
                                         )}
                                     </div>
                                 </div>
+
                             </div>
 
                             {/* Buttons unten */}

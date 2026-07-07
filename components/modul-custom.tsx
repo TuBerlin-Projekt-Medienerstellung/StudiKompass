@@ -49,10 +49,10 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                 console.error("Fehler beim Laden der Semester:", e);
             }
         }
+
         ladeSemester();
     }, []);
 
-    // WICHTIG: erst nach allen Hooks
     if (!isOpen) return null;
 
     // Prüft ob alle Pflichtfelder für den aktuellen Modus ausgefüllt sind
@@ -64,7 +64,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                 formData.beschreibung.trim() !== ""
             );
         }
-        // mode === "modul"
+
         return (
             formData.modulname.trim() !== "" &&
             formData.pruefungsform.trim() !== "" &&
@@ -106,8 +106,8 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
             />
 
             {/**Modal */}
-            <div className='fixed left-0 md:left-72 right-0 bottom-0 flex justify-items-stretch bg-white z-50 gap-6 border-y-2 border-x-2 rounded-t-xl flex-col p-8'>
-                <header className='flex w-full bg-white flex-row gap-6 items-center justify-between'>
+            <div className='fixed left-0 md:left-72 right-0 bottom-0 flex justify-items-stretch bg-white dark:bg-card z-50 gap-6 border-y-2 border-x-2 rounded-t-xl flex-col p-8'>
+                <header className='flex w-full flex-row gap-6 items-center justify-between'>
                     <h1 className='flex font-bold md:text-2xl text-xl'>Custom Modul erstellen</h1>
                     <button onClick={onClose}>
                         <X className='flex flex-none w-4 h-4'></X>
@@ -137,6 +137,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                 }));
                             }}>Job
                         </button>
+
                         <div
                             className={`absolute bottom-0 h-[2px] bg-flag-red transition-transform duration-300 w-1/2`}
                             style={{
@@ -148,9 +149,9 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                     {mode === "modul" ? (
                         <>
                             {/** Modulname */}
-                            <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg'>
+                            <div className="flex rounded-lg border-x-2 border-y-2 border-border bg-white px-4 py-3 dark:bg-[#24112f]">
                                 <input
-                                    className="w-full outline-none"
+                                    className="w-full bg-transparent text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-gray-500"
                                     placeholder="Wie heißt dein Modul?"
                                     value={formData.modulname}
                                     onChange={(e) =>
@@ -162,9 +163,9 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                             {/** Prüfungsform */}
                             <div className='flex gap-2 flex-col'>
                                 <p className='font-bold text-[14px]'>Prüfungsform</p>
-                                <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg'>
+                                <div className="flex rounded-lg border-x-2 border-y-2 border-border bg-white px-4 py-3 dark:bg-[#24112f]">
                                     <input
-                                        className="w-full outline-none"
+                                        className="w-full bg-transparent text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-gray-500"
                                         placeholder="Wie wird das Modul geprüft?"
                                         value={formData.pruefungsform}
                                         onChange={(e) =>
@@ -180,7 +181,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                     <p className='font-bold text-[14px]'>ECTS</p>
                                     <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between'>
                                         <input
-                                            className="flex-1 appearance-none leading-none outline-none w-full outline-none"
+                                            className="flex-1 w-full appearance-none bg-transparent leading-none text-gray-900 outline-none dark:text-white"
                                             type='number'
                                             value={formData.ects}
                                             onChange={(e) =>
@@ -199,7 +200,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                             onChange={(e) =>
                                                 setFormData({ ...formData, turnus: e.target.value })
                                             }
-                                            className="flex-1 w-full bg-transparent outline-none">
+                                            className="flex-1 w-full bg-transparent text-gray-900 outline-none dark:text-white">
                                             <option value="">Bitte wählen</option>
                                             <option value="WiSe">WiSe</option>
                                             <option value="SoSe">SoSe</option>
@@ -217,7 +218,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                             onChange={(e) =>
                                                 setFormData({ ...formData, bereichspfad: e.target.value })
                                             }
-                                            className="w-full bg-transparent outline-none">
+                                            className="w-full bg-transparent text-gray-900 outline-none dark:text-white">
                                             <option value="">Bitte wählen</option>
                                             <option value="Pflicht">Pflicht</option>
                                             <option value="Wahlpflicht">Wahlpflicht</option>
@@ -238,7 +239,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                                     benotet: e.target.value === "" ? null : e.target.value === "true",
                                                 })
                                             }
-                                            className="w-full bg-transparent outline-none">
+                                            className="w-full bg-transparent text-gray-900 outline-none dark:text-white">
                                             <option value="">Bitte wählen</option>
                                             <option value="true">Ja</option>
                                             <option value="false">Nein</option>
@@ -250,9 +251,9 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                             {/** Beschreibung */}
                             <div className='flex gap-2 flex-col'>
                                 <p className='font-bold text-[14px]'>Beschreibung</p>
-                                <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg'>
+                                <div className="flex rounded-lg border-x-2 border-y-2 border-border bg-white px-4 py-3 dark:bg-[#24112f]">
                                     <input
-                                        className="w-full outline-none"
+                                        className="w-full bg-transparent text-gray-900 outline-none placeholder:text-gray-400 dark:text-white dark:placeholder:text-gray-500"
                                         placeholder="Hier kannst du dein Modul beschreiben"
                                         value={formData.beschreibung}
                                         onChange={(e) =>
@@ -268,16 +269,18 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
 
                     {/** Buttons */}
                     <div className='flex gap-2 flex-col md:flex-row items-center self-stretch'>
-                        <button onClick={onClose}
-                            className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg font-bold w-full md:w-1/3 items-center justify-center'>
+                        <button
+                            onClick={onClose}
+                            className="flex w-full items-center justify-center rounded-lg border-x-2 border-y-2 border-border bg-white px-4 py-3 font-bold text-gray-900 dark:bg-[#24112f] dark:text-white md:w-1/3">
                             abbrechen
                         </button>
 
                         <div className='w-full md:w-2/3 flex flex-col gap-2'>
                             <button
                                 disabled={!istEingabeVollstaendig()}
-                                className={`flex px-4 py-3 rounded-lg bg-violet-ray text-white w-full items-center justify-center ${!istEingabeVollstaendig() ? 'opacity-50 cursor-not-allowed' : ''
-                                    }`}
+                                className={`flex px-4 py-3 rounded-lg bg-violet-ray text-white w-full items-center justify-center ${
+                                    !istEingabeVollstaendig() ? 'opacity-50 cursor-not-allowed' : ''
+                                }`}
                                 onClick={() => setPlannerOpen(!plannerOpen)}>
                                 Zum Planer hinzufügen
                             </button>
@@ -294,7 +297,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                             <button
                                                 key={sem.id}
                                                 onClick={() => handleSubmit(sem.id)}
-                                                className='flex items-center px-3 py-2.5 rounded-lg hover:bg-gray-100 transition-colors text-left'>
+                                                className='flex items-center px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#16081f] transition-colors text-left'>
                                                 <span className='font-medium'>{sem.name}</span>
                                             </button>
                                         ))
