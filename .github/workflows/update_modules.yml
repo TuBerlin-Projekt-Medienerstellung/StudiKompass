@@ -19,15 +19,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Pulls your repository code into the GitHub runner
+      # pulls repo code into the gitHub runner
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Builds the isolated Docker environment from your Dockerfile
+      #Builds the isolated Docker environment from your Dockerfile
       - name: Build Docker Image
         run: docker build -t extended-search .
 
-      # 3. Runs the container and safely passes secrets from the vault into memory
+      # Runs the container and passes secrets from the vault into memory
       - name: Run Python Script Inside Docker
         env:
           # Pulls directly from your GitHub repository secrets vault
@@ -35,14 +35,13 @@ jobs:
           MOSES_KEY: ${{ secrets.moses_API_KEY }}
           STUDIEN_KEY: ${{ secrets.Studiengaenge_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SERVICE_ROLE_KEY }}
         run: |
           docker run \
             -e moses_API_URL="$MOSES_URL" \
             -e moses_API_KEY="$MOSES_KEY" \
             -e Studiengaenge_API_KEY="$STUDIEN_KEY" \
-            -e SUPABASE_URL="$SUPABASE_URL" \
-            -e SUPABASE_SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" \
+            -e NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
+            -e SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" \
             extended-search
-
 
