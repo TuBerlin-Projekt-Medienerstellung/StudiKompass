@@ -142,7 +142,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
                             z.id;
 
                         return {
-                            id: actualModulId,
+                            id: { type: "moses", value: actualModulId },
                             name: zuordnung?.name ?? "",                       // ← Fallback
                             lp: zuordnung?.modullp ?? 0,                       // ← Fallback
                             bereichPfad,
@@ -249,7 +249,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 
 // Verlagerung der detailedmodules Komponente, da client komponenten keine server action/Komponente wrappen/einbetten oder aufrufen können..
 
-export async function ladeDetailedModulAction(modul_id: string) {
+export async function ladeDetailedModulAction(modul_id: string | number) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
@@ -268,12 +268,13 @@ export async function ladeDetailedModulAction(modul_id: string) {
     }
 
     try {
+        const id = String(modul_id);
 
         // fetchMoses hat bereits try/catch + null-Fallback eingebaut
-        let zuordnungRaw = await fetchMoses(`/studiengangszuordnung/${modul_id}`);
+        let zuordnungRaw = await fetchMoses(`/studiengangszuordnung/${id}`);
         let zuordnung = zuordnungRaw?.data?.[0];
         if (!zuordnung) {
-            zuordnungRaw = await fetchMoses(`/bolognamodullistenzuordnung/${modul_id}`); //new fallback
+            zuordnungRaw = await fetchMoses(`/bolognamodullistenzuordnung/${id}`); //new fallback
             zuordnung = zuordnungRaw?.data?.[0];
         }
 
@@ -485,21 +486,32 @@ export async function createCustomModul(modulname: string,
     return data.id;
 }
 
-export async function addCustomModultoPlanner(groupId: UUID, modul_id: ModuleId) {
+export async function addCustomModulToPlanner(groupId?: UUID, modul_id?: ModuleId) {
     const supabase = await createClient();
+
     const {
-        data: { user },
+        data: {user},
     } = await supabase.auth.getUser();
 
     if (!user) return null;
 
-    const { error } = await supabase
+    const groupIdValue = groupId ?? crypto.randomUUID();
+
+    let modulIdValue: string | number;
+    if (!modul_id) {
+        modulIdValue = crypto.randomUUID();
+    } else if (typeof modul_id === 'object' && 'type' in modul_id) {
+        modulIdValue = modul_id.value;
+    } else {
+        modulIdValue = modul_id as any;
+    }
+
+    const {error} = await supabase
         .from("planner")
         .insert({
-            modul_id: modul_id,
-            group_id: groupId,
+            modul_id: modulIdValue,
+            group_id: groupIdValue,
             user_id: user.id,
-
         })
         .select()
         .single();
