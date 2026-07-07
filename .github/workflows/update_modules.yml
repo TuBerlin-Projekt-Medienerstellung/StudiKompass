@@ -31,15 +31,15 @@ jobs:
       - name: Run Python Script Inside Docker
         env:
           # Pulls directly from your GitHub repository secrets vault
-          MOSES_URL: ${{ secrets.moses_API_URL }}
-          MOSES_KEY: ${{ secrets.moses_API_KEY }}
+          MOSES_URL: ${{ secrets.MOSES_API_URL }}
+          MOSES_KEY: ${{ secrets.MOSES_API_KEY }}
           STUDIEN_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY }}
           SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SERVICE_ROLE_KEY }}
         run: |
           docker run \
-            -e moses_API_URL="$MOSES_URL" \
-            -e moses_API_KEY="$MOSES_KEY" \
+            -e MOSES_API_URL="$MOSES_URL" \
+            -e MOSES_API_KEY="$MOSES_KEY" \
             -e NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="$STUDIEN_KEY" \
             -e NEXT_PUBLIC_SUPABASE_URL="$SUPABASE_URL" \
             -e SERVICE_ROLE_KEY="$SUPABASE_SERVICE_ROLE_KEY" \
