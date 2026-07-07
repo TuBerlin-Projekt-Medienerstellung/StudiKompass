@@ -39,8 +39,8 @@ env_path = os.path.join(root_dir, ".env.local")
 if os.path.exists(env_path):
     load_dotenv(dotenv_path=env_path)
 
-base_url = os.getenv("moses_API_URL")
-api_key = os.getenv("moses_API_KEY")
+base_url = os.getenv("MOSES_API_URL")
+api_key = os.getenv("MOSES_API_KEY")
 supabase_url = os.getenv("NEXT_PUBLIC_SUPABASE_URL")
 service_role = os.getenv("SERVICE_ROLE_KEY")
 
