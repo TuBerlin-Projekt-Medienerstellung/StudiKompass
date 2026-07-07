@@ -36,7 +36,8 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 root_dir = os.path.dirname(script_dir)
 
 env_path = os.path.join(root_dir, ".env.local") 
-load_dotenv(dotenv_path=env_path)
+if os.path.exists(env_path):
+    load_dotenv(dotenv_path=env_path)
 
 base_url = os.getenv("moses_API_URL")
 api_key = os.getenv("moses_API_KEY")
@@ -518,6 +519,7 @@ def find_internal_candidates(my_dict):
         
         # Save it perfectly into your module data structure
         data["words"] = combined_words[:6]
+    await send_status_admin(f"Successfully updated dictionary with transformers", "SUCCESS")
     return my_dict
 #mean vector compared to svg file 
 def sparql_candidates():
