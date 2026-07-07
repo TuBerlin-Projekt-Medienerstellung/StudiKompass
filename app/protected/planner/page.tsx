@@ -4,7 +4,7 @@ import SemesterCard from "@/components/semester-card";
 import SemesterModulCard from "@/components/semester-modul-card";
 import { useState, useEffect } from "react";
 import { Plus, Trash2 } from 'lucide-react';
-import { reduceSemesterTable, deleteSemester, updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul , loescheSemesterMitModulen } from './actions';
+import { reduceSemesterTable, deleteSemester, createSemester, updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul, loescheSemesterMitModulen, getProfilTurnus } from './actions';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 
@@ -22,6 +22,8 @@ const Page = () => {
     const [semesterList, setSemesterList] = useState<SemesterList>([]);
     const [activeModul, setActiveModul] = useState<modulInfo | null>(null);
     const [proWoche, setProWoche] = useState(false);
+    const [currentSemester, setCurrentSemester] = useState<number | null>(null);
+    const [currentTurnus, setCurrentTurnus] = useState<string | null>(null);
 
     useEffect(() => {
         async function loadSemesters() {
@@ -51,10 +53,23 @@ const Page = () => {
                 }))
             );
         }
+
+        async function loadTurnus() {
+            const { currentSemester, currentTurnus } = await getProfilTurnus();
+            setCurrentSemester(currentSemester);
+            setCurrentTurnus(currentTurnus);
+        }
+
         loadSemesters();
+        loadTurnus();
     }, []);
 
     async function handleAddSemester() {
+        // Grenze: maximal 20 Semester (konsistent mit den Settings)
+        if (semesterList.length >= 20) {
+            return;   // nichts tun, Grenze erreicht
+        }
+
         const maxNummer =
             semesterList.length > 0
                 ? Math.max(...semesterList.map((s) => s.nummer))
@@ -62,12 +77,13 @@ const Page = () => {
 
         const neueNummer = maxNummer + 1;
 
-        const neueZeile = await updateSemesterTable(neueNummer);   // gibt die neue Zeile zurück
+        await createSemester();
+        const neueZeile = await updateSemesterTable(neueNummer);
 
         setSemesterList((prev) => [
             ...prev,
             {
-                id: neueZeile.id,      // uuid aus der zurückgegebenen Zeile
+                id: neueZeile.id,
                 nummer: neueNummer,
                 modules: [],
             },
@@ -80,6 +96,17 @@ const Page = () => {
 
         setSemesterList((prev) => prev.filter((sem) => sem.id !== semesterId));
     }
+
+    // Entfernt ein Modul aus dem State (nach dem Löschen aus der DB).
+    function entferneModulAusState(modulId: string) {
+        setSemesterList((prev) =>
+            prev.map((sem) => ({
+                ...sem,
+                modules: sem.modules.filter((m) => String(m.modul_id) !== modulId),
+            }))
+        );
+    }
+    const getModuleId = (m: modulInfo) => String((m as any)?.modul_id?.value ?? (m as any)?.modul_id);
 
     const findSemesterByModulId = (modulId: string) => {
         return semesterList.find(s => s.modules.some(m => String(m.modul_id) === modulId)
@@ -125,9 +152,8 @@ const Page = () => {
         if (!sourceSemester || !targetSemesterNummer) return;
 
         const newSemesters = [...semesterList];
-        const sourceSemIndex = newSemesters.findIndex(s => s.nummer === sourceSemester.nummer);
-        const targetSemIndex = newSemesters.findIndex(s => s.nummer === targetSemesterNummer);
-
+        const sourceSemIndex = newSemesters.findIndex((s) => s.nummer === sourceSemester.nummer);
+        const targetSemIndex = newSemesters.findIndex((s) => s.nummer === targetSemesterNummer);
 
         // FALL 1: Innerhalb desselben Semesters verschieben (Reihenfolge ändern)
         if (sourceSemester.nummer === targetSemesterNummer) {
@@ -147,7 +173,7 @@ const Page = () => {
             const modulIndex = sourceSem.modules.findIndex(m => String(m.modul_id) === activeModulId);
             const [movedModul] = sourceSem.modules.splice(modulIndex, 1);
 
-            let newIndex = targetSem.modules.findIndex(m => String(m.modul_id) === String(over.id));
+            let newIndex = targetSem.modules.findIndex((m) => getModuleId(m) === String(over.id));
             if (newIndex === -1) newIndex = targetSem.modules.length;
 
             targetSem.modules.splice(newIndex, 0, movedModul);
@@ -162,10 +188,11 @@ const Page = () => {
             collisionDetection={closestCenter}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}>
-            <section className="flex flex-col gap-4 p-6">
+            <section className="flex flex-col gap-4 p-4 md:p-6">
+                {/* Responsive Header: auf Mobile etwas kleiner */}
                 <div className="flex flex-col gap-2">
-                    <h1 className="font-bold text-4xl">Studienplaner</h1>
-                    <p className="opacity-70">Plane dein Studium semesterweise</p>
+                    <h1 className="text-3xl font-bold md:text-4xl">Studienplaner</h1>
+                    <p className="text-sm opacity-70 md:text-base">Plane dein Studium semesterweise</p>
                 </div>
 
                 <div className="flex flex-col gap-6">
@@ -177,13 +204,21 @@ const Page = () => {
                             onClick={() => console.log(semester.nummer)}
                             proWoche={proWoche}
                             onToggleAufwand={() => setProWoche(!proWoche)}
+                            currentSemester={currentSemester}
+                            currentTurnus={currentTurnus}
+                            onDeleteModul={entferneModulAusState}
                         />
                     ))}
                 </div>
 
-                <div className='flex flex-row gap-4'>
+                {/* Buttons auf Mobile untereinander, auf Desktop nebeneinander */}
+                <div className='flex flex-col gap-4 md:flex-row'>
                     <button onClick={handleAddSemester}
-                        className='border-2 rounded-2xl border-dashed p-4 flex cursor-pointer items-center justify-center px-6 py-4 md:w-5/6 w-full'>
+                        disabled={semesterList.length >= 20}
+                        className={`border-2 rounded-2xl border-dashed p-4 flex items-center justify-center px-6 py-4 md:w-5/6 w-full ${semesterList.length >= 20
+                            ? 'opacity-50 cursor-not-allowed'
+                            : 'cursor-pointer'
+                            }`}>
                         <Plus></Plus>Semester hinzufügen
                     </button>
                     <button onClick={() => {
@@ -202,6 +237,7 @@ const Page = () => {
                         modul={activeModul}
                         proWoche={proWoche}
                         onToggleAufwand={() => setProWoche(!proWoche)}
+                        onDeleteModul={() => { }}
                     />
                 ) : null}
             </DragOverlay>

@@ -26,25 +26,31 @@ export async function getSemesters() {
 
 //leeres Semester hinzufügen
 export async function createSemester() {
-
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-
+    // current_semester MIT laden (für Regel 5 + Sonderfall)
     const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("max_semester")
+        .select("max_semester, current_semester")
         .eq("id", user.id)
         .single();
-
     if (profileError) throw profileError;
 
     const nextSemester = (profile.max_semester ?? 0) + 1;
 
+    // Sonderfall: war current 0 (alles leer), wird es beim ersten Hinzufügen 1.
+    // Sonst bleibt current stehen (Regel 5).
+    const aktuellesCurrent = profile.current_semester ?? 0;
+    const neuerCurrentWert = aktuellesCurrent === 0 ? 1 : aktuellesCurrent;
+
     const { data, error } = await supabase
         .from('profiles')
-        .update({ max_semester: nextSemester })
+        .update({
+            max_semester: nextSemester,
+            current_semester: neuerCurrentWert,   // NEU
+        })
         .eq("id", user.id)
         .select()
         .single();
@@ -53,8 +59,6 @@ export async function createSemester() {
         console.error('Fehler beim Aktualisieren:', error)
         throw error
     }
-
-
     return data.max_semester;
 }
 
@@ -62,7 +66,7 @@ export async function createSemester() {
 //erstellt neue Zeile in Tabelle Semester
 export async function updateSemesterTable(semesterzahl: number) {
     const supabase = await createClient();
-
+    const semester_id = crypto.randomUUID();
 
     const {
         data: { user },
@@ -73,6 +77,7 @@ export async function updateSemesterTable(semesterzahl: number) {
     const { data, error } = await supabase
         .from("semester")
         .insert({
+            id: semester_id,
             name: semesterzahl + ". Semester",
             semesterzahl: semesterzahl,
             user_id: user.id,
@@ -94,18 +99,28 @@ export async function deleteSemester() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
 
-
+    // current_semester MIT laden (für Regel 3)
     const { data: profile, error: profileError } = await supabase
         .from("profiles")
-        .select("max_semester")
+        .select("max_semester, current_semester")
         .eq("id", user.id)
         .single();
-
     if (profileError) throw profileError;
+
+    const neuerMaxWert = Math.max(0, (profile.max_semester ?? 0) - 1);
+
+    // Regel 3: current darf nie größer als max sein → zieht mit
+    const aktuellesCurrent = profile.current_semester ?? 0;
+    const neuerCurrentWert = aktuellesCurrent > neuerMaxWert
+        ? neuerMaxWert
+        : aktuellesCurrent;
 
     const { data, error } = await supabase
         .from('profiles')
-        .update({ max_semester: profile.max_semester - 1 })
+        .update({
+            max_semester: neuerMaxWert,
+            current_semester: neuerCurrentWert,   // NEU
+        })
         .eq("id", user.id)
         .select()
         .single();
@@ -114,7 +129,6 @@ export async function deleteSemester() {
         console.error('Fehler beim Löschen:', error)
         throw error
     }
-
     return data
 }
 
@@ -145,7 +159,6 @@ export async function getTries(modulId: string) {
         .eq("user_id", user.id)
         .eq("id", modulId)
         .maybeSingle();
-
     if (error) {
         console.error("Fehler beim Abrufen der Versuche:", error);
         return 0;
@@ -205,11 +218,11 @@ export async function saveGrade(modulId: string, note: number, gewichtung: boole
         .from("module")
         .update({
             note: note,
-            gewichtung: gewichtung ? 1 : 0
+            gewichtung: gewichtung ? 1 : 0,
         })
         .eq("user_id", user.id)
         .eq("id", modulId)
-        .select()
+        .select();
 
     if (error) {
         console.error("Datenbank-Fehler beim Update der Note:", error);
@@ -236,7 +249,7 @@ export async function deleteGrade(modulId: string) {
         })
         .eq("user_id", user.id)
         .eq("id", modulId)
-        .select()
+        .select();
 
     if (error) {
         console.error("Datenbank-Fehler beim Update der Note:", error);
@@ -319,6 +332,10 @@ export async function moduleZuPlanerHinzufuegen(
         .single();
 
     if (modulError) {
+        // Duplikat: Modul ist schon im Planer (Unique-Constraint unique_user_moses_modul)
+        if (modulError.code === "23505") {
+            return { success: false, error: "Dieses Modul ist bereits in deinem Planer." };
+        }
         console.error("Fehler beim Speichern des Moduls:", modulError);
         return { success: false, error: "Modul konnte nicht gespeichert werden." };
     }
@@ -501,24 +518,77 @@ export async function loescheSemesterMitModulen(semesterId: string) {
     return { success: true };
 }
 
-// Prüft ob ein bestimmtes Modul (per moses_id) schon im Planer des Nutzers ist.
-export async function istModulImPlaner(mosesId: string): Promise<boolean> {
+// Prüft ob ein Modul (per moses_id) im Planer ist — und in welchem Semester.
+export async function findeModulImPlaner(
+    mosesId: string
+): Promise<{ imPlaner: boolean; semesterName: string | null }> {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
-    if (!user) return false;
+    if (!user) return { imPlaner: false, semesterName: null };
 
-    const { data, error } = await supabase
+    // Schritt 1: Modul per moses_id finden
+    const { data: modul, error: modulError } = await supabase
         .from("module")
         .select("id")
         .eq("user_id", user.id)
         .eq("moses_id", mosesId)
         .maybeSingle();
 
-    if (error) {
-        console.error("Fehler beim Prüfen ob Modul im Planer:", error);
-        return false;   // im Zweifel: erlauben (nicht blockieren)
+    if (modulError || !modul) {
+        return { imPlaner: false, semesterName: null };
     }
 
-    return data !== null;   // true = schon drin, false = noch nicht
+    // Schritt 2: planner-Eintrag finden → group_id (das Semester)
+    const { data: plannerEintrag, error: plannerError } = await supabase
+        .from("planner")
+        .select("group_id")
+        .eq("modul_id", modul.id)
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+    if (plannerError || !plannerEintrag) {
+        // Modul existiert, aber keine Semester-Zuordnung → trotzdem "drin"
+        return { imPlaner: true, semesterName: null };
+    }
+
+    // Schritt 3: Semester-Name holen
+    const { data: semester, error: semesterError } = await supabase
+        .from("semester")
+        .select("name")
+        .eq("id", plannerEintrag.group_id)
+        .maybeSingle();
+
+    if (semesterError || !semester) {
+        return { imPlaner: true, semesterName: null };
+    }
+
+    return { imPlaner: true, semesterName: semester.name };
+}
+
+// Lädt current_semester und current_turnus aus dem Profil des Nutzers.
+export async function getProfilTurnus(): Promise<{
+    currentSemester: number | null;
+    currentTurnus: string | null;
+}> {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) return { currentSemester: null, currentTurnus: null };
+
+    const { data, error } = await supabase
+        .from("profiles")
+        .select("current_semester, current_turnus")
+        .eq("id", user.id)
+        .maybeSingle();
+
+    if (error || !data) {
+        console.error("Fehler beim Laden des Turnus:", error);
+        return { currentSemester: null, currentTurnus: null };
+    }
+
+    return {
+        currentSemester: data.current_semester ?? null,
+        currentTurnus: data.current_turnus ?? null,
+    };
 }
