@@ -73,7 +73,7 @@ export default function AdminPage() {
   }, [isLoading, activeLog?.id]);
 
   const fetchLogs = useCallback(async () => {
-    const supabase = createClient();
+    const supabase = createClient(); 
     const { data } = await supabase
       .from("logs")
       .select("*")
@@ -98,17 +98,24 @@ export default function AdminPage() {
     try {
       await triggerBackupScript();
       const supabase= createClient();
-      const {data}= await supabase
-        .from("logs")
-        .select("*")
-        .gt("created_at", start)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (data) {
-        setActiveLog(data); 
+      let retries = 5;
+      let foundLog = null;
+      while (retries > 0 && !foundLog) {
+        await new Promise(res => setTimeout(res, 2000));
+        const {data}= await supabase //race condition or smth keeps returning null
+          .from("logs")
+          .select("*")
+          .gt("created_at", start)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (data) {
+          setActiveLog(data); 
+        }
+        retries--;
       }
-    } catch (error) {
+    }
+    catch (error) {
       console.error(error);
       setIsLoading(false);
     }
@@ -140,13 +147,19 @@ export default function AdminPage() {
             <div className="mb-4 p-2 bg-neutral-800 rounded">
               <span className="text-yellow-400 font-bold">Status: {activeLog.current_status}</span>
             </div>
-            {activeLog.history.map((msg, index) => (
+            {activeLog.history && activeLog.history.length > 0 ? (activeLog.history.map((msg, index) => (
               <div key={index} className="text-gray-300 mb-1">
-                {typeof msg === 'string' ? msg : JSON.stringify(msg)}
+                <span className="text-gray-500 text-xs">
+                {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString() : ''}
+                </span>
+                <span className="ml-2 font-bold text-blue-400">[{msg.level}]</span>
+                <span className="ml-2">{msg.message}</span>
               </div>
-            ))}
+          ))
+          ) : (
+              <div className="text-gray-500 italic">Waiting for history...</div>)}
           </div>
-        ) : (
+          ) : (
           logs.map((log) => (
             <div key={log.id} className="mb-2 border-b border-neutral-800 pb-1">
               <span className="text-gray-500">[{new Date(log.created_at).toLocaleTimeString()}]</span>{" "}
