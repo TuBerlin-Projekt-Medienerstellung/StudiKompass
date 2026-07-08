@@ -112,7 +112,8 @@ export default function AdminPage() {
   const handleRunScript = async () => {
     setIsLoading(true);
     setActiveLog(null); // Reset active log
-    const start = new Date(Date.now() - 10000).toISOString();
+    //const start = new Date(Date.now() - 10000).toISOString();
+    listener.current = true;
     try {
       await triggerBackupScript();
     }
@@ -143,7 +144,7 @@ export default function AdminPage() {
           {isLoading ? "Live Execution History" : "Recent Execution Logs"}
         </h3>
 
-        {isLoading && activeLog ? (
+        {isLoading ? ( activeLog ? (
           <div>
             <div className="mb-4 p-2 bg-neutral-800 rounded">
               <span className="text-yellow-400 font-bold">Status: {activeLog.current_status}</span>
@@ -160,6 +161,11 @@ export default function AdminPage() {
           ) : (
               <div className="text-gray-500 italic">Waiting for history...</div>)}
           </div>
+          ) : (
+             <div className="text-yellow-500 italic animate-pulse py-2">
+              Waiting for Docker container to build and initialize...
+            </div>
+          )
           ) : (
           logs.map((log) => (
             <div key={log.id} className="mb-2 border-b border-neutral-800 pb-1">
