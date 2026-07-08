@@ -1,6 +1,6 @@
 "use client";
 import { createClient } from "@/lib/supabase/client";
-import { useEffect, useState, useCallback, useRef } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import AccessDenied from "@/components/access_denied";
 import { triggerBackupScript } from "./actions";
@@ -10,14 +10,18 @@ interface LogEntry {
   created_at: string;
   current_status: string;
   latest_message: string;
-  history: any[];
+  history: any[]; 
 }
+//I should add the active logging in realtime from supabase instead long polling 
+//https://supabase.com/docs/guides/realtime/postgres-changes?hl=en-DE
 
 export default function AdminPage() {
   const [isAuthorized, setIsAuthorized] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  //track log entry 
+  const [activeLog, setActiveLog] = useState<LogEntry | null>(null);
+  
   const router = useRouter();
 
   const checkAdmin = useCallback(async () => {
@@ -34,9 +38,42 @@ export default function AdminPage() {
 
     setIsAuthorized(true);
   }, [router]);
+  
+  useEffect(() => {
+    // Only subscribe once a process was started
+    if (!isLoading || !activeLog?.id) return;
+    const supabase = createClient();
+    
+    const channel = supabase
+      .channel('logs-changes')
+      .on(
+        'postgres_changes',
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'logs', 
+          filter: `id=eq.${activeLog.id}` 
+        },
+        (payload) => {
+          // payload.new has update
+          setActiveLog(payload.new as LogEntry);
+
+          const status = payload.new.current_status;
+          if (status === "SUCCESS" || status === "ERROR" || status === "CRITICAL") {
+            setIsLoading(false);
+            fetchLogs(); 
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isLoading, activeLog?.id]);
 
   const fetchLogs = useCallback(async () => {
-    const supabase = await createClient();
+    const supabase = createClient();
     const { data } = await supabase
       .from("logs")
       .select("*")
@@ -51,50 +88,32 @@ export default function AdminPage() {
       fetchLogs();
     }
     return () => {
-      if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
     };
   }, [checkAdmin, isAuthorized, fetchLogs]);
 
-  // Long-poll the active script execution until terminal status achieved
-  const startLogPolling = () => {
-    if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-
-    const startTime = new Date().toISOString();
-
-    pollingIntervalRef.current = setInterval(async () => {
-      const supabase = createClient();
-      
-      // Look for the newest log entry spawned after button press
-      const { data } = await supabase
+  const handleRunScript = async () => {
+    setIsLoading(true);
+    setActiveLog(null); // Reset active log
+    const start = new Date().toISOString();
+    try {
+      await triggerBackupScript();
+      const supabase= createClient();
+      const {data}= await supabase
         .from("logs")
         .select("*")
-        .gt("created_at", startTime)
+        .gt("created_at", start)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-
       if (data) {
-        fetchLogs(); // Sync entire history list view
-
-        if (data.current_status === "SUCCESS" || data.current_status === "ERROR" || data.current_status === "CRITICAL") {
-          setIsLoading(false);
-          if (pollingIntervalRef.current) clearInterval(pollingIntervalRef.current);
-        }
+        setActiveLog(data); 
       }
-    }, 4000); 
-  };
-
-  const handleRunScript = async () => {
-    setIsLoading(true);
-    try {
-      await triggerBackupScript();
-      startLogPolling();
     } catch (error) {
       console.error(error);
       setIsLoading(false);
     }
   };
-
+//same logic as before
   if (!isAuthorized) return <AccessDenied />;
 
   return (
@@ -108,13 +127,25 @@ export default function AdminPage() {
           isLoading ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
         }`}
       >
-        {isLoading ? "Workflow Triggered & Fetching Docker Logs..." : "Start Database backup"}
+        {isLoading ? "Workflow Triggered..." : "Start Database backup"}
       </button>
 
-      <div className="bg-neutral-900 text-white p-4 rounded-lg w-5/6 font-mono text-sm max-h-60 overflow-y-auto">
-        <h3 className="font-bold mb-2 border-b border-gray-700 pb-1 text-gray-400">Execution Logs</h3>
-        {logs.length === 0 ? (
-          <p className="text-gray-500">No logs found.</p>
+      <div className="bg-neutral-900 text-white p-4 rounded-lg w-5/6 font-mono text-sm max-h-96 overflow-y-auto">
+        <h3 className="font-bold mb-2 border-b border-gray-700 pb-1 text-gray-400">
+          {isLoading ? "Live Execution History" : "Recent Execution Logs"}
+        </h3>
+
+        {isLoading && activeLog ? (
+          <div>
+            <div className="mb-4 p-2 bg-neutral-800 rounded">
+              <span className="text-yellow-400 font-bold">Status: {activeLog.current_status}</span>
+            </div>
+            {activeLog.history.map((msg, index) => (
+              <div key={index} className="text-gray-300 mb-1">
+                {typeof msg === 'string' ? msg : JSON.stringify(msg)}
+              </div>
+            ))}
+          </div>
         ) : (
           logs.map((log) => (
             <div key={log.id} className="mb-2 border-b border-neutral-800 pb-1">
