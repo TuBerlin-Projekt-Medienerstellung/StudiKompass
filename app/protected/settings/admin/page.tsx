@@ -1,6 +1,6 @@
 "use client";
 import { createClient } from "@/lib/supabase/client";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef} from "react";
 import { useRouter } from "next/navigation";
 import AccessDenied from "@/components/access_denied";
 import { triggerBackupScript } from "./actions";
@@ -21,6 +21,7 @@ export default function AdminPage() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
   //track log entry 
   const [activeLog, setActiveLog] = useState<LogEntry | null>(null);
+  const listener = useRef(false); // this instead of the while Polling so it aint js 10s wait time bc of build-time
   
   const router = useRouter();
 
@@ -38,41 +39,7 @@ export default function AdminPage() {
 
     setIsAuthorized(true);
   }, [router]);
-  
-  useEffect(() => {
-    // Only subscribe once a process was started
-    if (!activeLog?.id) return;
-    const supabase = createClient();
-    
-    const channel = supabase
-      .channel('logs-changes')
-      .on(
-        'postgres_changes',
-        { 
-          event: 'UPDATE', 
-          schema: 'public', 
-          table: 'logs', 
-          filter: `id=eq.${activeLog.id}` 
-        },
-        (payload) => {
-          // payload.new has update
-          setActiveLog(payload.new as LogEntry);
-
-          const status = payload.new.current_status;
-          if (status === "SUCCESS" || status === "ERROR" || status === "CRITICAL") {
-            setIsLoading(false);
-            fetchLogs(); 
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [isLoading, activeLog?.id]);
-
-  const fetchLogs = useCallback(async () => {
+    const fetchLogs = useCallback(async () => {
     const supabase = createClient(); 
     const { data } = await supabase
       .from("logs")
@@ -81,6 +48,57 @@ export default function AdminPage() {
       .limit(10);
     if (data) setLogs(data);
   }, []);
+
+    // Only subscribe once a process was started
+    //I found that the docker image build takes a long time and that's why my current logs listening is failing
+    //what if I engage an event listener in a loop like in tkinter?
+  useEffect(() => {
+    if (!isAuthorized) return;
+    const supabase = createClient();
+    
+    const channel = supabase
+      .channel('logs-events')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'logs' },
+        (payload) => {
+          // If triggered new workflow
+          if (listener.current) {
+            setActiveLog(payload.new as LogEntry);
+            listener.current = false; 
+          }
+          fetchLogs(); // Refresh the list in the background
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'logs' },
+        (payload) => {
+          const updatedLog = payload.new as LogEntry;
+          
+          setActiveLog((prevLog) => {
+            // Only update the state if it belongs to the active log
+            if (prevLog && prevLog.id === updatedLog.id) {
+              return updatedLog;
+            }
+            return prevLog;
+          });
+
+          // Check for terminal states to re-enable the UI
+          const status = updatedLog.current_status;
+          if (["SUCCESS", "ERROR", "CRITICAL"].includes(status)) {
+            setIsLoading(false);
+            listener.current = false; 
+            fetchLogs(); 
+          }
+        }
+      )
+      .subscribe(); //supabase realtime
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [isAuthorized, fetchLogs]);
 
   useEffect(() => {
     checkAdmin();
@@ -97,29 +115,6 @@ export default function AdminPage() {
     const start = new Date(Date.now() - 10000).toISOString();
     try {
       await triggerBackupScript();
-      const supabase= createClient();
-      let retries = 5;
-      let foundLog = null;
-      while (retries > 0 && !foundLog) {
-        await new Promise(res => setTimeout(res, 2000));
-        const {data}= await supabase //race condition or smth keeps returning null
-          .from("logs")
-          .select("*")
-          .gt("created_at", start)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (data) {
-          foundLog = data;
-          setActiveLog(data); 
-        }
-        
-        retries--;
-      }
-      if (!foundLog) {
-        console.warn("Could not find the new log in the database.");
-        setIsLoading(false);
-      }
     }
     catch (error) {
       console.error(error);
