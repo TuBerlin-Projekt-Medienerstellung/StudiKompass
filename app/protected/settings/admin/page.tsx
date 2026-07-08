@@ -41,7 +41,7 @@ export default function AdminPage() {
   
   useEffect(() => {
     // Only subscribe once a process was started
-    if (!isLoading || !activeLog?.id) return;
+    if (!activeLog?.id) return;
     const supabase = createClient();
     
     const channel = supabase
@@ -94,7 +94,7 @@ export default function AdminPage() {
   const handleRunScript = async () => {
     setIsLoading(true);
     setActiveLog(null); // Reset active log
-    const start = new Date().toISOString();
+    const start = new Date(Date.now() - 10000).toISOString();
     try {
       await triggerBackupScript();
       const supabase= createClient();
@@ -110,9 +110,15 @@ export default function AdminPage() {
           .limit(1)
           .maybeSingle();
         if (data) {
+          foundLog = data;
           setActiveLog(data); 
         }
+        
         retries--;
+      }
+      if (!foundLog) {
+        console.warn("Could not find the new log in the database.");
+        setIsLoading(false);
       }
     }
     catch (error) {
