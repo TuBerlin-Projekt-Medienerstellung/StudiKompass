@@ -4,6 +4,7 @@ import { UpdatePasswordForm } from "@/components/update-password-form";
 import DeleteAccount from "@/components/delete-acc-button";
 import { UpdateEmailForm } from "@/components/update-email-form";
 import { UpdateSemesterForm } from "@/components/update-semester-form";
+import Stupo from "@/components/stupo_wahl"
 import Link from "next/link";
 export default function SettingsPage() {
     return (
@@ -17,6 +18,7 @@ export default function SettingsPage() {
                 </div>
                 <SettingsClient />
                 <Studiengang />
+                <Stupo />
                 <UpdateSemesterForm />
                 <UpdateEmailForm />
                 <UpdatePasswordForm />
