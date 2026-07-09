@@ -10,7 +10,16 @@ import re
 from sentence_transformers import SentenceTransformer, util
 from keybert import KeyBERT
 #import concurrent.futures
+'''Update: Upon further testing I found out that some degrees didnt had modules in the Basis search. 
+So I looked into it and found that the id logic I have been using (max extract) didn't match up with the database reality.
+More testing and logging revealed that there was absolutely no sequence or order to those ids, so here is my solution:
 
+Basic-Search: User needs to add his Stupo_Id in settings -> Basic search then checks all Stupo_id names and filter whether there
+is such a stupo-year, and if so returns all modules from that.. I'll have to see if I keep other max filters there
+
+Extended-Search: Here I will have to actually check all Stupos and in the dictionary I will then add another field "year", 
+so then the cards for the extended Modulesearch, if there are duplicates due to stupo, show the year they belong to.
+-> this means the manager function will filter via name and year'''
 #remove after testing and getting them github actions to run
 import uuid 
 # logging for Docker stdout
