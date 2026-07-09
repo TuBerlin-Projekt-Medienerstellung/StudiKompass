@@ -77,19 +77,27 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
     const studiengangDaten = await fetchMoses(`/studiengang/${studiengangId}`);
     const studiengang = studiengangDaten?.data?.[0];
     if (!studiengang) return [];
+    console.log("StudiengangId", studiengangId);
+    console.log("Studiengang Data", studiengang);
 
     // ← stupoList absichern: leere/fehlende Liste würde reduce zum Absturz bringen
     const stupoList: MosesRef[] = studiengang.stupoList ?? [];
     if (stupoList.length === 0) return [];
     const neuesteStupo = stupoList.reduce((max, s) => s.id > max.id ? s : max);
-
+    //const neuesteStupo = { id: 24652 }; 
+    // 24544 (2015), 24653: empty, 24652:empty, 37: empty, 6161:full (2013), 16501:full (2014)
+    //this means the code should filter via the year in the stupo name
+    //should the user have to tell us his Stupo? This also means other filters including other scripts have to have a different mechanism rather than max-search
+    console.log("Stupo id", neuesteStupo);
     const abbildungListeDaten = await fetchMoses(`/studiengangsabbildung?stupoId=${neuesteStupo.id}`);
     const abbildungRef = abbildungListeDaten?.data?.[0];
     if (!abbildungRef) return [];
+    console.log("abbildungRef for Studiengangabbildung", abbildungRef);
 
     const abbildungDetailDaten = await fetchMoses(`/studiengangsabbildung/${abbildungRef.id}`);
     const abbildungDetail = abbildungDetailDaten?.data?.[0];
     if (!abbildungDetail) return [];
+    console.log("studiengangsabbildung Data", abbildungDetail);
 
     let modullisteIds: MosesRef[] = abbildungDetail.modullisteList ?? [];
     let isBologna = false;
@@ -108,6 +116,8 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
         const modullisteDaten = await fetchMoses(`/modulliste/${neuesteModullisteId}`);
         const aktuelleModulliste = modullisteDaten?.data?.[0];
         if (!aktuelleModulliste) return [];
+        console.log("aktuelleModulliste Data", aktuelleModulliste);
+
 
         const zuordnungen: MosesRef[] = aktuelleModulliste.studiengangszuordnungList ?? [];
         if (zuordnungen.length === 0) return [];
@@ -159,6 +169,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 
             moduleRoh.push(...(batchErgebnisse.filter(Boolean) as ModulBasis[]));
         }
+        console.log("moduleRoh Data", moduleRoh);
 
         return moduleRoh;
     }
@@ -246,6 +257,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 
         moduleRoh.push(...(batchErgebnisse.filter(Boolean) as ModulBasis[]));
     }
+    console.log("moduleRoh Data", moduleRoh);
 
     return moduleRoh;
 }
