@@ -114,9 +114,9 @@ async def fetch_with_retry(client, endpoint, headers=None, params=None, retries=
 
     #^implement this: https://will-ockmore.github.io/httpx-retries/
 def get_stupo_year(stupo_name):
-    match = re.search(r'\b(19|20)\d{2}\b', stupo_name)
+    match = re.search(r'- StuPO\s*(.*)', stupo_name, re.IGNORECASE)
     if match:
-        return match.group(0)
+        return match.group(1).strip()
     elif "Allg. PO der TU" in stupo_name:
         return "Allg. PO der TU"
     return "Undefined  stupo"
