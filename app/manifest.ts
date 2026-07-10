@@ -23,3 +23,4 @@ export default function manifest(): MetadataRoute.Manifest {
         ],
     }
 }
+//https://supabase.com/docs/guides/realtime/postgres-changes?hl=en-DE
