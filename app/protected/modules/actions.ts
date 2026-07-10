@@ -74,22 +74,45 @@ function baueMosesLink(nummer: number | string, version?: number | string | null
 }
 
 export async function ladeModulBasisAction(studiengangId: number): Promise<ModulBasis[]> {
+    const supabase = await createClient();
+    const {data: {user}} = await supabase.auth.getUser();
+    let user_stupo: string | null = null;
+    
+    if (user) {
+        const {data: profile} = await supabase
+            .from("profiles")
+            .select("stupo_year")
+            .eq("id", user.id)
+            .single();
+        user_stupo = profile?.stupo_year || null;
+    }
     const studiengangDaten = await fetchMoses(`/studiengang/${studiengangId}`);
     const studiengang = studiengangDaten?.data?.[0];
     if (!studiengang) return [];
+    console.log("StudiengangId", studiengangId);
+    console.log("Studiengang Data", studiengang);
 
-    // ← stupoList absichern: leere/fehlende Liste würde reduce zum Absturz bringen
     const stupoList: MosesRef[] = studiengang.stupoList ?? [];
     if (stupoList.length === 0) return [];
-    const neuesteStupo = stupoList.reduce((max, s) => s.id > max.id ? s : max);
-
+    let neuesteStupo = null;
+    if (user_stupo) {
+        neuesteStupo = stupoList.find(s => s.name?.includes(user_stupo));}
+    if (!neuesteStupo) {
+        neuesteStupo = stupoList.reduce((max, s) => s.id > max.id ? s : max);}
+    //const neuesteStupo = { id: 24652 }; 
+    // 24544 (2015), 24653: empty, 24652:empty, 37: empty, 6161:full (2013), 16501:full (2014)
+    //this means the code should filter via the year in the stupo name
+    //should the user have to tell us his Stupo? This also means other filters including other scripts have to have a different mechanism rather than max-search
+    console.log("Stupo id", neuesteStupo);
     const abbildungListeDaten = await fetchMoses(`/studiengangsabbildung?stupoId=${neuesteStupo.id}`);
     const abbildungRef = abbildungListeDaten?.data?.[0];
     if (!abbildungRef) return [];
+    console.log("abbildungRef for Studiengangabbildung", abbildungRef);
 
     const abbildungDetailDaten = await fetchMoses(`/studiengangsabbildung/${abbildungRef.id}`);
     const abbildungDetail = abbildungDetailDaten?.data?.[0];
     if (!abbildungDetail) return [];
+    console.log("studiengangsabbildung Data", abbildungDetail);
 
     let modullisteIds: MosesRef[] = abbildungDetail.modullisteList ?? [];
     let isBologna = false;
@@ -108,6 +131,8 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
         const modullisteDaten = await fetchMoses(`/modulliste/${neuesteModullisteId}`);
         const aktuelleModulliste = modullisteDaten?.data?.[0];
         if (!aktuelleModulliste) return [];
+        console.log("aktuelleModulliste Data", aktuelleModulliste);
+
 
         const zuordnungen: MosesRef[] = aktuelleModulliste.studiengangszuordnungList ?? [];
         if (zuordnungen.length === 0) return [];
@@ -159,6 +184,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 
             moduleRoh.push(...(batchErgebnisse.filter(Boolean) as ModulBasis[]));
         }
+        console.log("moduleRoh Data", moduleRoh);
 
         return moduleRoh;
     }
@@ -246,6 +272,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 
         moduleRoh.push(...(batchErgebnisse.filter(Boolean) as ModulBasis[]));
     }
+    console.log("moduleRoh Data", moduleRoh);
 
     return moduleRoh;
 }
@@ -328,7 +355,7 @@ export async function ladeDetailedModulAction(modul_id: string | number) {
     return details;
 }
 
-export async function ladeModulBasisByIdsAction(modulDaten: { id: string; name: string }[]): Promise<ModulBasis[]> {
+export async function ladeModulBasisByIdsAction(modulDaten: { id: string; name: string, stupo_year:string }[]): Promise<ModulBasis[]> {
     // Iterate through the modulIds array from supabase (fuse.js return)
     // Fetch the basic data for each ID from the Moses API like with ladeModulBasisAction
     // Format them into your ModulBasis[] type and return them
@@ -342,7 +369,7 @@ export async function ladeModulBasisByIdsAction(modulDaten: { id: string; name: 
         const batch = modulDaten.slice(i, i + BATCH_SIZE);
         
         const batchErgebnisse = await Promise.all(
-            batch.map(async ({ id, name }) => {
+            batch.map(async ({ id, name, stupo_year }) => {
                 try {
                     // basically for every id I get for every fuse js match I wanna grab the version_id from ../bolognamodul/${id} 
                     const modulRaw = await fetchMoses(`/bolognamodul/${id}`);
@@ -351,13 +378,11 @@ export async function ladeModulBasisByIdsAction(modulDaten: { id: string; name: 
                     let lp = 0;
                     let semester = "Unbekannt";
 
-                    // 2. Apply your existing reduce logic to find the newest version object
                     if (versionen.length > 0) {
                         const neuesteVersion = versionen.reduce(
                             (max: any, v: any) => v.id > max.id ? v : max
                         );
                         
-                        // 3. Fetch version details ONLY for LP and Turnus using the max ID
                         if (neuesteVersion?.id) {
                             const versionRaw = await fetchMoses(`/bolognamodulversion/${neuesteVersion.id}`);
                             const versionDetail = versionRaw?.data?.[0];
@@ -379,7 +404,7 @@ export async function ladeModulBasisByIdsAction(modulDaten: { id: string; name: 
                         id: {type: "moses", value: Number(id)},
                         name: name,         //already exists in the json, always take german name for now
                         lp: lp,
-                        bereichPfad: [" "], // doesnt matter for extended search
+                        bereichPfad: [stupo_year], // doesnt matter for extended search, add stupo_year instead
                         semester: semester
                     } as ModulBasis;
 

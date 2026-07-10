@@ -5,12 +5,13 @@ import Fuse from 'fuse.js';
 import { ladeModulBasisByIdsAction, ModulBasis } from '@/app/protected/modules/actions';
 import ModulCard from '@/components/modul-card';
 import { getSemesters, getProfilTurnus } from '@/app/protected/planner/actions';
+import { ListRestart } from 'lucide-react';
 
 interface DictionaryItem {
   id: string;
   de_name: string;
   en_name: string;
-  studiengänge: string[];
+  studiengänge: { name: string; stupo: string }[];
   lehrinhalt: string;
   words: string[];
 }
@@ -88,14 +89,25 @@ export default function ExtendedModulsuche() {
         const results = fuse.search(query);
         const matchedData = results.slice(0, 30).map(res => ({
             id: res.item.id,
-            name: res.item.de_name 
+            name: res.item.de_name,
+            studiengaenge: res.item.studiengänge
+        }));
+        const payload = matchedData.map(item => ({
+            id: item.id,
+            name: item.name,
+            // Pass the first stupo year, or an empty string as a fallback, to satisfy 'stupo_year: string'
+            stupo_year: item.studiengaenge.length > 0 ? item.studiengaenge[0].stupo : ""
         }));
         
         if (matchedData.length > 0) {
             try {
-                const fetchedModules = await ladeModulBasisByIdsAction(matchedData);
+                const fetchedModules = await ladeModulBasisByIdsAction(payload);
+                const modules_stupo= fetchedModules.map(modul => {
+                    const match = matchedData.find(m => m.id === modul.id.value); 
+                    return {...modul, studiengaengeInfo: match ? match.studiengaenge : [] };
+                });
                 console.log("Fetched Modules from Action:", fetchedModules);
-                setDisplayModules(fetchedModules);
+                setDisplayModules(modules_stupo);
             } catch (error) {
                 console.error("Error fetching module details by IDs", error);
             }

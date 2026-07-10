@@ -10,7 +10,16 @@ import re
 from sentence_transformers import SentenceTransformer, util
 from keybert import KeyBERT
 #import concurrent.futures
+'''Update: Upon further testing I found out that some degrees didnt had modules in the Basis search. 
+So I looked into it and found that the id logic I have been using (max extract) didn't match up with the database reality.
+More testing and logging revealed that there was absolutely no sequence or order to those ids, so here is my solution:
 
+Basic-Search: User needs to add his Stupo_Id in settings -> Basic search then checks all Stupo_id names and filter whether there
+is such a stupo-year, and if so returns all modules from that.. I'll have to see if I keep other max filters there
+
+Extended-Search: Here I will have to actually check all Stupos and in the dictionary I will then add another field "year", 
+so then the cards for the extended Modulesearch, if there are duplicates due to stupo, show the year they belong to.
+-> this means the manager function will filter via name and year'''
 #remove after testing and getting them github actions to run
 import uuid 
 # logging for Docker stdout
@@ -104,6 +113,13 @@ async def fetch_with_retry(client, endpoint, headers=None, params=None, retries=
 #    transport = RetryTransport(retry=retry_strategy)
 
     #^implement this: https://will-ockmore.github.io/httpx-retries/
+def get_stupo_year(stupo_name):
+    match = re.search(r'- StuPO\s*(.*)', stupo_name, re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+    elif "Allg. PO der TU" in stupo_name:
+        return "Allg. PO der TU"
+    return "Undefined  stupo"
 
 #logic for a single page out here so the ThreadPool can use it
 async def fetch_deg_page(client: httpx.AsyncClient, page: int, sem: asyncio.Semaphore):
@@ -124,8 +140,13 @@ async def fetch_deg_page(client: httpx.AsyncClient, page: int, sem: asyncio.Sema
             
             for x in result:
                 stupo_list = x.get("stupoList", [])
-                max_id = max((s.get("id", 0) for s in stupo_list), default=None)
-                cache.append((x.get("id"), x.get("name"), max_id))
+                deg_name = x.get("name")
+                deg_id = x.get("id")
+
+                for stupo in stupo_list:
+                    stupo_id = stupo.get("id")
+                    stupo_year = get_stupo_year(stupo.get("name", ""))
+                    cache.append((deg_id, deg_name, stupo_id, stupo_year))
                 
             return cache, data.get("totalPages", 1)
         except Exception as e:
@@ -192,7 +213,7 @@ async def fetch_single(client, endpoint, params, only_id, deduplicate, sem):
 async def fetch_is_Bologna(client, deg_info, sem):
     list_modules=[]
     isBologna= False
-    deg_id, deg_name, stupo_id = deg_info
+    deg_id, deg_name, stupo_id, stupo_year = deg_info
     async with sem:
         try:
             # response = requests.get(f"{base_url}/studiengangsabbildung/{my_list[2]}", headers=headers, params={"fields":"stupo"})
@@ -410,7 +431,6 @@ async def module_manager():
     await send_status_admin("Initializing runtime client and structural pipeline.", "PROCESSING")
     async with httpx.AsyncClient(headers=headers, limits=limits) as client:
     
-        # 2. Your async pipelines go here...
         list_studiengaenge = await fetch_all_degs(client, sem)
         await send_status_admin(f"fetch_all_degs completed:: {len(list_studiengaenge)} degrees", "PROCESSING")
     
@@ -422,7 +442,7 @@ async def module_manager():
         for x,module_id in list_modules:
             if not module_id:
                 continue
-            x_name = x[1]
+            x_id, x_name, stupo_id, stupo_year = x 
             try:
                 process_status = 1
                 # my_dict_list=[{"id":mod_id, **details} for mod_id, details in my_dict.items()]
@@ -461,9 +481,13 @@ async def module_manager():
                     }
                     
                 if module_id in my_dict:
-                    if x_name not in my_dict[module_id]["studiengänge"]:
-                    #add x to list of degs that have that modules in my_dict
-                        my_dict[module_id]["studiengänge"].append(x_name)
+                    deg_entry = {
+                        "name": x_name,
+                        "stupo": stupo_year
+                    }
+                    #add x (now also the stupo_year..) to list of degs that have that modules in my_dict
+                    if deg_entry not in my_dict[module_id]["studiengänge"]:
+                        my_dict[module_id]["studiengänge"].append(deg_entry)
                     
                 process_status = 3
             except Exception as e:
