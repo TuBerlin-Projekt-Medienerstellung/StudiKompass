@@ -124,7 +124,7 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 
     if (modullisteIds.length === 0) return [];
 
-    const neuesteModullisteId = modullisteIds.reduce((max, ml) => ml.id > max.id ? ml : max).id;
+    const neuesteModullisteId = modullisteIds.reduce((max, ml) => ml.id > max.id ? ml : max).id; //also change max logic here
 
     // Nicht-Bologna-Pfad
     if (!isBologna) {
@@ -276,9 +276,8 @@ export async function ladeModulBasisAction(studiengangId: number): Promise<Modul
 
     return moduleRoh;
 }
-
-// Verlagerung der detailedmodules Komponente, da client komponenten keine server action/Komponente wrappen/einbetten oder aufrufen können..
-export async function ladeDetailedModulAction(modul_id: string | number) {
+async function ladeStandardDetails(modul_id: string | number) {
+    //for basis Modul fetch, didnt change anything
     const supabase = await createClient();
     const {data: {user}} = await supabase.auth.getUser();
     if (!user) return null;
@@ -355,7 +354,66 @@ export async function ladeDetailedModulAction(modul_id: string | number) {
     return details;
 }
 
-export async function ladeModulBasisByIdsAction(modulDaten: { id: string; name: string, stupo_year:string }[]): Promise<ModulBasis[]> {
+export async function ladeExtendedDetails(modul_id: string | number){
+    //for extended search, bc it's independent from deg_id
+    const id = String(modul_id);
+        let details = {
+        lehrinhalte: "",
+        lernergebnisse: "",
+        voraussetzungen: "",
+        lehrlernformen: "",
+        pruefungsform: "",
+        benotet: null as boolean | null,
+        pruefungsBeschreibung: "",
+        pruefungselemente: [] as string[],
+        anmeldeformalitaetenDE: "",
+        link: "",
+    }
+    try{
+        const modulRaw = await fetchMoses(`/bolognamodul/${id}`);
+        const versionen = modulRaw?.data?.[0]?.bolognamodulVersionList ?? [];
+        if (versionen.length === 0) return details;
+        const neuesteVersion = versionen.reduce((max: any, v: any) => v.id > max.id ? v : max);
+        const versionRaw = await fetchMoses(`/bolognamodulversion/${neuesteVersion.id}`);
+        const version = versionRaw?.data?.[0];
+        let versionsnummer = null;
+        if (version?.semesterBis == null){
+            versionsnummer = version?.versionsnummer;}
+        const [bolognamodulData, beschreibungData, pruefungData] = await Promise.all([
+            fetchMoses(`/bolognamodul/${id}`),
+            fetchMoses(`/bolognamodulbeschreibung/${version.bolognamodulBeschreibung.id}`),
+            fetchMoses(`/bolognamodulpruefung?bolognamodulId=${id}`),
+        ]);
+        const nummer = bolognamodulData?.data?.[0]?.number;
+        const beschreibung = beschreibungData?.data?.[0];
+        const pruefung = pruefungData?.data?.[0];
+
+        details = {
+        lehrinhalte: beschreibung?.lehrinhalteDE ?? "",
+        lernergebnisse: beschreibung?.lernergebnisseDE ?? "",
+        voraussetzungen: beschreibung?.lehrveranstaltungsvoraussetzungenDE ?? "",
+        lehrlernformen: beschreibung?.lehrlernformenDE ?? "",
+        pruefungsform: pruefung?.pruefungsform?.name ?? "",
+        benotet: pruefung?.benotet ?? null,
+        pruefungsBeschreibung: pruefung?.beschreibungDE ?? "",
+        pruefungselemente: pruefung?.pruefungselementList?.map((p: { name: string }) => p.name) ?? [],
+        anmeldeformalitaetenDE: pruefung?.anmeldeformalitaetenDE ?? "",
+        link: nummer != null ? baueMosesLink(nummer, versionsnummer) : "",
+    }
+        return details;
+    }catch (e){
+        return details;
+    }
+}
+export async function ladeDetailedModulAction(modul_id: string | number, no_deg: boolean = false) {
+    //manager function basically
+    if (no_deg) {
+        return await ladeExtendedDetails(modul_id);
+    }
+    return await ladeStandardDetails(modul_id);
+}
+
+export async function ladeModulBasisByIdsAction(modulDaten: { id: string; name: string, version_info:string }[]): Promise<ModulBasis[]> {
     // Iterate through the modulIds array from supabase (fuse.js return)
     // Fetch the basic data for each ID from the Moses API like with ladeModulBasisAction
     // Format them into your ModulBasis[] type and return them
@@ -369,7 +427,7 @@ export async function ladeModulBasisByIdsAction(modulDaten: { id: string; name: 
         const batch = modulDaten.slice(i, i + BATCH_SIZE);
         
         const batchErgebnisse = await Promise.all(
-            batch.map(async ({ id, name, stupo_year }) => {
+            batch.map(async ({ id, name, version_info }) => {
                 try {
                     // basically for every id I get for every fuse js match I wanna grab the version_id from ../bolognamodul/${id} 
                     const modulRaw = await fetchMoses(`/bolognamodul/${id}`);
@@ -380,7 +438,7 @@ export async function ladeModulBasisByIdsAction(modulDaten: { id: string; name: 
 
                     if (versionen.length > 0) {
                         const neuesteVersion = versionen.reduce(
-                            (max: any, v: any) => v.id > max.id ? v : max
+                            (max: any, v: any) => v.id > max.id ? v : max 
                         );
                         
                         if (neuesteVersion?.id) {
@@ -404,7 +462,7 @@ export async function ladeModulBasisByIdsAction(modulDaten: { id: string; name: 
                         id: {type: "moses", value: Number(id)},
                         name: name,         //already exists in the json, always take german name for now
                         lp: lp,
-                        bereichPfad: [stupo_year], // doesnt matter for extended search, add stupo_year instead
+                        bereichPfad: [version_info], // doesnt matter for extended search, add version_info instead
                         semester: semester
                     } as ModulBasis;
 
