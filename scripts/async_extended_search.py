@@ -460,7 +460,7 @@ async def module_manager():
                     if version_id:
                         #module will have semesterBis -> outdated module versions visable
                         semesterBis = await fetch_single(client, f"{base_url}/bolognamodulversion/{version_id}","semesterBis" ,False, None, sem)
-                        version_info = semesterBis.get("name") if isinstance(semesterBis, dict) else "Active" 
+                        version_info = "bis" + semesterBis.get("name") if isinstance(semesterBis, dict) else "Active" 
                         desc_res = await fetch_single(client, f"{base_url}/bolognamodulversion/{version_id}","bolognamodulBeschreibung" ,True, None, sem)
                         if isinstance(desc_res, list) and len(desc_res) > 0:
                             description_id = max(desc_res)
