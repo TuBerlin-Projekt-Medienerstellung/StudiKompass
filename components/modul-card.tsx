@@ -24,6 +24,7 @@ const ModulCard = (props: modulInfo & {
     semesterListe: { id: string; semesterzahl: number; name: string }[];
     currentSemester: number | null;
     currentTurnus: string | null;
+    no_deg?: boolean;
 }) => {
     const [liked, setLiked] = useState(true);
     const [open, setOpen] = useState(false);
@@ -46,6 +47,7 @@ const ModulCard = (props: modulInfo & {
         semesterListe,
         currentSemester,
         currentTurnus,
+        no_deg = false,
     } = props;
 
     const angezeigterTurnus = turnus ?? undefined;
@@ -64,7 +66,7 @@ const ModulCard = (props: modulInfo & {
         setOpen(!open);
         if (!open && !details) {
             setLoadingDetails(true);
-            const data = await ladeDetailedModulAction(handleModule(modul_id));
+            const data = await ladeDetailedModulAction(handleModule(modul_id), no_deg);
             if (data) {
                 setDetails({
                     ...data,
