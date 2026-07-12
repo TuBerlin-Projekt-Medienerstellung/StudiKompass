@@ -19,7 +19,9 @@ is such a stupo-year, and if so returns all modules from that.. I'll have to see
 
 Extended-Search: Here I will have to actually check all Stupos and in the dictionary I will then add another field "year", 
 so then the cards for the extended Modulesearch, if there are duplicates due to stupo, show the year they belong to.
--> this means the manager function will filter via name and year'''
+-> this means the manager function will filter via name and year -> commented out
+
+NEW: get version_info: see if module is outdated (keep it in, if older student still wants to use the app)'''
 import uuid 
 # logging for Docker stdout
 logging.basicConfig(
