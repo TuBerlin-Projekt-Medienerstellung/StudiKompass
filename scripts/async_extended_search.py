@@ -19,8 +19,9 @@ is such a stupo-year, and if so returns all modules from that.. I'll have to see
 
 Extended-Search: Here I will have to actually check all Stupos and in the dictionary I will then add another field "year", 
 so then the cards for the extended Modulesearch, if there are duplicates due to stupo, show the year they belong to.
--> this means the manager function will filter via name and year'''
-#remove after testing and getting them github actions to run
+-> this means the manager function will filter via name and year -> commented out
+
+NEW: get version_info: see if module is outdated (keep it in, if older student still wants to use the app)'''
 import uuid 
 # logging for Docker stdout
 logging.basicConfig(
@@ -35,8 +36,6 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 run_id = os.environ.get("GITHUB_RUN_ID", f"local_run_{uuid.uuid4().hex[:8]}")
 process_history = []
 
-#this whole file is just a tester file where I aim to convert it to async from the existing working file
-#first testing the fetch with .env file to isolate possible problems
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -243,7 +242,6 @@ async def fetch_is_Bologna(client, deg_info, sem):
 
                     if len(list_modules) == 0:
                         return None, False
-
                     max_id = max((s.get("id",0) for s in list_modules), default=None) 
                     return max_id, isBologna
 
@@ -461,6 +459,9 @@ async def module_manager():
                         version_id = None
                     description_id = None
                     if version_id:
+                        #module will have semesterBis -> outdated module versions visable
+                        semesterBis = await fetch_single(client, f"{base_url}/bolognamodulversion/{version_id}","semesterBis" ,False, None, sem)
+                        version_info = semesterBis.get("name")
                         desc_res = await fetch_single(client, f"{base_url}/bolognamodulversion/{version_id}","bolognamodulBeschreibung" ,True, None, sem)
                         if isinstance(desc_res, list) and len(desc_res) > 0:
                             description_id = max(desc_res)
@@ -475,6 +476,7 @@ async def module_manager():
                     my_dict[module_id] = {
                         "de_name": de_name,
                         "en_name": en_name,
+                        "version": version_info,
                         "studiengänge": [], 
                         "lehrinhalt": Lehrinhalt,
                         "words": []
@@ -592,8 +594,13 @@ async def to_json(my_dict, bucket, file_name):
                 "id": str(module_id),
                 "de_name": data.get("de_name", ""),
                 "en_name": data.get("en_name", ""),
-                "studiengänge": data.get("studiengänge", []),
-                "lehrinhalt": data.get("lehrinhalt", ""),
+                "version": data.get("version_id"),
+                #"studiengänge": data.get("studiengänge", []), 
+                # the newest update revealed that using stupo year as range isn't reliable (so frontend doesnt need it currently)
+                # instead I will use semesterBis from /bolognamodulversion/{id} 
+                # js in case if there is a need Imma js uncomment
+                #"lehrinhalt": data.get("lehrinhalt", ""), 
+                #technically the frontend doesnt need this and the file grew exponentially since the stupo addition so I gotta optimise
                 "words": data.get("words", []) 
             }
             formatted_list.append(module_item)
