@@ -443,7 +443,6 @@ async def module_manager():
             x_id, x_name, stupo_id, stupo_year = x 
             try:
                 process_status = 1
-                # my_dict_list=[{"id":mod_id, **details} for mod_id, details in my_dict.items()]
                 if not module_id in my_dict:
                     #fetch Lehrinhalt of that module with id  /bolognamodulbeschreibung/{id} (id from modulversion endpoint)
                     multiname = await fetch_single(client, f"{base_url}/bolognamodul/{module_id}","multiname" ,False, None, sem) or {}
@@ -461,7 +460,7 @@ async def module_manager():
                     if version_id:
                         #module will have semesterBis -> outdated module versions visable
                         semesterBis = await fetch_single(client, f"{base_url}/bolognamodulversion/{version_id}","semesterBis" ,False, None, sem)
-                        version_info = semesterBis.get("name")
+                        version_info = semesterBis.get("name") if isinstance(semesterBis, dict) else "Active" 
                         desc_res = await fetch_single(client, f"{base_url}/bolognamodulversion/{version_id}","bolognamodulBeschreibung" ,True, None, sem)
                         if isinstance(desc_res, list) and len(desc_res) > 0:
                             description_id = max(desc_res)
@@ -594,7 +593,7 @@ async def to_json(my_dict, bucket, file_name):
                 "id": str(module_id),
                 "de_name": data.get("de_name", ""),
                 "en_name": data.get("en_name", ""),
-                "version": data.get("version_id"),
+                "version": data.get("version"),
                 #"studiengänge": data.get("studiengänge", []), 
                 # the newest update revealed that using stupo year as range isn't reliable (so frontend doesnt need it currently)
                 # instead I will use semesterBis from /bolognamodulversion/{id} 
@@ -664,7 +663,8 @@ async def send_status_admin(message, level="INFO"):
 async def main():
         my_dict, status = await module_manager()
         print(f"\nProcess Finished with Status: {status}")
-        final_dict = find_internal_candidates(my_dict)
+        await send_status_admin("Starting ML keyword extraction with sentence_transformers", "PROCESSING")
+        final_dict = await asyncio.to_thread(find_internal_candidates, my_dict)#another thread for comcurrency
         
         if final_dict:
             await send_status_admin(f"Successfully updated dictionary with transformers", "SUCCESS")
