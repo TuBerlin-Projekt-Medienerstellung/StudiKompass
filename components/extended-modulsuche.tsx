@@ -13,7 +13,7 @@ interface DictionaryItem {
   de_name: string;
   en_name: string;
   //studiengänge: { name: string; stupo: string }[];
-  version_info: string;
+  version: string;
   lehrinhalt: string;
   words: string[];
 }
@@ -92,7 +92,7 @@ export default function ExtendedModulsuche() {
         const matchedData = results.slice(0, 30).map(res => ({
             id: res.item.id,
             name: res.item.de_name,
-            version_info: res.item.version_info
+            version_info: res.item.version
         }));
         // const payload = matchedData.map(item => {
         //     let stupo_year = "";
