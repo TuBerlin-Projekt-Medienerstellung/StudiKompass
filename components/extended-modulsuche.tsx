@@ -5,8 +5,8 @@ import Fuse from 'fuse.js';
 import { ladeModulBasisByIdsAction, ModulBasis } from '@/app/protected/modules/actions';
 import ModulCard from '@/components/modul-card';
 import { getSemesters, getProfilTurnus } from '@/app/protected/planner/actions';
-import { handleModule, berechneTurnus } from "@/lib/utils";
-import { ListRestart } from 'lucide-react';
+// import { handleModule, berechneTurnus } from "@/lib/utils";
+// import { ListRestart } from 'lucide-react';
 
 interface DictionaryItem {
   id: string;
