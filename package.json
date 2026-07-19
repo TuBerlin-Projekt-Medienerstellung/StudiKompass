@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "dev": "node dev-with-qr.mjs",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint ."
   },
