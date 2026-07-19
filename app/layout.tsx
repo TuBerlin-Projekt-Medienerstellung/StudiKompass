@@ -1,4 +1,4 @@
-import type {Metadata} from "next";
+import type {Metadata, Viewport} from "next";
 import {Quicksand} from "next/font/google";
 import {ThemeProvider} from "../components/theme-provider";
 import "./globals.css";
@@ -9,8 +9,14 @@ const defaultUrl = process.env.VERCEL_URL
 
 export const metadata: Metadata = {
     metadataBase: new URL(defaultUrl),
-    title: "Next.js and Supabase Starter Kit",
-    description: "The fastest way to build apps with Next.js and Supabase",
+    title: "NAVIS",
+    description: "Dein Studium, perfekt organisiert.",
+};
+export const viewport: Viewport = {
+    themeColor: [
+        { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+        { media: "(prefers-color-scheme: dark)", color: "#09090b" }
+    ]
 };
 
 const quicksand = Quicksand({
