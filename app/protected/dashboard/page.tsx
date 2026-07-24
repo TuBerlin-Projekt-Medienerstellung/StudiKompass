@@ -11,11 +11,15 @@ import {
     TrendingUp,
     CircleCheckBig,
     Circle,
+    ChevronDown,
 } from "lucide-react";
 import {
     berechneGesamtschnitt,
     berechneUrteil,
 } from "@/lib/grades";
+
+import TargetGradeInput from "@/components/target-grade";
+import DashboardSettings from "@/components/dashboard-settings";
 
 type AktuellesModul = {
     name: string;
@@ -56,12 +60,12 @@ export default async function DashboardPage() {
     const urteil = berechneUrteil(gesamtschnitt);
 
     const {data: profile} = user
-        ? await supabase
-            .from("profiles")
-            .select("current_semester, max_semester")
-            .eq("id", user.id)
-            .single()
-        : {data: null};
+    ? await supabase
+        .from("profiles")
+        .select("current_semester, max_semester, target_grade")
+        .eq("id", user.id)
+        .single()
+    : {data: null};
 
     const {data: plannedModules} = user
         ? await supabase
@@ -97,34 +101,7 @@ export default async function DashboardPage() {
         .filter(Boolean);
 
 
-    // Aktuelles Semester ist das erste Planer-Semester, das noch offene Module enthält.
-    const semesterAusPlaner = plannedModuleItems
-        .map((item) => firstOrSingle(item.semester))
-        .filter(Boolean);
-
-    const eindeutigeSemester = Array.from(
-        new Map(
-            semesterAusPlaner.map((semester) => [semester?.semesterzahl, semester])
-        ).values()
-    ).sort((a, b) => (a?.semesterzahl ?? 0) - (b?.semesterzahl ?? 0));
-
-    const aktuellesSemesterObjekt =
-        eindeutigeSemester.find((semester) => {
-            const moduleInSemester = plannedModuleItems.filter((item) => {
-                const itemSemester = firstOrSingle(item.semester);
-                return itemSemester?.semesterzahl === semester?.semesterzahl;
-            });
-
-            return moduleInSemester.some((item) => {
-                const modul = firstOrSingle(item.module);
-                return !modul?.abgeschlossen;
-            });
-        }) ??
-        eindeutigeSemester[eindeutigeSemester.length - 1] ??
-        null;
-
-    const aktuellesSemester =
-        aktuellesSemesterObjekt?.semesterzahl ?? profile?.current_semester ?? 1;
+    const aktuellesSemester = profile?.current_semester ?? 1;
 
     const gesamtEcts = 180;
 
@@ -172,17 +149,44 @@ export default async function DashboardPage() {
             )
             : 0;
 
-    const meilensteine: Meilenstein[] = [
-        {
-            titel: "Module abgeschlossen",
-            fortschritt: moduleFortschritt,
-        },
+    const naechstesSemester = aktuellesSemester + 1;
 
-        {
-            titel: "Aktuelles Semester",
-            fortschritt: aktuellesSemesterFortschritt,
-        },
-    ];
+    const moduleImNaechstenSemester = plannedModuleItems.filter((item) => {
+        const semester = firstOrSingle(item.semester);
+        return semester?.semesterzahl === naechstesSemester;
+    });
+
+    const angezeigteModuleNaechstesSemester: AktuellesModul[] =
+        moduleImNaechstenSemester
+            .filter((item) => {
+                const modul = firstOrSingle(item.module);
+                return !modul?.abgeschlossen;
+            })
+            .map((item) => {
+                const modul = firstOrSingle(item.module);
+
+                return {
+                    name: modul?.name ?? "Unbekanntes Modul",
+                    prof: "Planner",
+                    ects: modul?.ects ?? 0,
+                    laufend: false,
+                };
+            });
+
+    const meilensteine: Meilenstein[] = [
+    {
+        titel: "Module abgeschlossen",
+        fortschritt: moduleFortschritt,
+    },
+    {
+        titel: "Aktuelles Semester",
+        fortschritt: aktuellesSemesterFortschritt,
+    },
+    {
+        titel: "Wunschschnitt",
+        fortschritt: 0, // später berechnen
+    },
+];
 
     const angezeigteModule: AktuellesModul[] =
         moduleImAktuellenSemester.length > 0
@@ -275,6 +279,7 @@ export default async function DashboardPage() {
                     </p>
                 </div>
 
+
                 <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
                     {angezeigteModule.map((modul) => (
                         <div
@@ -302,6 +307,44 @@ export default async function DashboardPage() {
                                 >
                   {modul.laufend ? "Laufend" : "Abgeschlossen"}
                 </span>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </section>
+            <section className="rounded-2xl border border-border p-4 bg-card sm:p-5">
+                <div className="mb-5 flex items-center justify-between">
+                    <h2 className="text-xl font-bold">Nächstes Semester</h2>
+
+                    <p className="text-sm text-muted-foreground">
+                        {angezeigteModuleNaechstesSemester.length} Module
+                    </p>
+                </div>
+
+                <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+                    {angezeigteModuleNaechstesSemester.map((modul) => (
+                        <div
+                            key={modul.name}
+                            className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-start"
+                        >
+                            <div>
+                                <h3 className="text-base font-medium text-gray-900 dark:text-white">
+                                    {modul.name}
+                                </h3>
+
+                                <p className="text-sm text-muted-foreground">
+                                    {modul.prof}
+                                </p>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-3 sm:justify-end lg:justify-start">
+                                <p className="text-sm text-muted-foreground">
+                                    {modul.ects} ECTS
+                                </p>
+
+                                <span className="rounded-full px-4 py-1 text-sm bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                                    Nicht laufend
+                                </span>
                             </div>
                         </div>
                     ))}
@@ -346,11 +389,22 @@ export default async function DashboardPage() {
                                         style={{width: `${meilenstein.fortschritt}%`}}
                                     />
                                 </div>
+                                {meilenstein.titel === "Wunschschnitt" && (
+                                    <div className="mt-3 flex items-center justify-between gap-4">
+                                        <TargetGradeInput
+                                            initialValue={profile?.target_grade ?? null}
+                                        />
+                                    </div>
+                                )}
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
+            
+            <DashboardSettings />
+            
         </div>
     );
+    
 }
