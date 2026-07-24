@@ -10,8 +10,18 @@ import re
 from sentence_transformers import SentenceTransformer, util
 from keybert import KeyBERT
 #import concurrent.futures
+'''Update: Upon further testing I found out that some degrees didnt had modules in the Basis search. 
+So I looked into it and found that the id logic I have been using (max extract) didn't match up with the database reality.
+More testing and logging revealed that there was absolutely no sequence or order to those ids, so here is my solution:
 
-#remove after testing and getting them github actions to run
+Basic-Search: User needs to add his Stupo_Id in settings -> Basic search then checks all Stupo_id names and filter whether there
+is such a stupo-year, and if so returns all modules from that.. I'll have to see if I keep other max filters there
+
+Extended-Search: Here I will have to actually check all Stupos and in the dictionary I will then add another field "year", 
+so then the cards for the extended Modulesearch, if there are duplicates due to stupo, show the year they belong to.
+-> this means the manager function will filter via name and year -> commented out
+
+NEW: get version_info: see if module is outdated (keep it in, if older student still wants to use the app)'''
 import uuid 
 # logging for Docker stdout
 logging.basicConfig(
@@ -26,8 +36,6 @@ logging.getLogger("httpcore").setLevel(logging.WARNING)
 run_id = os.environ.get("GITHUB_RUN_ID", f"local_run_{uuid.uuid4().hex[:8]}")
 process_history = []
 
-#this whole file is just a tester file where I aim to convert it to async from the existing working file
-#first testing the fetch with .env file to isolate possible problems
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -104,6 +112,13 @@ async def fetch_with_retry(client, endpoint, headers=None, params=None, retries=
 #    transport = RetryTransport(retry=retry_strategy)
 
     #^implement this: https://will-ockmore.github.io/httpx-retries/
+def get_stupo_year(stupo_name):
+    match = re.search(r'- StuPO\s*(.*)', stupo_name, re.IGNORECASE)
+    if match:
+        return match.group(1).strip()
+    elif "Allg. PO der TU" in stupo_name:
+        return "Allg. PO der TU"
+    return "Undefined  stupo"
 
 #logic for a single page out here so the ThreadPool can use it
 async def fetch_deg_page(client: httpx.AsyncClient, page: int, sem: asyncio.Semaphore):
@@ -124,8 +139,13 @@ async def fetch_deg_page(client: httpx.AsyncClient, page: int, sem: asyncio.Sema
             
             for x in result:
                 stupo_list = x.get("stupoList", [])
-                max_id = max((s.get("id", 0) for s in stupo_list), default=None)
-                cache.append((x.get("id"), x.get("name"), max_id))
+                deg_name = x.get("name")
+                deg_id = x.get("id")
+
+                for stupo in stupo_list:
+                    stupo_id = stupo.get("id")
+                    stupo_year = get_stupo_year(stupo.get("name", ""))
+                    cache.append((deg_id, deg_name, stupo_id, stupo_year))
                 
             return cache, data.get("totalPages", 1)
         except Exception as e:
@@ -192,7 +212,7 @@ async def fetch_single(client, endpoint, params, only_id, deduplicate, sem):
 async def fetch_is_Bologna(client, deg_info, sem):
     list_modules=[]
     isBologna= False
-    deg_id, deg_name, stupo_id = deg_info
+    deg_id, deg_name, stupo_id, stupo_year = deg_info
     async with sem:
         try:
             # response = requests.get(f"{base_url}/studiengangsabbildung/{my_list[2]}", headers=headers, params={"fields":"stupo"})
@@ -222,7 +242,6 @@ async def fetch_is_Bologna(client, deg_info, sem):
 
                     if len(list_modules) == 0:
                         return None, False
-
                     max_id = max((s.get("id",0) for s in list_modules), default=None) 
                     return max_id, isBologna
 
@@ -410,7 +429,6 @@ async def module_manager():
     await send_status_admin("Initializing runtime client and structural pipeline.", "PROCESSING")
     async with httpx.AsyncClient(headers=headers, limits=limits) as client:
     
-        # 2. Your async pipelines go here...
         list_studiengaenge = await fetch_all_degs(client, sem)
         await send_status_admin(f"fetch_all_degs completed:: {len(list_studiengaenge)} degrees", "PROCESSING")
     
@@ -422,10 +440,9 @@ async def module_manager():
         for x,module_id in list_modules:
             if not module_id:
                 continue
-            x_name = x[1]
+            x_id, x_name, stupo_id, stupo_year = x 
             try:
                 process_status = 1
-                # my_dict_list=[{"id":mod_id, **details} for mod_id, details in my_dict.items()]
                 if not module_id in my_dict:
                     #fetch Lehrinhalt of that module with id  /bolognamodulbeschreibung/{id} (id from modulversion endpoint)
                     multiname = await fetch_single(client, f"{base_url}/bolognamodul/{module_id}","multiname" ,False, None, sem) or {}
@@ -441,6 +458,9 @@ async def module_manager():
                         version_id = None
                     description_id = None
                     if version_id:
+                        #module will have semesterBis -> outdated module versions visable
+                        semesterBis = await fetch_single(client, f"{base_url}/bolognamodulversion/{version_id}","semesterBis" ,False, None, sem)
+                        version_info = "bis " + semesterBis.get("name") if isinstance(semesterBis, dict) else "Active" 
                         desc_res = await fetch_single(client, f"{base_url}/bolognamodulversion/{version_id}","bolognamodulBeschreibung" ,True, None, sem)
                         if isinstance(desc_res, list) and len(desc_res) > 0:
                             description_id = max(desc_res)
@@ -455,15 +475,20 @@ async def module_manager():
                     my_dict[module_id] = {
                         "de_name": de_name,
                         "en_name": en_name,
+                        "version": version_info,
                         "studiengänge": [], 
                         "lehrinhalt": Lehrinhalt,
                         "words": []
                     }
                     
                 if module_id in my_dict:
-                    if x_name not in my_dict[module_id]["studiengänge"]:
-                    #add x to list of degs that have that modules in my_dict
-                        my_dict[module_id]["studiengänge"].append(x_name)
+                    deg_entry = {
+                        "name": x_name,
+                        "stupo": stupo_year
+                    }
+                    #add x (now also the stupo_year..) to list of degs that have that modules in my_dict
+                    if deg_entry not in my_dict[module_id]["studiengänge"]:
+                        my_dict[module_id]["studiengänge"].append(deg_entry)
                     
                 process_status = 3
             except Exception as e:
@@ -568,8 +593,13 @@ async def to_json(my_dict, bucket, file_name):
                 "id": str(module_id),
                 "de_name": data.get("de_name", ""),
                 "en_name": data.get("en_name", ""),
-                "studiengänge": data.get("studiengänge", []),
-                "lehrinhalt": data.get("lehrinhalt", ""),
+                "version": data.get("version"),
+                #"studiengänge": data.get("studiengänge", []), 
+                # the newest update revealed that using stupo year as range isn't reliable (so frontend doesnt need it currently)
+                # instead I will use semesterBis from /bolognamodulversion/{id} 
+                # js in case if there is a need Imma js uncomment
+                #"lehrinhalt": data.get("lehrinhalt", ""), 
+                #technically the frontend doesnt need this and the file grew exponentially since the stupo addition so I gotta optimise
                 "words": data.get("words", []) 
             }
             formatted_list.append(module_item)
@@ -633,7 +663,8 @@ async def send_status_admin(message, level="INFO"):
 async def main():
         my_dict, status = await module_manager()
         print(f"\nProcess Finished with Status: {status}")
-        final_dict = find_internal_candidates(my_dict)
+        await send_status_admin("Starting ML keyword extraction with sentence_transformers", "PROCESSING")
+        final_dict = await asyncio.to_thread(find_internal_candidates, my_dict)#another thread for comcurrency
         
         if final_dict:
             await send_status_admin(f"Successfully updated dictionary with transformers", "SUCCESS")
