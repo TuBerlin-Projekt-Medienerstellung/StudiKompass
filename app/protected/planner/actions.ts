@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { berechneTurnus, zaehleSemesterWechsel } from "@/lib/utils";
 
 
 //Semester aus Supabase laden
@@ -591,4 +592,57 @@ export async function getProfilTurnus(): Promise<{
         currentSemester: data.current_semester ?? null,
         currentTurnus: data.current_turnus ?? null,
     };
+}
+
+// Prüft beim Laden, ob seit dem letzten Update Semesterwechsel (1.4./1.10.) vergangen sind,
+// und erhöht current_semester entsprechend (gedeckelt bei max_semester).
+export async function pruefeSemesterUpdate() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Profil laden
+    const { data: profil, error } = await supabase
+        .from("profiles")
+        .select("current_semester, max_semester, current_turnus, last_semester_update")
+        .eq("id", user.id)
+        .single();
+
+    if (error || !profil) return;
+
+    const heute = new Date();
+
+    // NULL-Fall: erstes Mal → Merker auf heute setzen, nicht hochzählen
+    if (!profil.last_semester_update) {
+        await supabase
+            .from("profiles")
+            .update({ last_semester_update: heute.toISOString().split("T")[0] })
+            .eq("id", user.id);
+        return;
+    }
+
+    // Wie viele Wechsel seit dem Merker?
+    const merker = new Date(profil.last_semester_update);
+    const anzahlWechsel = zaehleSemesterWechsel(merker, heute);
+
+    // Keine Wechsel → nichts tun (keine unnötige Schreibung)
+    if (anzahlWechsel <= 0) return;
+
+    // current erhöhen, aber bei max deckeln
+    const current = profil.current_semester ?? 0;
+    const max = profil.max_semester ?? current;
+    const neuesCurrent = Math.min(current + anzahlWechsel, max);
+
+    // Turnus mitwandern lassen — richtet sich nach dem NEUEN (gedeckelten) current
+    const neuerTurnus = berechneTurnus(neuesCurrent, current, profil.current_turnus);
+
+    // Update: neues current + Merker auf heute
+    await supabase
+        .from("profiles")
+        .update({
+            current_semester: neuesCurrent,
+            current_turnus: neuerTurnus,
+            last_semester_update: heute.toISOString().split("T")[0],
+        })
+        .eq("id", user.id);
 }
