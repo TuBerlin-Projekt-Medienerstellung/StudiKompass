@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import { ChevronDown, ChevronUp } from "lucide-react";
 
-type DashboardSettingsState = {
+export type DashboardSettingsState = {
     gesamtfortschritt: boolean;
     ects: boolean;
     aktuellesSemester: boolean;
@@ -20,7 +19,7 @@ type SettingsItem = {
     label: string;
 };
 
-const defaultSettings: DashboardSettingsState = {
+export const defaultDashboardSettings: DashboardSettingsState = {
     gesamtfortschritt: true,
     ects: true,
     aktuellesSemester: true,
@@ -32,26 +31,42 @@ const defaultSettings: DashboardSettingsState = {
     wunschSchnitt: false,
 };
 
-export default function DashboardSettings() {
-    const [open, setOpen] = useState(false);
-    const [settings, setSettings] = useState(defaultSettings);
+type DashboardSettingsProps = {
+    open: boolean;
+    settings: DashboardSettingsState;
+    onOpenChange: (open: boolean) => void;
+    onSettingsChange: (settings: DashboardSettingsState) => void;
+};
 
+export default function DashboardSettings({
+    open,
+    settings,
+    onOpenChange,
+    onSettingsChange,
+}: DashboardSettingsProps) {
     function toggle(key: keyof DashboardSettingsState) {
-        setSettings((prev) => ({
-            ...prev,
-            [key]: !prev[key],
-        }));
+        onSettingsChange({
+            ...settings,
+            [key]: !settings[key],
+        });
     }
 
     return (
-        <section className="rounded-2xl border border-border overflow-hidden">
+        <section className="overflow-hidden rounded-2xl border border-border">
             <button
                 type="button"
-                onClick={() => setOpen(!open)}
-                className="flex w-full items-center justify-between bg-[#ECE8E8] dark:bg-[#242424] px-5 py-4 transition-colors hover:bg-[#E2DEDE] dark:hover:bg-[#2d2d2d]"
+                onClick={() => onOpenChange(!open)}
+                className="flex w-full items-center justify-between bg-[#ECE8E8] px-5 py-4 transition-colors hover:bg-[#E2DEDE] dark:bg-[#242424] dark:hover:bg-[#2d2d2d]"
             >
-                <span className="font-semibold">Dashboard-Einstellungen</span>
-                {open ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                <span className="font-semibold">
+                    Dashboard-Einstellungen
+                </span>
+
+                {open ? (
+                    <ChevronUp className="h-5 w-5" />
+                ) : (
+                    <ChevronDown className="h-5 w-5" />
+                )}
             </button>
 
             {open && (
@@ -59,10 +74,22 @@ export default function DashboardSettings() {
                     <SettingsGroup
                         title="Übersicht"
                         items={[
-                            { key: "gesamtfortschritt", label: "Gesamtfortschritt" },
-                            { key: "ects", label: "ECTS" },
-                            { key: "aktuellesSemester", label: "Aktuelles Semester" },
-                            { key: "gesamtschnitt", label: "Gesamtschnitt" },
+                            {
+                                key: "gesamtfortschritt",
+                                label: "Gesamtfortschritt",
+                            },
+                            {
+                                key: "ects",
+                                label: "ECTS",
+                            },
+                            {
+                                key: "aktuellesSemester",
+                                label: "Aktuelles Semester",
+                            },
+                            {
+                                key: "gesamtschnitt",
+                                label: "Gesamtschnitt",
+                            },
                         ]}
                         settings={settings}
                         onToggle={toggle}
@@ -71,8 +98,14 @@ export default function DashboardSettings() {
                     <SettingsGroup
                         title="Semester"
                         items={[
-                            { key: "aktuellesSemesterModule", label: "Aktuelles Semester" },
-                            { key: "naechstesSemester", label: "Nächstes Semester" },
+                            {
+                                key: "aktuellesSemesterModule",
+                                label: "Aktuelles Semester",
+                            },
+                            {
+                                key: "naechstesSemester",
+                                label: "Nächstes Semester",
+                            },
                         ]}
                         settings={settings}
                         onToggle={toggle}
@@ -81,9 +114,18 @@ export default function DashboardSettings() {
                     <SettingsGroup
                         title="Meilensteine"
                         items={[
-                            { key: "moduleAbgeschlossen", label: "Module abgeschlossen" },
-                            { key: "semesterFortschritt", label: "Aktuelles Semester" },
-                            { key: "wunschSchnitt", label: "Wunschschnitt" },
+                            {
+                                key: "moduleAbgeschlossen",
+                                label: "Module abgeschlossen",
+                            },
+                            {
+                                key: "semesterFortschritt",
+                                label: "Aktuelles Semester",
+                            },
+                            {
+                                key: "wunschSchnitt",
+                                label: "Wunschschnitt",
+                            },
                         ]}
                         settings={settings}
                         onToggle={toggle}
@@ -111,8 +153,12 @@ function SettingsGroup({
 
             <div className="space-y-3">
                 {items.map((item) => (
-                    <label key={item.key} className="flex items-center justify-between gap-4">
+                    <label
+                        key={item.key}
+                        className="flex items-center justify-between gap-4"
+                    >
                         <span>{item.label}</span>
+
                         <input
                             type="checkbox"
                             checked={settings[item.key]}
