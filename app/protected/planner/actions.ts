@@ -604,7 +604,7 @@ export async function pruefeSemesterUpdate() {
     // Profil laden
     const { data: profil, error } = await supabase
         .from("profiles")
-        .select("current_semester, max_semester, current_turnus, last_semester_update")
+        .select("current_semester, max_semester, current_turnus, last_semester_update, auto_semester_update_enabled")
         .eq("id", user.id)
         .single();
 
@@ -614,6 +614,15 @@ export async function pruefeSemesterUpdate() {
 
     // NULL-Fall: erstes Mal → Merker auf heute setzen, nicht hochzählen
     if (!profil.last_semester_update) {
+        await supabase
+            .from("profiles")
+            .update({ last_semester_update: heute.toISOString().split("T")[0] })
+            .eq("id", user.id);
+        return;
+    }
+
+    // Automatik-Prüfung (Variante A: bei "aus" Merker aktuell halten, kein Nachholen)
+    if (profil.auto_semester_update_enabled !== true) {
         await supabase
             .from("profiles")
             .update({ last_semester_update: heute.toISOString().split("T")[0] })
