@@ -3,6 +3,7 @@ import Image from "next/image";
 import {words} from "@/constants"
 import Footer from "@/components/footer"
 import { ThemeSwitcher } from "../components/theme-switcher";
+import { NavButton } from "@/components/landingPage-button";
 
 export const metadata = {
     title: 'Navis | TU Berlin',
@@ -38,6 +39,7 @@ export default function Home() {
             {/*        />/!*Idk.. I thought it would look cool if it spun on hover*!/*/}
             {/*    </header>*/}
             {/*</div>*/}
+
             <section className="relative z-10 p-4 md:p-15 w-full">
                     <div className="absolute right-4 top-4 z-50 md:right-8 md:top-8">
                         <ThemeSwitcher />
@@ -89,19 +91,23 @@ export default function Home() {
                         Einfach mit der Campus-Mail einloggen und loslegen.
                     </p>
 
-                    {/* Buttons */}
+                    {/* Buttons mit Ladeanimation */}
                     <div className="flex flex-col sm:flex-row items-center justify-start gap-4 pt-4">
-                        <Link
+                        <NavButton
                             href="/auth/login"
-                            className="w-full sm:w-auto px-10 py-4 bg-flag-red shadow-[0px_4px_6px_-4px_rgba(231,0,11,0.20)] text-white  font-bold rounded-xl transition-all hover:scale-105 active:scale-95"
+                            loadingText="Login..."
+                            className="w-full sm:w-auto px-10 py-4 bg-flag-red shadow-[0px_4px_6px_-4px_rgba(231,0,11,0.20)] text-white font-bold rounded-xl transition-all hover:scale-105 active:scale-95"
                         >
                             Login
-                        </Link> {/*I dunno red is the official theme.. but green just looks so much better. Ig the team can vote: bg-rose-600/ bg-red-500?*/}
-                        <Link
+                        </NavButton>
+
+                        <NavButton
                             href="/auth/sign-up"
+                            loadingText="Weiterleiten..."
                             className="w-full sm:w-auto px-10 py-4 bg-white/70 hover:bg-white text-zinc-950 dark:bg-[#16081f] dark:hover:bg-[#210b31] dark:text-white font-bold rounded-xl border border-zinc-300 dark:border-violet-ray/40 transition-all hover:scale-105 active:scale-95"
-                        > Create Account
-                        </Link>
+                        >
+                            Create Account
+                        </NavButton>
                     </div>
                 </div>
 
