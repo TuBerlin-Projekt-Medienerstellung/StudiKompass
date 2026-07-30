@@ -4,39 +4,34 @@ import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
-type TargetGradeInputProps = {
-    initialValue: number | null;
+type TotalEctsInputProps = {
+    initialValue: number;
 };
 
-export default function TargetGradeInput({
+export default function TotalEctsInput({
     initialValue,
-}: TargetGradeInputProps) {
+}: TotalEctsInputProps) {
     const supabase = createClient();
     const router = useRouter();
 
-    const [targetGrade, setTargetGrade] = useState(
-        initialValue !== null
-            ? initialValue.toString()
-            : ""
+    const [totalEcts, setTotalEcts] = useState(
+        initialValue.toString()
     );
     const [isSaving, setIsSaving] = useState(false);
     const [message, setMessage] = useState<string | null>(null);
     const [hasError, setHasError] = useState(false);
 
     async function handleSave() {
-        const parsedTargetGrade = Number(
-            targetGrade.replace(",", ".")
-        );
+        const parsedTotalEcts = Number(totalEcts);
 
         setMessage(null);
         setHasError(false);
 
         if (
-            !Number.isFinite(parsedTargetGrade) ||
-            parsedTargetGrade < 1 ||
-            parsedTargetGrade > 4
+            !Number.isInteger(parsedTotalEcts) ||
+            parsedTotalEcts <= 0
         ) {
-            setMessage("Bitte gib eine gültige Zielnote ein.");
+            setMessage("Bitte gib eine gültige Gesamt-ECTS-Zahl ein.");
             setHasError(true);
             return;
         }
@@ -58,13 +53,13 @@ export default function TargetGradeInput({
         const { error } = await supabase
             .from("profiles")
             .update({
-                target_grade: parsedTargetGrade,
+                total_ects: parsedTotalEcts,
             })
             .eq("id", user.id);
 
         if (error) {
-            console.error("Fehler beim Speichern der Zielnote:", error);
-            setMessage("Die Zielnote konnte nicht gespeichert werden.");
+            console.error("Fehler beim Speichern der Gesamt-ECTS:", error);
+            setMessage("Die Gesamt-ECTS konnten nicht gespeichert werden.");
             setHasError(true);
             setIsSaving(false);
             return;
@@ -79,22 +74,21 @@ export default function TargetGradeInput({
     return (
         <div className="space-y-2">
             <label
-                htmlFor="target-grade"
+                htmlFor="total-ects"
                 className="block text-sm font-medium"
             >
-                Zielnote
+                Gesamt-ECTS
             </label>
 
             <div className="flex flex-col gap-2 sm:flex-row">
                 <input
-                    id="target-grade"
+                    id="total-ects"
                     type="number"
                     min={1}
-                    max={4}
-                    step={0.1}
-                    value={targetGrade}
+                    step={1}
+                    value={totalEcts}
                     onChange={(event) => {
-                        setTargetGrade(event.target.value);
+                        setTotalEcts(event.target.value);
                         setMessage(null);
                         setHasError(false);
                     }}

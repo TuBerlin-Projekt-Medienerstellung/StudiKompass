@@ -45,3 +45,54 @@ export function berechneUrteil(note: number | null) {
 
   return "Keine gültige Note";
 }
+
+export function berechneWunschschnittFortschritt(
+  module: ModulFuerSchnitt[],
+  zielnote: number | null,
+  gesamtEcts: number
+): number {
+  if (zielnote === null) return 0;
+
+  const benoteteModule = module.filter((modul) => {
+    return (
+      modul.abgeschlossen === true &&
+      modul.benotet === true &&
+      modul.note !== null &&
+      modul.ects !== null &&
+      modul.ects > 0 &&
+      modul.gewichtung === 1
+    );
+  });
+
+  const erreichteEcts = benoteteModule.reduce((summe, modul) => {
+    return summe + modul.ects!;
+  }, 0);
+
+  const notensumme = benoteteModule.reduce((summe, modul) => {
+    return summe + modul.note! * modul.ects!;
+  }, 0);
+
+  const restEcts = gesamtEcts - erreichteEcts;
+
+  if (erreichteEcts === 0) {
+    return 0;
+  }
+
+  if (restEcts <= 0) {
+    const schnitt = notensumme / erreichteEcts;
+    return schnitt <= zielnote ? 100 : 0;
+  }
+
+  const benoetigteNotensumme = zielnote * gesamtEcts;
+
+  const benoetigteRestnote =
+    (benoetigteNotensumme - notensumme) / restEcts;
+
+  if (benoetigteRestnote >= 4.0) return 100;
+  if (benoetigteRestnote <= 1.0) return 0;
+
+  const fortschritt =
+    ((benoetigteRestnote - 1.0) / 3.0) * 100;
+
+  return Math.max(0, Math.min(100, Math.round(fortschritt)));
+}

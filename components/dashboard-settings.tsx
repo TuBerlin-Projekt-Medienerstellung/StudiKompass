@@ -1,6 +1,10 @@
 "use client";
 
+import { useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { ChevronDown, ChevronUp } from "lucide-react";
+import TotalEctsInput from "@/components/total-ects-input";
+import TargetGradeInput from "@/components/target-grade";
 
 export type DashboardSettingsState = {
     gesamtfortschritt: boolean;
@@ -34,6 +38,8 @@ export const defaultDashboardSettings: DashboardSettingsState = {
 type DashboardSettingsProps = {
     open: boolean;
     settings: DashboardSettingsState;
+    initialTotalEcts: number;
+    initialTargetGrade: number | null;
     onOpenChange: (open: boolean) => void;
     onSettingsChange: (settings: DashboardSettingsState) => void;
 };
@@ -41,6 +47,8 @@ type DashboardSettingsProps = {
 export default function DashboardSettings({
     open,
     settings,
+    initialTotalEcts,
+    initialTargetGrade,
     onOpenChange,
     onSettingsChange,
 }: DashboardSettingsProps) {
@@ -130,6 +138,13 @@ export default function DashboardSettings({
                         settings={settings}
                         onToggle={toggle}
                     />
+                    <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:justify-items-center">
+                        <TotalEctsInput initialValue={initialTotalEcts} />
+
+                        <TargetGradeInput
+                            initialValue={initialTargetGrade}
+                        />
+                    </div>
                 </div>
             )}
         </section>

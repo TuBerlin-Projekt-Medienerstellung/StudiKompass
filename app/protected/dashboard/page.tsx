@@ -13,13 +13,14 @@ import {
     Circle,
     ChevronDown,
 } from "lucide-react";
+
+import DashboardContent from "@/components/dashboard-content";
 import {
-    berechneGesamtschnitt,
-    berechneUrteil,
+  berechneGesamtschnitt,
+  berechneUrteil,
+  berechneWunschschnittFortschritt,
 } from "@/lib/grades";
 
-import TargetGradeInput from "@/components/target-grade";
-import DashboardContent from "@/components/dashboard-content";
 
 type AktuellesModul = {
     name: string;
@@ -93,14 +94,16 @@ export default async function DashboardPage() {
             .select("ects, note, gewichtung, benotet, abgeschlossen")
             .eq("user_id", user.id)
         : {data: []};
+        console.log(notenModule);
 
     const gesamtschnitt = berechneGesamtschnitt(notenModule ?? []);
+    console.log("Gesamtschnitt:", gesamtschnitt);
     const urteil = berechneUrteil(gesamtschnitt);
 
     const {data: profile} = user
     ? await supabase
         .from("profiles")
-        .select("current_semester, max_semester, target_grade")
+        .select("current_semester, max_semester, total_ects, target_grade")
         .eq("id", user.id)
         .single()
     : {data: null};
@@ -141,7 +144,7 @@ export default async function DashboardPage() {
 
     const aktuellesSemester = profile?.current_semester ?? 1;
 
-    const gesamtEcts = 180;
+    const gesamtEcts = profile?.total_ects ?? 180;
 
     const aktuelleEcts = modules
         .filter((modul) => modul?.abgeschlossen)
@@ -231,6 +234,12 @@ export default async function DashboardPage() {
             }));
 
 
+    const wunschSchnittFortschritt = berechneWunschschnittFortschritt(
+    notenModule ?? [],
+    profile?.target_grade ?? null,
+    gesamtEcts
+);
+
     return (
         <div className="space-y-6 px-4 py-4 sm:px-6 lg:px-8">
             <div>
@@ -241,6 +250,8 @@ export default async function DashboardPage() {
             </div>
 
         <DashboardContent
+            initialTotalEcts={gesamtEcts}
+            initialTargetGrade={profile?.target_grade ?? null}
             gesamtfortschrittCard={
                 <div className="rounded-2xl bg-flag-red p-4 text-white">
                 <div className="flex items-center justify-between gap-4">
@@ -273,7 +284,7 @@ export default async function DashboardPage() {
 
                 <div>
                     <h2 className="text-xl font-bold">
-                        {aktuelleEcts}/180
+                        {aktuelleEcts}/{gesamtEcts}
                     </h2>
 
                     <p className="text-sm text-muted-foreground">
@@ -428,15 +439,9 @@ semesterFortschrittMilestone={
 
 wunschSchnittMilestone={
     <MilestoneCard
-        titel="Wunschschnitt"
-        fortschritt={0}
-    >
-        <div className="mt-3 flex items-center justify-between gap-4">
-            <TargetGradeInput
-                initialValue={profile?.target_grade ?? null}
-            />
-        </div>
-    </MilestoneCard>
+        titel="Wie nah zum Wunschschnitt?"
+        fortschritt={wunschSchnittFortschritt}
+    />
 }
 
 />          

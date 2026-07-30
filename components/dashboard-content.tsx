@@ -14,6 +14,8 @@ import DashboardSettings, {
 import { TrendingUp } from "lucide-react";
 
 type DashboardContentProps = {
+    initialTotalEcts: number;
+    initialTargetGrade: number | null;
     gesamtfortschrittCard: ReactNode;
     ectsCard: ReactNode;
     aktuellesSemesterCard: ReactNode;
@@ -30,6 +32,8 @@ type DashboardContentProps = {
 const STORAGE_KEY = "dashboard-settings";
 
 export default function DashboardContent({
+    initialTotalEcts,
+    initialTargetGrade,
     gesamtfortschrittCard,
     ectsCard,
     aktuellesSemesterCard,
@@ -39,7 +43,7 @@ export default function DashboardContent({
     moduleAbgeschlossenMilestone,
     semesterFortschrittMilestone,
     wunschSchnittMilestone,
-}: DashboardContentProps) {
+    }: DashboardContentProps){
     const [settings, setSettings] =
         useState<DashboardSettingsState>(defaultDashboardSettings);
 
@@ -100,7 +104,12 @@ export default function DashboardContent({
     return (
         <>
             {showAnyOverviewCard && (
-                <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <section
+                    className="grid gap-4"
+                    style={{
+                        gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                    }}
+                >
                     {settings.gesamtfortschritt &&
                         gesamtfortschrittCard}
 
@@ -143,6 +152,8 @@ export default function DashboardContent({
             <DashboardSettings
                 open={settingsOpen}
                 settings={settings}
+                initialTotalEcts={initialTotalEcts}
+                initialTargetGrade={initialTargetGrade}
                 onOpenChange={setSettingsOpen}
                 onSettingsChange={handleSettingsChange}
             />
