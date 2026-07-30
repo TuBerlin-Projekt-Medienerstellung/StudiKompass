@@ -82,13 +82,12 @@ export default function Home() {
 
                     {/* What do we aim to do */}
                     <p className="text-zinc-900 dark:text-zinc-200 opacity-70 text-base md:text-xl text-start leading-relaxed">
-                        Dein Studium, perfekt organisiert. Plane Module, tracke ECTS, entdecke Vorlagen aus der
-                        Community
-                        und hol dir den vollen Durchblick mit unseren Kurz-Tutorials. <br/>
-                        <br/> Filter nach nur für dich relevanten Modulen; egal ob <span
+                        Dein Studium, perfekt organisiert: Plane Module, tracke ECTS,
+                        Trage Noten und Fehlversuche ein und schau dir die Meinung der Community an.<br/>
+                        <br/> Filter nach nur für dich relevanten Modulen: egal ob <span
                         className="text-zinc-950 dark:text-zinc-50 italic">Wahlpflicht</span> oder <span
                         className="text-zinc-950 dark:text-zinc-50 italic">Pflicht</span>. <br/>
-                        Einfach mit der Campus-Mail einloggen und loslegen.
+                        Einfach mit einer Mail einloggen und loslegen.
                     </p>
 
                     {/* Buttons mit Ladeanimation */}
