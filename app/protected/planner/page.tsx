@@ -4,9 +4,10 @@ import SemesterCard from "@/components/semester-card";
 import SemesterModulCard from "@/components/semester-modul-card";
 import { useState, useEffect } from "react";
 import { Plus, Trash2 } from 'lucide-react';
-import { reduceSemesterTable, deleteSemester, createSemester, updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul, loescheSemesterMitModulen, getProfilTurnus } from './actions';
+import { reduceSemesterTable, deleteSemester, createSemester, updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul, loescheSemesterMitModulen, getProfilTurnus} from './actions';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
+import { modulInfo } from "@/constants";
 
 
 type Semester = {
@@ -26,6 +27,8 @@ const Page = () => {
     const [currentTurnus, setCurrentTurnus] = useState<string | null>(null);
     const [vollesSemester, setVollesSemester] = useState<number | null>(null);
     const [vollesSemesterSichtbar, setvollesSemesterSichtbar] = useState(false);
+    const [richtigerTurnus, setRichtigerTurnus] = useState<string | null>(null);
+    const [richtigerTurnusSichtbar, setRichtigerTurnusSichtbar] = useState(false);
 
     useEffect(() => {
         async function loadSemesters() {
@@ -65,6 +68,30 @@ const Page = () => {
         loadSemesters();
         loadTurnus();
     }, []);
+
+    //Turnus eines Semesters berechnen
+    function getSemesterTurnus(semesterNummer: number, startTurnus: string): "Wintersemester" | "Sommersemester" {
+
+                if (startTurnus === "Wintersemester") {
+                    return semesterNummer % 2 === 1
+                        ? "Wintersemester"
+                        : "Sommersemester";
+                }
+
+                return semesterNummer % 2 === 1
+                    ? "Sommersemester"
+                    : "Wintersemester";
+            }
+    
+    function checkTurnus(modulTurnus: string | undefined, semesterTurnus: string) {
+        if (semesterTurnus == modulTurnus){
+            return true; 
+        }
+        if (semesterTurnus != "Wintersemester" && semesterTurnus != "Sommersemester" ){
+            return true;
+        }
+        return false;
+    }
 
     async function handleAddSemester() {
         // Grenze: maximal 20 Semester (konsistent mit den Settings)
@@ -201,6 +228,24 @@ const Page = () => {
                     setVollesSemester(null);
                 }, 5000);
             }
+
+            //Turnus überprüfen
+            if (!currentTurnus) return;
+
+            const semesterTurnus = getSemesterTurnus(targetSem.nummer, currentTurnus);
+   
+            if (!checkTurnus(movedModul.turnus, semesterTurnus)) {
+                setRichtigerTurnus(semesterTurnus);
+                setRichtigerTurnusSichtbar(true);
+
+                setTimeout(() => {
+                    setRichtigerTurnusSichtbar(false);
+                }, 4000);
+
+                setTimeout(() => {
+                    setRichtigerTurnus(null);
+                }, 5000);
+            }
         }
 
     };
@@ -216,6 +261,15 @@ const Page = () => {
 
 
             )}
+
+            {richtigerTurnus && (
+                <div className={`fixed bottom-4 right-4 z-100 rounded-lg border border-sandy-brown bg-warning-background px-4 py-3 text-dark-khaki shadow-lg transition-all
+                                duration-1000 ease-in-out ${richtigerTurnus ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+                        Achtung! Das Modul gehört in das {richtigerTurnus}. 
+                </div>
+
+            )}
+    
             <DndContext
                 collisionDetection={closestCenter}
                 onDragStart={handleDragStart}
