@@ -592,3 +592,15 @@ export async function getProfilTurnus(): Promise<{
         currentTurnus: data.current_turnus ?? null,
     };
 }
+//To-Do:
+/*
+We need to implement a new feature to give the user the option to check whether his planner is up to date with the latest modules:
+
+To do this we will be checking the Modulename and "semesterBis" in {base_url}/bolognamodulversion/{version_id} using max(id) in data[0]?.bolognamodulVersionList from  /bolognamodul/{modul_id}
+if semesterBis exists -> module is outdated, only name changed -> Warning about changes to module
+Path A: User-added content: Custom Modul/Job -> Add column in Supabase for modules "custom" -> no check
+Path B: Basic Module: Added using StuPO and Studiengang in Settings -> Add column in Supabase for modules "basic" -> the basic search doesn't pass the actual module id, it goes by zuordnung (studiengangzuordnung/ modulzuordnungsListe)-> fetch actual module id when saving to supabase
+Path C: Extended Module: Added using extended Module Search -> Add column in Supabase for modules "extended" -> either compare inside the Json file that holds the extended module_dict or save the actual module id to supabase like in "basic"-> Option 2 is more uniform and safer
+*/ 
+
+// On another note: Adding a feed, where the Admin can post updates would be useful
