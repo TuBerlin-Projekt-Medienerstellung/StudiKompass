@@ -24,6 +24,8 @@ const Page = () => {
     const [proWoche, setProWoche] = useState(false);
     const [currentSemester, setCurrentSemester] = useState<number | null>(null);
     const [currentTurnus, setCurrentTurnus] = useState<string | null>(null);
+    const [vollesSemester, setVollesSemester] = useState<number | null>(null);
+    const [vollesSemesterSichtbar, setvollesSemesterSichtbar] = useState(false);
 
     useEffect(() => {
         async function loadSemesters() {
@@ -180,68 +182,100 @@ const Page = () => {
             setSemesterList(newSemesters);
 
             verschiebeModul(String(movedModul.modul_id), targetSem.id);
+
+            //Gesamtarbeitsaufwand prüfen
+            const gesamtArbeitsaufwand = targetSem.modules.reduce(
+                (sum, modul) => sum + (modul.arbeitsaufwand ?? 0),
+                0
+            );
+
+            if (gesamtArbeitsaufwand > 900){
+                setVollesSemester(targetSem.nummer);
+                setvollesSemesterSichtbar(true);
+
+                setTimeout(() => {
+                    setvollesSemesterSichtbar(false);
+                }, 4000);
+
+                setTimeout(() => {
+                    setVollesSemester(null);
+                }, 5000);
+            }
         }
+
     };
 
     return (
-        <DndContext
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}>
-            <section className="flex flex-col gap-4 p-4 md:p-6">
-                {/* Responsive Header: auf Mobile etwas kleiner */}
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-3xl font-bold md:text-4xl">Studienplaner</h1>
-                    <p className="text-sm opacity-70 md:text-base">Plane dein Studium semesterweise</p>
+        <div>
+        
+            {vollesSemester && (
+               <div className={`fixed bottom-4 right-4 z-100 rounded-lg border border-sandy-brown bg-warning-background px-4 py-3 text-dark-khaki shadow-lg transition-all
+                                duration-1000 ease-in-out ${vollesSemesterSichtbar ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+                        Das {vollesSemester}. Semester überschreitet den empfohlenen Arbeitsaufwand.
                 </div>
 
-                <div className="flex flex-col gap-6">
-                    {semesterList.map((semester) => (
-                        <SemesterCard
-                            key={semester.nummer}
-                            semester={semester.nummer}
-                            module={semester.modules}
-                            onClick={() => console.log(semester.nummer)}
+
+            )}
+            <DndContext
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}>
+            
+                <section className="flex flex-col gap-4 p-4 md:p-6">
+                    {/* Responsive Header: auf Mobile etwas kleiner */}
+                    <div className="flex flex-col gap-2">
+                        <h1 className="text-3xl font-bold md:text-4xl">Studienplaner</h1>
+                        <p className="text-sm opacity-70 md:text-base">Plane dein Studium semesterweise</p>
+                    </div>
+
+                    <div className="flex flex-col gap-6">
+                        {semesterList.map((semester) => (
+                            <SemesterCard
+                                key={semester.nummer}
+                                semester={semester.nummer}
+                                module={semester.modules}
+                                onClick={() => console.log(semester.nummer)}
+                                proWoche={proWoche}
+                                onToggleAufwand={() => setProWoche(!proWoche)}
+                                currentSemester={currentSemester}
+                                currentTurnus={currentTurnus}
+                                onDeleteModul={entferneModulAusState}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Buttons auf Mobile untereinander, auf Desktop nebeneinander */}
+                    <div className='flex flex-col gap-4 md:flex-row'>
+                        <button onClick={handleAddSemester}
+                            disabled={semesterList.length >= 20}
+                            className={`border-2 rounded-2xl border-dashed p-4 flex items-center justify-center px-6 py-4 md:w-5/6 w-full ${semesterList.length >= 20
+                                ? 'opacity-50 cursor-not-allowed'
+                                : 'cursor-pointer'
+                                }`}>
+                            <Plus></Plus>Semester hinzufügen
+                        </button>
+                        <button onClick={() => {
+                            const letztes = semesterList[semesterList.length - 1];
+                            if (letztes) handleDeleteSemester(letztes.id, letztes.nummer);
+                        }}
+                            className='flex border-2 rounded-2xl border-flag-red cursor-pointer md:w-1/6 w-full items-center justify-center'>
+                            <Trash2></Trash2>
+                        </button>
+                    </div>
+                </section>
+
+                <DragOverlay>
+                    {activeModul ? (
+                        <SemesterModulCard
+                            modul={activeModul}
                             proWoche={proWoche}
                             onToggleAufwand={() => setProWoche(!proWoche)}
-                            currentSemester={currentSemester}
-                            currentTurnus={currentTurnus}
-                            onDeleteModul={entferneModulAusState}
+                            onDeleteModul={() => { }}
                         />
-                    ))}
-                </div>
-
-                {/* Buttons auf Mobile untereinander, auf Desktop nebeneinander */}
-                <div className='flex flex-col gap-4 md:flex-row'>
-                    <button onClick={handleAddSemester}
-                        disabled={semesterList.length >= 20}
-                        className={`border-2 rounded-2xl border-dashed p-4 flex items-center justify-center px-6 py-4 md:w-5/6 w-full ${semesterList.length >= 20
-                            ? 'opacity-50 cursor-not-allowed'
-                            : 'cursor-pointer'
-                            }`}>
-                        <Plus></Plus>Semester hinzufügen
-                    </button>
-                    <button onClick={() => {
-                        const letztes = semesterList[semesterList.length - 1];
-                        if (letztes) handleDeleteSemester(letztes.id, letztes.nummer);
-                    }}
-                        className='flex border-2 rounded-2xl border-flag-red cursor-pointer md:w-1/6 w-full items-center justify-center'>
-                        <Trash2></Trash2>
-                    </button>
-                </div>
-            </section>
-
-            <DragOverlay>
-                {activeModul ? (
-                    <SemesterModulCard
-                        modul={activeModul}
-                        proWoche={proWoche}
-                        onToggleAufwand={() => setProWoche(!proWoche)}
-                        onDeleteModul={() => { }}
-                    />
-                ) : null}
-            </DragOverlay>
-        </DndContext>
+                    ) : null}
+                </DragOverlay>
+            </DndContext>
+        </div>
     );
 };
 
