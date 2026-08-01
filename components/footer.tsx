@@ -139,8 +139,18 @@ const Footer = () => {
                             E-Mail: <br/>
                             <ul className="list-disc list-inside pl-4 space-y-1">
                                 <li>
+                                    <a href="mailto:annaglavatska.dev@gmail.com" className="hover:underline">
+                                        Lead Backend; Architektur: annaglavatska.dev@gmail.com
+                                    </a>
+                                </li>
+                                <li>
                                     <a href="mailto:lena.bohlje@gmail.com" className="hover:underline">
                                         Projektmanagement: lena.bohlje@gmail.com
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="mailto:jasmin.heisse07@gmail.com" className="hover:underline">
+                                        Frontendentwicklerin: jasmin.heisse07@gmail.com
                                     </a>
                                 </li>
                                 <li>
