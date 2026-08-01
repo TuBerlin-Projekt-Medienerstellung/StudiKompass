@@ -69,20 +69,32 @@ const Page = () => {
         loadTurnus();
     }, []);
 
+    //turnus in profiles anders gespeichert als in modules tabelle
+    function normalizeTurnus(turnus: string) {
+    switch (turnus.toLowerCase()) {
+        case "wise":
+            return "Wintersemester";
+        case "sose":
+            return "Sommersemester";
+        default:
+            return turnus;
+    }
+}
+
     //Turnus eines Semesters berechnen
-    function getSemesterTurnus(semesterNummer: number, startTurnus: string): "Wintersemester" | "Sommersemester" {
+    function getSemesterTurnus(semesterNummer: number,currentSemester: number, currentTurnus: "Wintersemester" | "Sommersemester"): "Wintersemester" | "Sommersemester" {
 
-                if (startTurnus === "Wintersemester") {
-                    return semesterNummer % 2 === 1
-                        ? "Wintersemester"
-                        : "Sommersemester";
+               const diff = semesterNummer - currentSemester;
+
+                    if (diff % 2 === 0) {
+                        return currentTurnus;
+                    }
+
+                    return currentTurnus === "Wintersemester"
+                        ? "Sommersemester"
+                        : "Wintersemester";
                 }
-
-                return semesterNummer % 2 === 1
-                    ? "Sommersemester"
-                    : "Wintersemester";
-            }
-    
+            
     function checkTurnus(modulTurnus: string | undefined, semesterTurnus: string) {
         if (semesterTurnus == modulTurnus){
             return true; 
@@ -90,6 +102,11 @@ const Page = () => {
         if (semesterTurnus != "Wintersemester" && semesterTurnus != "Sommersemester" ){
             return true;
         }
+    
+        if (modulTurnus != "Wintersemester" && modulTurnus != "Sommersemester"){
+            return true;
+        }
+
         return false;
     }
 
@@ -230,12 +247,12 @@ const Page = () => {
             }
 
             //Turnus überprüfen
-            if (!currentTurnus) return;
+            if (!currentSemester || !currentTurnus) return;
 
-            const semesterTurnus = getSemesterTurnus(targetSem.nummer, currentTurnus);
+            const semesterTurnus = getSemesterTurnus(targetSem.nummer,currentSemester, normalizeTurnus(currentTurnus) as "Wintersemester" | "Sommersemester");
    
             if (!checkTurnus(movedModul.turnus, semesterTurnus)) {
-                setRichtigerTurnus(semesterTurnus);
+                setRichtigerTurnus(movedModul.turnus);
                 setRichtigerTurnusSichtbar(true);
 
                 setTimeout(() => {
@@ -252,9 +269,10 @@ const Page = () => {
 
     return (
         <div>
-        
+
+        <div className="fixed bottom-4 right-4 z-100 flex flex-col gap-2">
             {vollesSemester && (
-               <div className={`fixed bottom-4 right-4 z-100 rounded-lg border border-sandy-brown bg-warning-background px-4 py-3 text-dark-khaki shadow-lg transition-all
+               <div className={`rounded-lg border border-sandy-brown bg-warning-background px-4 py-3 text-dark-khaki shadow-lg transition-all
                                 duration-1000 ease-in-out ${vollesSemesterSichtbar ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
                         Das {vollesSemester}. Semester überschreitet den empfohlenen Arbeitsaufwand.
                 </div>
@@ -263,13 +281,13 @@ const Page = () => {
             )}
 
             {richtigerTurnus && (
-                <div className={`fixed bottom-4 right-4 z-100 rounded-lg border border-sandy-brown bg-warning-background px-4 py-3 text-dark-khaki shadow-lg transition-all
-                                duration-1000 ease-in-out ${richtigerTurnus ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+                <div className={`rounded-lg border border-sandy-brown bg-warning-background px-4 py-3 text-dark-khaki shadow-lg transition-all
+                                duration-1000 ease-in-out ${richtigerTurnusSichtbar ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
                         Achtung! Das Modul gehört in das {richtigerTurnus}. 
                 </div>
 
             )}
-    
+        </div>
             <DndContext
                 collisionDetection={closestCenter}
                 onDragStart={handleDragStart}

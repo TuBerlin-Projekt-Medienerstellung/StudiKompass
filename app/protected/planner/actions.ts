@@ -619,14 +619,3 @@ export async function checkArbeitsaufwand(semester_id: UUID){
         return false;
     }
 }
-
-//Turnus vergleichen
-export async function checkTurnus(modulTurnus: string | undefined, semesterTurnus: string) {
-    if (semesterTurnus == modulTurnus){
-        return true; 
-    }
-    if (semesterTurnus != "Wintersemester" && semesterTurnus != "Sommersemester" ){
-        return true;
-    }
-    return false;
-}
