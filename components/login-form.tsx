@@ -51,7 +51,6 @@ export function LoginForm({
 
         } catch (error: unknown) {
             setError(error instanceof Error ? error.message : "Ein unbekannter Fehler ist aufgetreten.");
-        } finally {
             setIsLoading(false);
         }
     };
@@ -129,8 +128,14 @@ export function LoginForm({
                                     disabled={isLoading}
                                     className="flex items-center justify-center gap-2 bg-flag-red rounded-2xl p-3 font-bold disabled:opacity-70 disabled:cursor-not-allowed transition-opacity"
                                 >
-                                    {isLoading && <Loader2 className="size-4 animate-spin text-white"/>}
-                                    <span className="text-white">{isLoading ? "Anmelden..." : "Anmelden"}</span>
+                                    {isLoading ? (
+                                        <>
+                                            <Loader2 className="size-4 animate-spin text-white"/>
+                                            <span className="text-white">Anmelden...</span>
+                                        </>
+                                    ) : (
+                                        <span className="text-white">Anmelden</span>
+                                    )}
                                 </button>
 
                                 <div className="mt-4 text-center text-sm">

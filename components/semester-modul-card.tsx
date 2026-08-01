@@ -153,6 +153,8 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
 
                 {/* Eingeklappte Version des Moduls */}
                 <div className="flex w-full items-start gap-3">
+
+                    {/* Drag-Handle */}
                     <button
                         type="button"
                         {...attributes}
@@ -163,6 +165,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
                         <Grip />
                     </button>
 
+                    {/* Modul-Infos (Name, ECTS, Link) */}
                     <div className="min-w-0 flex-1">
                         <h1 className="break-words text-base font-bold leading-snug sm:text-lg">
                             {modul.name}
@@ -177,7 +180,10 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
                                 </span>
 
                                 <span className="text-xs sm:text-sm">
-                                    {modul.turnus}
+                                    {modul.turnus
+                                        ?.replace(/Winter-\s*und\s*Sommersemester/gi, "WiSe & SoSe")
+                                        .replace(/Wintersemester/gi, "WiSe")
+                                        .replace(/Sommersemester/gi, "SoSe")}
                                 </span>
                             </div>
 
@@ -193,10 +199,13 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
                         </div>
                     </div>
 
-                    <div className="flex shrink-0 items-start gap-2 pt-1">
+                    {/* Rechte Seite: Aktionen (Ausklappen & Löschen) + Note */}
+                    <div className="flex shrink-0 flex-col items-end gap-2 pt-1">
+
+                        <div className="flex items-center gap-1">
                         <button
                             type="button"
-                            className="text-muted-foreground"
+                            className="pt-1 text-muted-foreground hover:text-foreground transition-colors"
                             onClick={handleAusklappen}
                         >
                             {isOpen ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
@@ -217,6 +226,13 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
                         >
                             <Trash2 />
                         </button>
+                        </div>
+
+                        {modul.note !== undefined && modul.note !== null  && (
+                            <div className="mt-3 rounded-md bg-blue-bell/10 border border-blue-bell/20 px-2 py-0.5 text-xs font-bold text-blue-bell whitespace-nowrap">
+                                Note: {modul.note}
+                            </div>
+                        )}
                     </div>
                 </div>
 
