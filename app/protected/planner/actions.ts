@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { UUID } from "crypto";
 
 
 //Semester aus Supabase laden
@@ -592,30 +591,4 @@ export async function getProfilTurnus(): Promise<{
         currentSemester: data.current_semester ?? null,
         currentTurnus: data.current_turnus ?? null,
     };
-}
-
-//Wenn Arbeitsaufwand in einem Semester 900h überschreitet
-export async function checkArbeitsaufwand(semester_id: UUID){
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-
-    if (!user) return { success: false, error: "Du bist nicht eingeloggt." };
- 
-    //Zum Semester hinzugehörige Modul_Ids holen
-    const { data: plannerData, error: plannerError } = await supabase
-        .from("planner")
-        .select("modul_id")
-        .eq("group_id", semester_id)
-        .eq("user_id", user.id);   // Sicherheit: nur eigene Module
-
-    if (plannerError) {
-        console.error("Fehler beim Finden von Modulen im Semester:", plannerError);
-        return { success: false, error: "Keine Module gefunden." };
-    }
-
-    const modul_ids = plannerData.map(row => row.modul_id);
-
-    if (modul_ids.length == 0){
-        return false;
-    }
 }
