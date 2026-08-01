@@ -51,7 +51,6 @@ export function LoginForm({
 
         } catch (error: unknown) {
             setError(error instanceof Error ? error.message : "Ein unbekannter Fehler ist aufgetreten.");
-        } finally {
             setIsLoading(false);
         }
     };

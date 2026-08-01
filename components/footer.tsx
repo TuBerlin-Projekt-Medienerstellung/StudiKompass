@@ -11,14 +11,14 @@ const Footer = () => {
     const [isImpressumOpen, setIsImpressumOpen] = useState(false);
 
     const team = [
-        { name: "Lena B.", rollen: ["Projektmanagerin", "Frontend", "Design", "Co-Videoproduktion"] },
-        { name: "Jakob M.R.E.", rollen: ["Frontend", "Design", "Co-Videoproduktion"] },
-        { name: "Emma W.", rollen: ["Frontend", "Design", "Videoproduktion"] },
-        { name: "Lennart N.L.", rollen: ["Lead Frontend", "Design"] },
-        { name: "Jamsin H.", rollen: ["Frontend", "Design"] },
-        { name: "Vlad H.", rollen: ["Frontend", "Design"] },
-        { name: "Anna G.", rollen: ["Lead Back-End Dev"] },
-        { name: "Alessio B.", rollen: ["Back-End"] },
+        { name: "Lena Bohlje", rollen: ["Projektmanagerin", "Frontend", "Design", "Video und Konzept"] },
+        { name: "Emma Weiland", rollen: ["Frontend", "Design", "Video und Konzept"] },
+        { name: "Jacob Matteo Rene Eckstein", rollen: ["Frontend", "Design", "Video und Konzept"] },
+        { name: "Lennart Nicolas Lunt", rollen: ["Lead Frontend", "Design"] },
+        { name: "Jasmin Heiße", rollen: ["Frontend", "Design"] },
+        { name: "Volodymyr Honcharov", rollen: ["Frontend", "Design"] },
+        { name: "Anna Glavatska", rollen: ["Lead Backend", "Frontend", "Architektur"] },
+        { name: "Alessio Beulcke", rollen: ["Backend"] },
     ];
     const supervisorin = "Judith M.B. - Supervisorin";
 
@@ -143,8 +143,12 @@ const Footer = () => {
                                         Projektmanagement: lena.bohlje@gmail.com
                                     </a>
                                 </li>
+                                <li>
+                                    <a href="mailto:honcharovvolodymyr2002@gmail.com" className="hover:underline">
+                                        Frontendentwickler: honcharovvolodymyr2002@gmail.com
+                                    </a>
+                                </li>
                             </ul>
-
                             <p>
                                 Projekt-Repository: <a href="https://github.com/orgs/TuBerlin-Projekt-Medienerstellung/dashboard" target="_blank" rel="noreferrer" className="hover:underline">GitHub</a><br/>
                                 <em>Fakultät IV / Institut an der TU Berlin</em><br/>
