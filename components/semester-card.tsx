@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useDroppable } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { berechneTurnus, handleModule } from "@/lib/utils";
+import { Module_Check_Info } from "@/components/check_modules";
 
 type Props = {
     semester: number;
@@ -16,9 +17,10 @@ type Props = {
     onDeleteModul: (modulId: string) => void;
     currentSemester: number | null;
     currentTurnus: string | null;
+    checkResults?: Record<string, Module_Check_Info>;
 };
 
-const SemesterCard = ({ semester, module, onClick, proWoche, onToggleAufwand, onDeleteModul, currentSemester, currentTurnus }: Props) => {
+const SemesterCard = ({ semester, module, onClick, proWoche, onToggleAufwand, onDeleteModul, currentSemester, currentTurnus, checkResults}: Props) => {
     const totalECTS = module.reduce((sum, modul) => sum + modul.leistungspunkte, 0);
     const { setNodeRef } = useDroppable({ id: `semester-${semester}` });
     const turnus = berechneTurnus(semester, currentSemester, currentTurnus);
@@ -53,15 +55,22 @@ const SemesterCard = ({ semester, module, onClick, proWoche, onToggleAufwand, on
                 strategy={verticalListSortingStrategy}
             >
                 <div className="flex flex-col gap-2 min-h-15">
-                    {module.map((modul) => (
+                    {module.map((modul) => {
+                    // Step A: Clean up the ID so we have a simple string (e.g. "25400")
+                    const modulIdKey = handleModule(modul.modul_id);
+
+                    // Step B: Return the card, and look up "25400" inside the checkResults dictionary!
+                    return (
                         <SemesterModulCard
-                            key={handleModule(modul.modul_id)}
-                            modul={modul}
-                            proWoche={proWoche}
-                            onToggleAufwand={onToggleAufwand}
-                            onDeleteModul={onDeleteModul}
+                        key={modulIdKey}
+                        modul={modul}
+                        proWoche={proWoche}
+                        onToggleAufwand={onToggleAufwand}
+                        onDeleteModul={onDeleteModul}
+                        checkInfo={checkResults?.[modulIdKey]} // <-- Grabs ONLY this card's check status!
                         />
-                    ))}
+                    );
+                    })}
                 </div>
             </SortableContext>
 

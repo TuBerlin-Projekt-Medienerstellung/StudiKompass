@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { fetchMoses} from "@/app/protected/modules/actions";
-
 //Semester aus Supabase laden
 export async function getSemesters() {
     const supabase = await createClient();
