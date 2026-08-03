@@ -5,12 +5,15 @@ import Fuse from 'fuse.js';
 import { ladeModulBasisByIdsAction, ModulBasis } from '@/app/protected/modules/actions';
 import ModulCard from '@/components/modul-card';
 import { getSemesters, getProfilTurnus } from '@/app/protected/planner/actions';
+// import { handleModule, berechneTurnus } from "@/lib/utils";
+// import { ListRestart } from 'lucide-react';
 
 interface DictionaryItem {
   id: string;
   de_name: string;
   en_name: string;
-  studiengänge: string[];
+  //studiengänge: { name: string; stupo: string }[];
+  version: string;
   lehrinhalt: string;
   words: string[];
 }
@@ -88,9 +91,39 @@ export default function ExtendedModulsuche() {
         const results = fuse.search(query);
         const matchedData = results.slice(0, 30).map(res => ({
             id: res.item.id,
-            name: res.item.de_name 
+            name: res.item.de_name,
+            version_info: res.item.version
         }));
+        // const payload = matchedData.map(item => {
+        //     let stupo_year = "";
+
+            // Pass the first stupo year, or an empty string as a fallback, to satisfy 'stupo_year: string'
+            //actually Imma make it a range instead.. so it's eg 20011-2017 stupo when a module has the dif stupos have the same module (id)
+            // if (item.studiengaenge && item.studiengaenge.length > 0 ) {
+            //     const years: number[]=[]; //item.studiengaenge.map(s=> Number(s.stupo));
+            //     for (const s of item.studiengaenge) {
+            //         const stupo = s.stupo || "";
+            //         const check_ws= stupo.split(" ")[0];
+            //         const year = Number(check_ws);
+            //         if (check_ws.trim() !== "" && !isNaN(year)){
+            //             years.push(year);}
+            //     }
+            //     if (years.length > 0){
+            //         const stupo_min = Math.min(...years);
+            //         stupo_year = "seit ca. " + String(stupo_min);}
+            // }else{
+            //     stupo_year = "";}
+            // //wanted to use reduce first but Math seems to be built in
+            // return {
+            //     id: item.id,
+            //     name: item.name,
+            //     stupo_year: stupo_year
+            // };
         
+	/*started doing min max calculation to have a stupo range to help students, 
+    but realised that the stupo versions were all from dif Degrees and so min max wouldn't do much, 
+    also some are undefined.. */
+
         if (matchedData.length > 0) {
             try {
                 const fetchedModules = await ladeModulBasisByIdsAction(matchedData);
@@ -139,6 +172,7 @@ export default function ExtendedModulsuche() {
                     <ModulCard
                         key={`${modul.id.value}-${index}`}
                         modul_id={modul.id}
+                        no_deg={true}
                         name={modul.name}
                         leistungspunkte={modul.lp}
                         bereichpfad={modul.bereichPfad[0] ?? "—"} 
