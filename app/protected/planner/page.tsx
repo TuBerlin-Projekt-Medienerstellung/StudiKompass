@@ -1,6 +1,7 @@
 "use client";
 
 import SemesterCard from "@/components/semester-card";
+import PlannerSkeleton from "@/components/planner-skeleton";
 import SemesterModulCard from "@/components/semester-modul-card";
 import { useState, useEffect } from "react";
 import { Plus, Trash2 } from 'lucide-react';
@@ -24,6 +25,9 @@ const Page = () => {
     const [proWoche, setProWoche] = useState(false);
     const [currentSemester, setCurrentSemester] = useState<number | null>(null);
     const [currentTurnus, setCurrentTurnus] = useState<string | null>(null);
+    // Startet auf true: die Daten werden erst nach der Hydration geladen,
+    // ohne diesen Zustand waere der Planer solange leer
+    const [laedt, setLaedt] = useState(true);
 
     useEffect(() => {
         async function loadSemesters() {
@@ -63,8 +67,11 @@ const Page = () => {
             setCurrentTurnus(currentTurnus);
         }
 
-        loadSemesters();
-        loadTurnus();
+        // Skelett bleibt sichtbar, bis beide Abfragen durch sind.
+        // finally auch im Fehlerfall, sonst haengt die Seite dauerhaft im Ladezustand.
+        Promise.all([loadSemesters(), loadTurnus()])
+            .catch((e) => console.error("Planer konnte nicht geladen werden:", e))
+            .finally(() => setLaedt(false));
     }, []);
 
     async function handleAddSemester() {
@@ -185,6 +192,11 @@ const Page = () => {
             verschiebeModul(String(movedModul.modul_id), targetSem.id);
         }
     };
+
+    // Muss nach allen Hooks stehen, sonst waere die Hook-Reihenfolge instabil
+    if (laedt) {
+        return <PlannerSkeleton/>;
+    }
 
     return (
         <DndContext
