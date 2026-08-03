@@ -35,6 +35,7 @@ const ModulCard = (props: modulInfo & {
     const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
     const [imPlaner, setImPlaner] = useState(false);
     const [imPlanerSemester, setImPlanerSemester] = useState<string | null>(null);
+    const [warnung, setWarnung] = useState<string | null>(null);
 
 
     const {
@@ -109,13 +110,21 @@ const ModulCard = (props: modulInfo & {
         });
 
         if (!ergebnis.success) {
-            console.error("Speichern fehlgeschlagen:", ergebnis.error);
+            
+            if (ergebnis.error === "Dieses Modul ist bereits in deinem Planer.") {
+                console.warn("Modul ist bereits im Planer:", ergebnis.error);
+                setImPlaner(true);
+                const gewaehltesSemester = semesterListe.find(s => s.id === semesterId);
+                setImPlanerSemester(gewaehltesSemester?.name ?? null);
+                console.log("Modul gespeichert:", ergebnis.modulId);
+                setWarnung("Dieses Modul ist bereits in deinem Planer.");
+                return;}
         } else {
-            console.log("Modul gespeichert:", ergebnis.modulId);
-            setImPlaner(true);
-            const gewaehltesSemester = semesterListe.find(s => s.id === semesterId);
-            setImPlanerSemester(gewaehltesSemester?.name ?? null);
+            
+            console.error("Speichern fehlgeschlagen:", ergebnis.error);
+            return;
         }
+
     }
 
     const detailBoxen = [
@@ -256,6 +265,13 @@ const ModulCard = (props: modulInfo & {
                                         plannerOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
                                     )}
                                 </button>
+
+                                {warnung && (
+                                    <div className="text-flag-red">
+                                        {warnung}
+                                    </div>
+                                )}
+    
 
                                 <div className={`grid transition-all duration-300 ease-in-out ${plannerOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
                                     <div className="overflow-hidden">
