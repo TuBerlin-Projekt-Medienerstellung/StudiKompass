@@ -35,6 +35,9 @@ const Page = () => {
                     // TODO: statt any einen Typ für DB-Module definieren
                     modules: (s.modules ?? []).map((m: any) => ({
                         modul_id: m.id,
+                        // wird für die Bewertungen gebraucht, damit Planer und
+                        // Modulkatalog denselben Schlüssel verwenden
+                        moses_id: m.moses_id,
                         name: m.name,
                         leistungspunkte: m.ects,
                         turnus: m.turnus,
