@@ -29,6 +29,7 @@ export function UpdateSemesterForm({
     const [turnus, setTurnus] = useState<string>("");
     const [originalCurrent, setOriginalCurrent] = useState<number | null>(null);
     const [originalTurnus, setOriginalTurnus] = useState<string | null>(null);
+    const [originalMax, setOriginalMax] = useState<string | null>(null);
 
     useEffect(() => {
         async function ladeSemester() {
@@ -46,7 +47,10 @@ export function UpdateSemesterForm({
                 if (error) throw error;
 
                 if (data?.current_semester) setCurrentSemester(String(data.current_semester));
-                if (data?.max_semester) setMaxSemester(String(data.max_semester));
+                if (data?.max_semester) {
+                    setMaxSemester(String(data.max_semester));
+                    setOriginalMax(String(data.max_semester));
+                }
                 if (data?.current_turnus) setTurnus(data.current_turnus);
 
                 // Anker für die Turnus-Automatik merken
@@ -146,12 +150,18 @@ export function UpdateSemesterForm({
 
             setOriginalCurrent(Number(currentSemester));
             setOriginalTurnus(turnus);
+            setOriginalMax(maxSemester);
         } catch (error: unknown) {
             setError(error instanceof Error ? error.message : "Ein Fehler ist aufgetreten.");
         } finally {
             setIsLoading(false);
         }
     }
+
+    // Prüfen: Hat sich etwas ggü der gespeicherten Werte geändert?
+    const isUnchanged =
+        currentSemester === (originalCurrent !== null ? String(originalCurrent) : "") && turnus === (originalTurnus ?? "") && maxSemester === (originalMax ?? "");
+    const isDisabled = isLoading || isUnchanged;
 
     return (
         <div className={cn(className)} {...props}>
@@ -207,7 +217,10 @@ export function UpdateSemesterForm({
                                     <select
                                         id="turnus"
                                         value={turnus}
-                                        onChange={(e) => setTurnus(e.target.value)}
+                                        onChange={(e) => {
+                                            setTurnus(e.target.value);
+                                            setIsSuccess(false);
+                                        }}
                                         className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm outline-none focus:ring-1 focus:ring-ring">
                                         <option value="">Bitte wählen</option>
                                         <option value="WiSe">Wintersemester (WiSe)</option>
@@ -223,7 +236,10 @@ export function UpdateSemesterForm({
                                         min={1}
                                         max={20}
                                         value={maxSemester}
-                                        onChange={(e) => setMaxSemester(e.target.value)}
+                                        onChange={(e) => {
+                                            setMaxSemester(e.target.value);
+                                            setIsSuccess(false);
+                                        }}
                                     />
                                 </div>
                                 {error && <p className="text-sm text-flag-red">{error}</p>}
@@ -232,7 +248,7 @@ export function UpdateSemesterForm({
                                         Erfolgreich gespeichert! ✓
                                     </p>
                                 )}
-                                <Button type="submit" className="w-full bg-flag-red" disabled={isLoading}>
+                                <Button type="submit" className="w-full bg-flag-red" disabled={isDisabled}>
                                     {isLoading ? "Wird gespeichert..." : "Speichern"}
                                 </Button>
                             </div>

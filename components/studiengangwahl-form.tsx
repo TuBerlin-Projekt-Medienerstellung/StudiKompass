@@ -10,8 +10,12 @@ export default function StudiengangForm({degrees, current}: {
     current: string
 }) {
 
-    const [query, setQuery] = useState(current)
+    const [query, setQuery] = useState(current || "")
+    const [savedStudiengang, setSavedStudiengang] = useState(current || "")
     const [selected, setSelected] = useState<{ id: number, name: string } | null>(null)
+    const [isSaving, setIsSaving] = useState(false)
+    const [isSuccess, setIsSuccess] = useState(false)
+    const [error, setError] = useState<string | null>(null)
 
     const filtered = degrees.filter(deg =>
         deg.name?.toLowerCase().includes(query.toLowerCase())
@@ -22,16 +26,38 @@ export default function StudiengangForm({degrees, current}: {
         return typeName
     }
     const handleSave = async () => {
-        const supabase = createClient()
-        const {data: {user}} = await supabase.auth.getUser()
-        if (!user) return
-        if (!user || !selected) return
-        await supabase.from("profiles").update({
-            studiengang: selected.name,
-            studiengang_id: selected.id
-        }).eq("id", user.id)
-        window.dispatchEvent(new CustomEvent("studiengang-updated"))
+        if (!selected) return
+        setIsSaving(true)
+        setIsSuccess(false)
+        setError(null)
+
+        try {
+            const supabase = createClient()
+            const {data: {user}} = await supabase.auth.getUser()
+
+            if (!user) throw new Error("Nicht angemeldet.")
+
+            const { error: updateError } = await supabase.from("profiles").update({
+                studiengang: selected.name,
+                studiengang_id: selected.id
+            }).eq("id", user.id)
+
+            if (updateError) throw updateError
+
+            setSavedStudiengang(selected.name)
+            setSelected(null)
+            setIsSuccess(true)
+
+            window.dispatchEvent(new CustomEvent("studiengang-updated"))
+        } catch (err: any) {
+            console.error("Fehler beim Speichern:", err)
+            setError(err.message || "Fehler beim Speichern des Studiengangs.")
+        } finally {
+            setIsSaving(false)
+        }
     }
+    const isDisabled = !selected || selected.name === savedStudiengang || isSaving;
+
     return (
         <div className="w-full">
             <section className="w-full space-y-8">
@@ -52,6 +78,8 @@ export default function StudiengangForm({degrees, current}: {
                                 onChange={e => {
                                     setQuery(e.target.value)
                                     setSelected(null) // wenn der User wieder tippt, Auswahl zurücksetzen
+                                    setIsSuccess(false) // verstecken, wenn getippt wird
+                                    setError(null)
                                 }}
                                 placeholder="Studiengang wählen..."
                                 className="w-full border text-black dark:text-white rounded-md px-3 py-1.5 shadow-xs"
@@ -73,6 +101,8 @@ export default function StudiengangForm({degrees, current}: {
                                                 onClick={() => {
                                                     setQuery(displayName)    // Input zeigt den Namen
                                                     setSelected({id: deg.id, name: displayName}) // merkt sich die Auswahl für handleSave
+                                                    setIsSuccess(false) // verstecken, wenn neue Auswahl geklickt wird
+                                                    setError(null)
                                                 }}
 
                                                 className="px-4 py-2 cursor-pointer hover:bg-secondary"
@@ -84,16 +114,22 @@ export default function StudiengangForm({degrees, current}: {
                                 </ul>
                             )}
                         </div>
-
+                        {error && <p className="text-sm text-flag-red">{error}</p>}
+                        {isSuccess && (
+                                    <p className="text-sm text-mint-leaf">
+                                        Erfolgreich gespeichert! ✓
+                                    </p>
+                                )}
+                        
                         {/* Speichern-Button bleibt gleich, nur disabled wenn nichts ausgewählt */}
 
                         <Button
                             type="button"
                             onClick={handleSave}
-                            disabled={!selected}
+                            disabled={isDisabled}
                             className="w-full text-primary-foreground bg-flag-red hover:bg-foreground disabled:opacity-50 disabled:cursor-not-allowed rounded-md px-6 py-2 transition-all"
                         >
-                            Studiengang speichern
+                            {isSaving ? "Wird gespeichert..." : "Studiengang speichern"}
                         </Button>
 
                     </div>
