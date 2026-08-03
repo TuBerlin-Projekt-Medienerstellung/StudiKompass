@@ -46,7 +46,7 @@ export default function Page() {
               <CardTitle className="text-2xl">
                 Thank you for signing up! <br />
               </CardTitle>
-              <CardDescription>Check your email to confirm</CardDescription>
+              <CardDescription>Check your emails to confirm, also check your Spam!</CardDescription>
             </CardHeader>
             <CardContent className = "flex flex-col gap-6">
               <p className="text-sm text-muted-foreground">
