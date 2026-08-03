@@ -110,6 +110,43 @@ const Page = () => {
         return false;
     }
 
+    //Arbeitsaufwand warning fade
+    useEffect(() => {
+        if (!vollesSemesterSichtbar) return;
+
+        const hideTimer = setTimeout(() => {
+            setvollesSemesterSichtbar(false);
+        }, 4000);
+
+        const resetTimer = setTimeout(() => {
+            setVollesSemester(null);
+        }, 5000);
+
+        return () => {
+            clearTimeout(hideTimer);
+            clearTimeout(resetTimer);
+        };
+    }, [vollesSemesterSichtbar]);
+
+    //Turnus warning fade
+     useEffect(() => {
+        if (!richtigerTurnusSichtbar) return;
+
+        const hideTimer = setTimeout(() => {
+            setRichtigerTurnusSichtbar(false);
+        }, 4000);
+
+        const resetTimer = setTimeout(() => {
+            setRichtigerTurnus(null);
+        }, 5000);
+
+        return () => {
+            clearTimeout(hideTimer);
+            clearTimeout(resetTimer);
+        };
+    }, [richtigerTurnusSichtbar]);
+
+
     async function handleAddSemester() {
         // Grenze: maximal 20 Semester (konsistent mit den Settings)
         if (semesterList.length >= 20) {
@@ -148,14 +185,14 @@ const Page = () => {
         setSemesterList((prev) =>
             prev.map((sem) => ({
                 ...sem,
-                modules: sem.modules.filter((m) => String(m.modul_id) !== modulId),
+                modules: sem.modules.filter((m) => getModuleId(m) !== modulId),
             }))
         );
     }
     const getModuleId = (m: modulInfo) => String((m as any)?.modul_id?.value ?? (m as any)?.modul_id);
 
     const findSemesterByModulId = (modulId: string) => {
-        return semesterList.find(s => s.modules.some(m => String(m.modul_id) === modulId)
+        return semesterList.find(s => s.modules.some(m => getModuleId(m) === modulId)
         );
     };
 
@@ -164,7 +201,7 @@ const Page = () => {
         // Durchsuche alle Semester nach dem Modul mit dieser ID
         for (const sem of semesterList) {
             const gefunden = sem.modules.find(
-                m => String(m.modul_id) === activeId
+                m => getModuleId(m) === activeId
             );
             if (gefunden) {
                 setActiveModul(gefunden);
@@ -189,7 +226,7 @@ const Page = () => {
             targetSemesterNummer = Number(String(over.id).replace('semester-', ''));
         } else {
             const overModulId = String(over.id);
-            const targetSem = semesterList.find(s => s.modules.some(m => String(m.modul_id) === overModulId));
+            const targetSem = semesterList.find(s => s.modules.some(m => getModuleId(m) === overModulId));
             if (!targetSem) return;
             targetSemesterNummer = targetSem.nummer;
         }
@@ -204,8 +241,8 @@ const Page = () => {
         // FALL 1: Innerhalb desselben Semesters verschieben (Reihenfolge ändern)
         if (sourceSemester.nummer === targetSemesterNummer) {
             const sem = newSemesters[sourceSemIndex];
-            const oldIndex = sem.modules.findIndex(m => String(m.modul_id) === activeModulId);
-            let newIndex = sem.modules.findIndex(m => String(m.modul_id) === String(over.id));
+            const oldIndex = sem.modules.findIndex(m => getModuleId(m) === activeModulId);
+            let newIndex = sem.modules.findIndex(m => getModuleId(m) === String(over.id));
             if (newIndex === -1) newIndex = sem.modules.length - 1;
 
             sem.modules = arrayMove(sem.modules, oldIndex, newIndex);
@@ -216,34 +253,26 @@ const Page = () => {
             const sourceSem = newSemesters[sourceSemIndex];
             const targetSem = newSemesters[targetSemIndex];
 
-            const modulIndex = sourceSem.modules.findIndex(m => String(m.modul_id) === activeModulId);
-            const [movedModul] = sourceSem.modules.splice(modulIndex, 1);
+            const modulIndex = sourceSem.modules.findIndex(m => getModuleId(m) === activeModulId);
+            const movedModul = sourceSem.modules[modulIndex];
+            sourceSem.modules = sourceSem.modules.filter((_, index) => index !== modulIndex);
 
             let newIndex = targetSem.modules.findIndex((m) => getModuleId(m) === String(over.id));
             if (newIndex === -1) newIndex = targetSem.modules.length;
 
-            targetSem.modules.splice(newIndex, 0, movedModul);
+            targetSem.modules = [...targetSem.modules.slice(0, newIndex), movedModul,...targetSem.modules.slice(newIndex),];
             setSemesterList(newSemesters);
 
             verschiebeModul(String(movedModul.modul_id), targetSem.id);
 
+
             //Gesamtarbeitsaufwand prüfen
             const gesamtArbeitsaufwand = targetSem.modules.reduce(
-                (sum, modul) => sum + (modul.arbeitsaufwand ?? 0),
-                0
-            );
+                (sum, modul) => sum + (modul.arbeitsaufwand ?? 0), 0);
 
             if (gesamtArbeitsaufwand > 900){
                 setVollesSemester(targetSem.nummer);
                 setvollesSemesterSichtbar(true);
-
-                setTimeout(() => {
-                    setvollesSemesterSichtbar(false);
-                }, 4000);
-
-                setTimeout(() => {
-                    setVollesSemester(null);
-                }, 5000);
             }
 
             //Turnus überprüfen
@@ -254,14 +283,6 @@ const Page = () => {
             if (!checkTurnus(movedModul.turnus, semesterTurnus)) {
                 setRichtigerTurnus(movedModul.turnus);
                 setRichtigerTurnusSichtbar(true);
-
-                setTimeout(() => {
-                    setRichtigerTurnusSichtbar(false);
-                }, 4000);
-
-                setTimeout(() => {
-                    setRichtigerTurnus(null);
-                }, 5000);
             }
         }
 
