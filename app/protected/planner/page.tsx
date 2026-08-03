@@ -270,7 +270,7 @@ const Page = () => {
     return (
         <div>
 
-        <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+        <div className="fixed bottom-4 right-4 z-100 flex flex-col gap-2">
             {vollesSemester && (
                <div className={`rounded-lg border border-sandy-brown bg-warning-background px-4 py-3 text-dark-khaki shadow-lg transition-all
                                 duration-1000 ease-in-out ${vollesSemesterSichtbar ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
