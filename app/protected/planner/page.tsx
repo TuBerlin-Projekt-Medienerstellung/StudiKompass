@@ -4,12 +4,14 @@ import SemesterCard from "@/components/semester-card";
 import SemesterModulCard from "@/components/semester-modul-card";
 import { useState, useEffect } from "react";
 import { Plus, Trash2 } from 'lucide-react';
-import { reduceSemesterTable, deleteSemester, createSemester, updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul, loescheSemesterMitModulen, getProfilTurnus } from './actions';
+import { reduceSemesterTable, deleteSemester, createSemester, updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul, loescheSemesterMitModulen, getProfilTurnus} from './actions';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
 import { Check_modules } from "./actions";
 import { RefreshCw, ShieldCheck } from "lucide-react";
 import { Module_Check_Info } from "@/components/check_modules"
+import { modulInfo } from "@/constants";
+
 
 type Semester = {
     id: string;
@@ -26,6 +28,10 @@ const Page = () => {
     const [proWoche, setProWoche] = useState(false);
     const [currentSemester, setCurrentSemester] = useState<number | null>(null);
     const [currentTurnus, setCurrentTurnus] = useState<string | null>(null);
+    const [vollesSemester, setVollesSemester] = useState<number | null>(null);
+    const [vollesSemesterSichtbar, setvollesSemesterSichtbar] = useState(false);
+    const [richtigerTurnus, setRichtigerTurnus] = useState<string | null>(null);
+    const [richtigerTurnusSichtbar, setRichtigerTurnusSichtbar] = useState(false);
 
     const [checkResults, setCheckResults] = useState<Record<string, Module_Check_Info>>({});
     const [checking, setChecking] = useState(false);
@@ -81,6 +87,84 @@ const Page = () => {
         loadTurnus();
     }, []);
 
+    //turnus in profiles anders gespeichert als in modules tabelle
+    function normalizeTurnus(turnus: string) {
+    switch (turnus.toLowerCase()) {
+        case "wise":
+            return "Wintersemester";
+        case "sose":
+            return "Sommersemester";
+        default:
+            return turnus;
+    }
+}
+
+    //Turnus eines Semesters berechnen
+    function getSemesterTurnus(semesterNummer: number,currentSemester: number, currentTurnus: "Wintersemester" | "Sommersemester"): "Wintersemester" | "Sommersemester" {
+
+               const diff = semesterNummer - currentSemester;
+
+                    if (diff % 2 === 0) {
+                        return currentTurnus;
+                    }
+
+                    return currentTurnus === "Wintersemester"
+                        ? "Sommersemester"
+                        : "Wintersemester";
+                }
+            
+    function checkTurnus(modulTurnus: string | undefined, semesterTurnus: string) {
+        if (semesterTurnus == modulTurnus){
+            return true; 
+        }
+        if (semesterTurnus != "Wintersemester" && semesterTurnus != "Sommersemester" ){
+            return true;
+        }
+    
+        if (modulTurnus != "Wintersemester" && modulTurnus != "Sommersemester"){
+            return true;
+        }
+
+        return false;
+    }
+
+    //Arbeitsaufwand warning fade
+    useEffect(() => {
+        if (!vollesSemesterSichtbar) return;
+
+        const hideTimer = setTimeout(() => {
+            setvollesSemesterSichtbar(false);
+        }, 4000);
+
+        const resetTimer = setTimeout(() => {
+            setVollesSemester(null);
+        }, 5000);
+
+        return () => {
+            clearTimeout(hideTimer);
+            clearTimeout(resetTimer);
+        };
+    }, [vollesSemesterSichtbar]);
+
+    //Turnus warning fade
+     useEffect(() => {
+        if (!richtigerTurnusSichtbar) return;
+
+        const hideTimer = setTimeout(() => {
+            setRichtigerTurnusSichtbar(false);
+        }, 4000);
+
+        const resetTimer = setTimeout(() => {
+            setRichtigerTurnus(null);
+        }, 5000);
+
+        return () => {
+            clearTimeout(hideTimer);
+            clearTimeout(resetTimer);
+        };
+    }, [richtigerTurnusSichtbar]);
+
+
     async function handleAddSemester() {
         // Grenze: maximal 20 Semester (konsistent mit den Settings)
         if (semesterList.length >= 20) {
@@ -119,14 +203,14 @@ const Page = () => {
         setSemesterList((prev) =>
             prev.map((sem) => ({
                 ...sem,
-                modules: sem.modules.filter((m) => String(m.modul_id) !== modulId),
+                modules: sem.modules.filter((m) => getModuleId(m) !== modulId),
             }))
         );
     }
     const getModuleId = (m: modulInfo) => String((m as any)?.modul_id?.value ?? (m as any)?.modul_id);
 
     const findSemesterByModulId = (modulId: string) => {
-        return semesterList.find(s => s.modules.some(m => String(m.modul_id) === modulId)
+        return semesterList.find(s => s.modules.some(m => getModuleId(m) === modulId)
         );
     };
 
@@ -135,7 +219,7 @@ const Page = () => {
         // Durchsuche alle Semester nach dem Modul mit dieser ID
         for (const sem of semesterList) {
             const gefunden = sem.modules.find(
-                m => String(m.modul_id) === activeId
+                m => getModuleId(m) === activeId
             );
             if (gefunden) {
                 setActiveModul(gefunden);
@@ -160,7 +244,7 @@ const Page = () => {
             targetSemesterNummer = Number(String(over.id).replace('semester-', ''));
         } else {
             const overModulId = String(over.id);
-            const targetSem = semesterList.find(s => s.modules.some(m => String(m.modul_id) === overModulId));
+            const targetSem = semesterList.find(s => s.modules.some(m => getModuleId(m) === overModulId));
             if (!targetSem) return;
             targetSemesterNummer = targetSem.nummer;
         }
@@ -175,8 +259,8 @@ const Page = () => {
         // FALL 1: Innerhalb desselben Semesters verschieben (Reihenfolge ändern)
         if (sourceSemester.nummer === targetSemesterNummer) {
             const sem = newSemesters[sourceSemIndex];
-            const oldIndex = sem.modules.findIndex(m => String(m.modul_id) === activeModulId);
-            let newIndex = sem.modules.findIndex(m => String(m.modul_id) === String(over.id));
+            const oldIndex = sem.modules.findIndex(m => getModuleId(m) === activeModulId);
+            let newIndex = sem.modules.findIndex(m => getModuleId(m) === String(over.id));
             if (newIndex === -1) newIndex = sem.modules.length - 1;
 
             sem.modules = arrayMove(sem.modules, oldIndex, newIndex);
@@ -187,35 +271,76 @@ const Page = () => {
             const sourceSem = newSemesters[sourceSemIndex];
             const targetSem = newSemesters[targetSemIndex];
 
-            const modulIndex = sourceSem.modules.findIndex(m => String(m.modul_id) === activeModulId);
-            const [movedModul] = sourceSem.modules.splice(modulIndex, 1);
+            const modulIndex = sourceSem.modules.findIndex(m => getModuleId(m) === activeModulId);
+            const movedModul = sourceSem.modules[modulIndex];
+            sourceSem.modules = sourceSem.modules.filter((_, index) => index !== modulIndex);
 
             let newIndex = targetSem.modules.findIndex((m) => getModuleId(m) === String(over.id));
             if (newIndex === -1) newIndex = targetSem.modules.length;
 
-            targetSem.modules.splice(newIndex, 0, movedModul);
+            targetSem.modules = [...targetSem.modules.slice(0, newIndex), movedModul,...targetSem.modules.slice(newIndex),];
             setSemesterList(newSemesters);
 
             verschiebeModul(String(movedModul.modul_id), targetSem.id);
+
+
+            //Gesamtarbeitsaufwand prüfen
+            const gesamtArbeitsaufwand = targetSem.modules.reduce(
+                (sum, modul) => sum + (modul.arbeitsaufwand ?? 0), 0);
+
+            if (gesamtArbeitsaufwand > 900){
+                setVollesSemester(targetSem.nummer);
+                setvollesSemesterSichtbar(true);
+            }
+
+            //Turnus überprüfen
+            if (!currentSemester || !currentTurnus) return;
+
+            const semesterTurnus = getSemesterTurnus(targetSem.nummer,currentSemester,normalizeTurnus(currentTurnus) as "Wintersemester" | "Sommersemester");
+   
+            if (!checkTurnus(movedModul.turnus, semesterTurnus)) {
+                setRichtigerTurnus(movedModul.turnus);
+                setRichtigerTurnusSichtbar(true);
+            }
         }
+
     };
 
     return (
-        <DndContext
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragEnd={handleDragEnd}>
-            <section className="flex flex-col gap-4 p-4 md:p-6">
-                {/* Responsive Header: auf Mobile etwas kleiner */}
-                <div className="flex flex-col gap-2">
-                    <h1 className="text-3xl font-bold md:text-4xl">Studienplaner</h1>
-                    <p className="text-sm opacity-70 md:text-base">Plane dein Studium semesterweise</p>
+        <div>
+
+        <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+            {vollesSemester && (
+               <div className={`rounded-lg border border-sandy-brown bg-warning-background px-4 py-3 text-dark-khaki shadow-lg transition-all
+                                duration-1000 ease-in-out ${vollesSemesterSichtbar ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+                        Das {vollesSemester}. Semester überschreitet den empfohlenen Arbeitsaufwand.
                 </div>
                 
-                <button
+            )}
+
+            {richtigerTurnus && (
+                <div className={`rounded-lg border border-sandy-brown bg-warning-background px-4 py-3 text-dark-khaki shadow-lg transition-all
+                                duration-1000 ease-in-out ${richtigerTurnusSichtbar ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
+                        Achtung! Das Modul gehört in das {richtigerTurnus}. 
+                </div>
+
+            )}
+        </div>
+            <DndContext
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragEnd={handleDragEnd}>
+            
+                <section className="flex flex-col gap-4 p-4 md:p-6">
+                    {/* Responsive Header: auf Mobile etwas kleiner */}
+                    <div className="flex flex-col gap-2">
+                        <h1 className="text-3xl font-bold md:text-4xl">Studienplaner</h1>
+                        <p className="text-sm opacity-70 md:text-base">Plane dein Studium semesterweise</p>
+                    </div>
+                    <button
                         onClick={handle_Check}
                         disabled={checking}
-                        className="flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card px-4 py-2.5 font-medium transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto shadow-sm"
+                        className="w-full sm:w-auto sm:self-end flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card px-4 py-2.5 font-medium transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto shadow-sm"
                     >
                         {checking ? (
                             <>
@@ -230,55 +355,58 @@ const Page = () => {
                         )}
                     </button>
 
+                    <div className="flex flex-col gap-6">
+                        {semesterList.map((semester) => (
+                            <SemesterCard
+                                key={semester.nummer}
+                                semester={semester.nummer}
+                                module={semester.modules}
+                                onClick={() => console.log(semester.nummer)}
+                                proWoche={proWoche}
+                                onToggleAufwand={() => setProWoche(!proWoche)}
+                                currentSemester={currentSemester}
+                                currentTurnus={currentTurnus}
+                                onDeleteModul={entferneModulAusState}
+                                checkResults={checkResults}
+                            />
+                        ))}
+                    </div>
 
-                <div className="flex flex-col gap-6">
-                    {semesterList.map((semester) => (
-                        <SemesterCard
-                            key={semester.nummer}
-                            semester={semester.nummer}
-                            module={semester.modules}
-                            onClick={() => console.log(semester.nummer)}
+                    {/* Buttons auf Mobile untereinander, auf Desktop nebeneinander */}
+                    <div className='flex flex-col gap-4 md:flex-row'>
+                        <button onClick={handleAddSemester}
+                            disabled={semesterList.length >= 20}
+                            className={`border-2 rounded-2xl border-dashed p-4 flex items-center justify-center px-6 py-4 md:w-5/6 w-full ${semesterList.length >= 20
+                                ? 'opacity-50 cursor-not-allowed'
+                                : 'cursor-pointer'
+                                }`}>
+                            <Plus></Plus>Semester hinzufügen
+                        </button>
+                        <button onClick={() => {
+                            const letztes = semesterList[semesterList.length - 1];
+                            if (letztes) handleDeleteSemester(letztes.id, letztes.nummer);
+                        }}
+                            className='flex border-2 rounded-2xl border-flag-red cursor-pointer md:w-1/6 w-full items-center justify-center'>
+                            <Trash2></Trash2>
+                        </button>
+                    </div>
+                </section>
+
+                <DragOverlay>
+                    {activeModul ? (
+                        <SemesterModulCard
+                            modul={activeModul}
                             proWoche={proWoche}
                             onToggleAufwand={() => setProWoche(!proWoche)}
-                            currentSemester={currentSemester}
-                            currentTurnus={currentTurnus}
-                            onDeleteModul={entferneModulAusState}
-                            checkResults={checkResults}
+                            // currentSemester={currentSemester}
+                            // currentTurnus={currentTurnus}
+                            onDeleteModul={() => { }}
+                            //checkResults={checkResults}
                         />
-                    ))}
-                </div>
-
-                {/* Buttons auf Mobile untereinander, auf Desktop nebeneinander */}
-                <div className='flex flex-col gap-4 md:flex-row'>
-                    <button onClick={handleAddSemester}
-                        disabled={semesterList.length >= 20}
-                        className={`border-2 rounded-2xl border-dashed p-4 flex items-center justify-center px-6 py-4 md:w-5/6 w-full ${semesterList.length >= 20
-                            ? 'opacity-50 cursor-not-allowed'
-                            : 'cursor-pointer'
-                            }`}>
-                        <Plus></Plus>Semester hinzufügen
-                    </button>
-                    <button onClick={() => {
-                        const letztes = semesterList[semesterList.length - 1];
-                        if (letztes) handleDeleteSemester(letztes.id, letztes.nummer);
-                    }}
-                        className='flex border-2 rounded-2xl border-flag-red cursor-pointer md:w-1/6 w-full items-center justify-center'>
-                        <Trash2></Trash2>
-                    </button>
-                </div>
-            </section>
-
-            <DragOverlay>
-                {activeModul ? (
-                    <SemesterModulCard
-                        modul={activeModul}
-                        proWoche={proWoche}
-                        onToggleAufwand={() => setProWoche(!proWoche)}
-                        onDeleteModul={() => { }}
-                    />
-                ) : null}
-            </DragOverlay>
-        </DndContext>
+                    ) : null}
+                </DragOverlay>
+            </DndContext>
+        </div>
     );
 };
 
