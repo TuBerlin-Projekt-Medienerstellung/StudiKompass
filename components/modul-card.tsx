@@ -29,7 +29,8 @@ const ModulCard = (props: modulInfo & {
     const [liked, setLiked] = useState(true);
     const [open, setOpen] = useState(false);
     const [details, setDetails] = useState<ModulDetails | null>(null);
-    const [loadingDetails, setLoadingDetails] = useState(false);
+    // const [loadingDetails, setLoadingDetails] = useState(false);
+    const [, setLoadingDetails] = useState(false);
     const [showLernergebnisse, setShowLernergebnisse] = useState(false);
     const [plannerOpen, setPlannerOpen] = useState(false);
     const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
@@ -112,11 +113,9 @@ const ModulCard = (props: modulInfo & {
         if (!ergebnis.success) {
             
             if (ergebnis.error === "Dieses Modul ist bereits in deinem Planer.") {
-                console.warn("Modul ist bereits im Planer:", ergebnis.error);
                 setImPlaner(true);
                 const gewaehltesSemester = semesterListe.find(s => s.id === semesterId);
                 setImPlanerSemester(gewaehltesSemester?.name ?? null);
-                console.log("Modul gespeichert:", ergebnis.modulId);
                 setWarnung("Dieses Modul ist bereits in deinem Planer.");
                 return;}
         } else {
