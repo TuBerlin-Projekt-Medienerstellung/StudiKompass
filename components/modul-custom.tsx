@@ -212,9 +212,9 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                             }
                                             className="flex-1 w-full bg-transparent text-gray-900 outline-none dark:text-white">
                                             <option value="">Bitte wählen</option>
-                                            <option value="WiSe">WiSe</option>
-                                            <option value="SoSe">SoSe</option>
-                                            <option value="WiSe/SoSe">WiSe/SoSe</option>
+                                            <option value="Wintersemester">WiSe</option>
+                                            <option value="Sommersemester">SoSe</option>
+                                            <option value="Winter- und Sommersemester">WiSe/SoSe</option>
                                         </select>
                                     </div>
                                 </div>
