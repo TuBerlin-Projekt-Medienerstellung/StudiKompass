@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { SquareArrowOutUpRight, Grip, Trash2, ChevronDown, ChevronUp, Circle, CircleCheckBig } from 'lucide-react';
@@ -22,6 +23,8 @@ type ModulDetails = {
 };
 
 const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: Props) => {
+    const router = useRouter();
+
     const [isOpen, setIsOpen] = useState(false);
     const [details, setDetails] = useState<ModulDetails | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
@@ -29,6 +32,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
     const [counter, setCount] = useState(0);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [noteInput, setNoteInput] = useState<number>(modul.note ?? 2.3);
+    const [savedNote, setSavedNote] = useState<number | null>(modul.note ?? null);
     const [isSavingNote, setIsSavingNote] = useState(false);
     const [gewichtung, setGewichtung] = useState<number>(modul.gewichtung ?? 1);
 
@@ -119,6 +123,9 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
 
         if (modul.note !== undefined && modul.note !== null) {
             setNoteInput(modul.note);
+            setSavedNote(modul.note);
+        } else {
+            setSavedNote(null);
         }
 
         if (modul.gewichtung !== undefined && modul.gewichtung !== null) {
@@ -231,9 +238,9 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
                         </button>
                         </div>
 
-                        {modul.note !== undefined && modul.note !== null  && (
+                                                {savedNote !== null && (
                             <div className="mt-3 rounded-md bg-blue-bell/10 border border-blue-bell/20 px-2 py-0.5 text-xs font-bold text-blue-bell whitespace-nowrap">
-                                Note: {modul.note}
+                                Note: {savedNote.toFixed(1)}
                             </div>
                         )}
                     </div>
@@ -363,10 +370,12 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
                                                                 const result = await saveGrade(handleModule(modul.modul_id), noteInput, gewichtung);
 
                                                                 if (result.success) {
-                                                                    console.log("Erfolgreich gespeichert!");
+                                                                    setSavedNote(noteInput);
+                                                                    router.refresh();
                                                                 } else {
                                                                     setErrorMsg(result.error || "Fehler beim Speichern.");
                                                                 }
+
                                                             } catch (error) {
                                                                 console.error("Fehler beim Speichern der Note:", error);
                                                                 setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");
@@ -390,10 +399,12 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
                                                                 const result = await deleteGrade(handleModule(modul.modul_id));
 
                                                                 if (result.success) {
-                                                                    console.log("Erfolgreich gelöscht!");
+                                                                    setSavedNote(null);
+                                                                    router.refresh();
                                                                 } else {
                                                                     setErrorMsg(result.error || "Fehler beim Löschen.");
                                                                 }
+
                                                             } catch (error) {
                                                                 console.error("Fehler beim Löschen der Note:", error);
                                                                 setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");
@@ -424,10 +435,13 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
 
                                         try {
                                             const result = await saveStatus(handleModule(modul.modul_id), nextCheckedState);
-                                            if (!result.success) {
+                                            if (result.success) {
+                                                router.refresh();
+                                            } else {
                                                 setChecked(checked);
                                                 setErrorMsg(result.error || "Status konnte nicht gespeichert werden.");
                                             }
+                                            
                                         } catch (error) {
                                             setChecked(checked);
                                             console.error("Fehler beim Speichern des Status:", error);
