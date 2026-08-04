@@ -612,11 +612,11 @@ in the shared path: */
 
 export type CheckStatus = "UP_TO_DATE" | "WARNING" | "ERROR";
 
-export interface ModuleCheckInfo {
+export interface Module_Check_Info {
     status: CheckStatus;
     message: string;
 }
-export type CheckModulesResult = Record<string, ModuleCheckInfo>;
+export type CheckModulesResult = Record<string, Module_Check_Info>;
 
 export async function Check_modules(): Promise<CheckModulesResult>{
     const supabase= await createClient();
