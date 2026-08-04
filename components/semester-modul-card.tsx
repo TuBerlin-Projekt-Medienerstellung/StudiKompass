@@ -30,7 +30,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [noteInput, setNoteInput] = useState<number>(modul.note ?? 2.3);
     const [isSavingNote, setIsSavingNote] = useState(false);
-    const [gewichtung, setGewichtung] = useState<boolean>(modul.gewichtung === 1);
+    const [gewichtung, setGewichtung] = useState<number>(modul.gewichtung ?? 1);
 
     const {
         attributes,
@@ -120,8 +120,11 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
         if (modul.note !== undefined && modul.note !== null) {
             setNoteInput(modul.note);
         }
+
         if (modul.gewichtung !== undefined && modul.gewichtung !== null) {
-            setGewichtung(modul.gewichtung === 1);
+            setGewichtung(modul.gewichtung);
+        } else {
+            setGewichtung(1);
         }
 
         if (modul.abgeschlossen !== undefined && modul.abgeschlossen !== null) {
@@ -319,20 +322,31 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
                                                         <button className="px-1 font-bold hover:opacity-70 disabled:opacity-30 text-sm" onClick={increaseNote} disabled={noteInput >= 4.0}>+</button>
                                                     </div>
 
-                                                    {/* Gewichtungs-Toggle */}
+                                                    {/* Gewichtung */}
                                                     <div
-                                                        title="Welche Noten (nicht) in den Gesamtschnitt einfließen, steht in der StuPo zum Studiengang."
-                                                        className="flex items-center justify-between md:justify-center gap-3 px-3 py-2 bg-background border rounded-xl flex-1 md:flex-none select-none">
-                                                        <span className="text-xs font-normal opacity-70 whitespace-nowrap">
-                                                            {gewichtung ? "normal gewichtet" : "nicht gewichtet"}
-                                                        </span>
-                                                        <button
-                                                            onClick={() => setGewichtung(!gewichtung)}
-                                                            className={`${gewichtung ? "bg-mint-leaf" : "bg-muted border shadow-inner"} relative inline-flex h-3.5 w-7 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none items-center`}>
-                                                            <span
-                                                                className={`${gewichtung ? "translate-x-3.5 bg-background" : "translate-x-0.5 bg-muted-foreground/60"} pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full shadow transition duration-200 ease-in-out`}
-                                                            />
-                                                        </button>
+                                                        title="Welche Noten in den Gesamtschnitt einfließen, steht in der StuPo zum Studiengang."
+                                                        className="flex flex-col gap-1 px-3 py-2 bg-background border rounded-xl flex-1 md:flex-none"
+                                                    >
+                                                        <label className="text-xs font-normal opacity-70 whitespace-nowrap">
+                                                            Gewichtung
+                                                        </label>
+
+                                                        <input
+                                                            type="number"
+                                                            min={0}
+                                                            step={1}
+                                                            value={gewichtung}
+                                                            onChange={(e) => {
+                                                                const value = Number(e.target.value);
+                                                                setGewichtung(Number.isNaN(value) ? 0 : value);
+                                                            }}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="w-20 rounded-md border border-border bg-background px-2 py-1 text-center text-xs font-semibold"
+                                                        />
+
+                                                        <p className="text-[10px] font-normal opacity-60">
+                                                            0 = nicht, 1 = normal, 2 = doppelt
+                                                        </p>
                                                     </div>
                                                 </div>
 

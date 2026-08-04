@@ -6,93 +6,90 @@ export type ModulFuerSchnitt = {
   abgeschlossen: boolean | null;
 };
 
+function getGewichtung(modul: ModulFuerSchnitt): number {
+  return modul.gewichtung ?? 1;
+}
+
+function istRelevantesNotenModul(modul: ModulFuerSchnitt): boolean {
+  const gewichtung = getGewichtung(modul);
+
+  return (
+    modul.abgeschlossen === true &&
+    modul.benotet === true &&
+    modul.note !== null &&
+    modul.note >= 1.0 &&
+    modul.note <= 4.0 &&
+    modul.ects !== null &&
+    modul.ects > 0 &&
+    gewichtung > 0
+  );
+}
+
 export function berechneGesamtschnitt(module: ModulFuerSchnitt[]) {
-  const relevanteModule = module.filter((modul) => {
-    return (
-      modul.abgeschlossen === true &&
-      modul.benotet === true &&
-      modul.note !== null &&
-      (modul.gewichtung === 1 || modul.gewichtung === null) &&
-      modul.ects !== null &&
-      modul.ects > 0
-    );
-  });
+  const relevanteModule = module.filter(istRelevantesNotenModul);
 
   const gewichteteSumme = relevanteModule.reduce((summe, modul) => {
-    return summe + modul.note! * modul.ects!;
+    const gewichtung = getGewichtung(modul);
+
+    return summe + modul.note! * modul.ects! * gewichtung;
   }, 0);
 
-  const ectsSumme = relevanteModule.reduce((summe, modul) => {
-    return summe + modul.ects!;
+  const gewichtSumme = relevanteModule.reduce((summe, modul) => {
+    const gewichtung = getGewichtung(modul);
+
+    return summe + modul.ects! * gewichtung;
   }, 0);
 
-  if (ectsSumme === 0) {
+  if (gewichtSumme === 0) {
     return null;
   }
 
-  const rohwert = gewichteteSumme / ectsSumme;
+  const rohwert = gewichteteSumme / gewichtSumme;
 
   return Math.trunc(rohwert * 10) / 10;
 }
 
 export function berechneUrteil(note: number | null) {
-  if (note === null) return "Noch keine Gesamtnote";
+  if (note === null) {
+    return "Noch keine Gesamtnote";
+  }
 
-  if (note >= 1.0 && note <= 1.5) return "sehr gut";
-  if (note >= 1.6 && note <= 2.5) return "gut";
-  if (note >= 2.6 && note <= 3.5) return "befriedigend";
-  if (note >= 3.6 && note <= 4.0) return "ausreichend";
+  if (note < 1.0 || note > 4.0) {
+    return "Keine gültige Note";
+  }
 
-  return "Keine gültige Note";
+  if (note <= 1.5) return "sehr gut";
+  if (note <= 2.5) return "gut";
+  if (note <= 3.5) return "befriedigend";
+
+  return "ausreichend";
 }
 
 export function berechneWunschschnittFortschritt(
   module: ModulFuerSchnitt[],
   zielnote: number | null,
-  gesamtEcts: number
+  _gesamtEcts: number
 ): number {
-  if (zielnote === null) return 0;
-
-  const benoteteModule = module.filter((modul) => {
-    return (
-      modul.abgeschlossen === true &&
-      modul.benotet === true &&
-      modul.note !== null &&
-      modul.ects !== null &&
-      modul.ects > 0 &&
-      modul.gewichtung === 1
-    );
-  });
-
-  const erreichteEcts = benoteteModule.reduce((summe, modul) => {
-    return summe + modul.ects!;
-  }, 0);
-
-  const notensumme = benoteteModule.reduce((summe, modul) => {
-    return summe + modul.note! * modul.ects!;
-  }, 0);
-
-  const restEcts = gesamtEcts - erreichteEcts;
-
-  if (erreichteEcts === 0) {
+  if (zielnote === null || zielnote < 1.0 || zielnote > 4.0) {
     return 0;
   }
 
-  if (restEcts <= 0) {
-    const schnitt = notensumme / erreichteEcts;
-    return schnitt <= zielnote ? 100 : 0;
+  const aktuellerSchnitt = berechneGesamtschnitt(module);
+
+  if (aktuellerSchnitt === null) {
+    return 0;
   }
 
-  const benoetigteNotensumme = zielnote * gesamtEcts;
+  if (aktuellerSchnitt <= zielnote) {
+    return 100;
+  }
 
-  const benoetigteRestnote =
-    (benoetigteNotensumme - notensumme) / restEcts;
-
-  if (benoetigteRestnote >= 4.0) return 100;
-  if (benoetigteRestnote <= 1.0) return 0;
+  if (zielnote === 4.0) {
+    return 100;
+  }
 
   const fortschritt =
-    ((benoetigteRestnote - 1.0) / 3.0) * 100;
+    ((4.0 - aktuellerSchnitt) / (4.0 - zielnote)) * 100;
 
   return Math.max(0, Math.min(100, Math.round(fortschritt)));
 }

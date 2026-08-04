@@ -24,57 +24,67 @@ export default function TargetGradeInput({
     const [hasError, setHasError] = useState(false);
 
     async function handleSave() {
-        const parsedTargetGrade = Number(
-            targetGrade.replace(",", ".")
-        );
+    const normalizedTargetGrade = targetGrade.trim().replace(",", ".");
 
-        setMessage(null);
-        setHasError(false);
+    const parsedTargetGrade =
+        normalizedTargetGrade === ""
+            ? null
+            : Number(normalizedTargetGrade);
 
-        if (
+    setMessage(null);
+    setHasError(false);
+
+    if (
+        parsedTargetGrade !== null &&
+        (
             !Number.isFinite(parsedTargetGrade) ||
             parsedTargetGrade < 1 ||
             parsedTargetGrade > 4
-        ) {
-            setMessage("Bitte gib eine gültige Zielnote ein.");
-            setHasError(true);
-            return;
-        }
-
-        setIsSaving(true);
-
-        const {
-            data: { user },
-            error: userError,
-        } = await supabase.auth.getUser();
-
-        if (userError || !user) {
-            setMessage("Der Nutzer konnte nicht ermittelt werden.");
-            setHasError(true);
-            setIsSaving(false);
-            return;
-        }
-
-        const { error } = await supabase
-            .from("profiles")
-            .update({
-                target_grade: parsedTargetGrade,
-            })
-            .eq("id", user.id);
-
-        if (error) {
-            console.error("Fehler beim Speichern der Zielnote:", error);
-            setMessage("Die Zielnote konnte nicht gespeichert werden.");
-            setHasError(true);
-            setIsSaving(false);
-            return;
-        }
-
-        setMessage("Gespeichert.");
-        setHasError(false);
-        setIsSaving(false);
-        router.refresh();
+        )
+    ) {
+        setMessage("Bitte gib eine gültige Zielnote zwischen 1,0 und 4,0 ein.");
+        setHasError(true);
+        return;
     }
+
+    setIsSaving(true);
+
+    const {
+        data: { user },
+        error: userError,
+    } = await supabase.auth.getUser();
+
+    if (userError || !user) {
+        setMessage("Der Nutzer konnte nicht ermittelt werden.");
+        setHasError(true);
+        setIsSaving(false);
+        return;
+    }
+
+    const { error } = await supabase
+        .from("profiles")
+        .update({
+            target_grade: parsedTargetGrade,
+        })
+        .eq("id", user.id);
+
+    if (error) {
+        console.error("Fehler beim Speichern der Zielnote:", error);
+        setMessage("Die Zielnote konnte nicht gespeichert werden.");
+        setHasError(true);
+        setIsSaving(false);
+        return;
+    }
+
+    setMessage(
+        parsedTargetGrade === null
+            ? "Zielnote entfernt."
+            : "Gespeichert."
+    );
+    setHasError(false);
+    setIsSaving(false);
+    router.refresh();
+}
 
     return (
         <div className="space-y-2">
