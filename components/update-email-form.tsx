@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/card";
 import {Input} from "@/components/ui/input";
 import {Label} from "@/components/ui/label";
-import {useRouter} from "next/navigation";
 import React, {useState} from "react";
 import {MailOpen} from 'lucide-react';
 
@@ -23,7 +22,6 @@ export function UpdateEmailForm({
     const [email, setEmail] = useState("");
     const [error, setError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
-    const router = useRouter();
     const [isSuccess, setIsSuccess] = useState(false);
 
     const handleUpdateEmail = async (e: React.SubmitEvent) => {
@@ -92,7 +90,7 @@ export function UpdateEmailForm({
                         <form onSubmit={handleUpdateEmail}>
                             <div className="flex flex-col gap-6">
                                 <div className="grid gap-2">
-                                    <Label htmlFor="password">Neue E-Mail:</Label>
+                                    <Label htmlFor="email">Neue E-Mail:</Label>
                                     <Input
                                         id="email"
                                         type="email"
@@ -103,7 +101,7 @@ export function UpdateEmailForm({
                                     />
                                 </div>
                                 {error && <p className="text-sm text-flag-red">{error}</p>}
-                                <Button type="submit" className="w-full bg-flag-red" disabled={isLoading}>
+                                <Button type="submit" className="w-full bg-flag-red" disabled={isLoading || !email.trim()}>
                                     {isLoading ? "Speichern..." : "Speichere neue E-Mail"}
                                 </Button>
 
