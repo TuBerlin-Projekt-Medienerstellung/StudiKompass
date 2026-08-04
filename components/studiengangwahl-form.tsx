@@ -61,18 +61,25 @@ export default function StudiengangForm({degrees, current}: {
     return (
         <div className="w-full">
             <section className="w-full space-y-8">
-                <div className="rounded-xl border-2 bg-card shadow-sm p-6 gap 4">
-                    <div className="space-y-4">
+                <div className="rounded-xl border-2 bg-card shadow-sm p-6 gap-4">
+                    <form
+                        className="space-y-4"
+                        onSubmit={(e) => {
+                            e.preventDefault();
+                            handleSave();
+                        }}
+                    >
                         <div className="flex flex-row gap-4 pb-1 md:justify-start items-center">
                             <GraduationCap className="text-flag-red w-8 h-8 stroke-1.5"></GraduationCap>
                             <h1 className="text-xl font-bold">Studiengang</h1>
                         </div>
 
-                        <Label htmlFor="password"> Studiengang: </Label>
+                        <Label htmlFor="studiengang"> Studiengang: </Label>
 
                         {/* Das alte <select> ist weg, stattdessen Input + Liste */}
                         <div className="relative pt-1 pb-2">
                             <input
+                                id="studiengang"
                                 type="text"
                                 value={query}
                                 onChange={e => {
@@ -87,7 +94,7 @@ export default function StudiengangForm({degrees, current}: {
 
                             {/* Liste nur sichtbar wenn: etwas getippt wurde UND noch nichts ausgewählt */}
                             {query.length > 0 && !selected && (
-                                <ul className="absolute z-16 w-full mt-1 max-h-60 overflow-y-auto bg-card border rounded-lg">
+                                <ul className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto bg-card border rounded-lg">
                                     {filtered.map((deg, index) => {
                                         const typeName = deg?.studiengangart?.name ?? ""
                                         const displayName = typeName
@@ -124,15 +131,13 @@ export default function StudiengangForm({degrees, current}: {
                         {/* Speichern-Button bleibt gleich, nur disabled wenn nichts ausgewählt */}
 
                         <Button
-                            type="button"
-                            onClick={handleSave}
+                            type="submit"
                             disabled={isDisabled}
                             className="w-full text-primary-foreground bg-flag-red hover:bg-foreground disabled:opacity-50 disabled:cursor-not-allowed rounded-md px-6 py-2 transition-all"
                         >
                             {isSaving ? "Wird gespeichert..." : "Studiengang speichern"}
                         </Button>
-
-                    </div>
+                    </form>
                 </div>
             </section>
         </div>

@@ -78,7 +78,13 @@ export default function Stupo() {
             <div className="w-full">
                 <section className="w-full space-y-8">
                     <div className="rounded-xl border-2 bg-card shadow-sm p-6 gap 4">
-                        <div className="space-y-4">
+                        <form
+                            className="space-y-4"
+                            onSubmit={(e) => {
+                                e.preventDefault();
+                                handleSave();
+                            }}
+                        >
                             <div className="flex flex-row gap-4 pb-1 md:justify-start items-center">
                                 <GraduationCap className="text-flag-red w-8 h-8 stroke-1.5" />
                                 <h1 className="text-xl font-bold">Studien- und Prüfungsordnung</h1>
@@ -105,14 +111,13 @@ export default function Stupo() {
                                 </p>
                             )}
                             <Button
-                                type="button"
-                                onClick={handleSave}
+                                type="submit"
                                 disabled={isDisabled} 
                                 className="w-full text-primary-foreground bg-flag-red hover:bg-foreground disabled:opacity-50 disabled:cursor-not-allowed rounded-md px-6 py-2 transition-all"
                             >
                                 {isSaving ? "Wird gespeichert..." : isLoading ? "Lädt..." : "Stupo speichern"}
                             </Button>
-                        </div>
+                        </form>
                     </div>
                 </section>
             </div>

@@ -247,7 +247,7 @@ export function UpdateSemesterForm({
                                             className="w-full border text-black dark:text-white rounded-md px-3 py-1.5 shadow-xs"
                                         />
                                         {isOpen && (
-                                            <ul className="absolute z-16 w-full mt-1 max-h-60 overflow-y-auto bg-card text-card-foreground border rounded-lg">
+                                            <ul className="absolute z-50 w-full mt-1 max-h-60 overflow-y-auto bg-card text-card-foreground border rounded-lg">
                                                 {TURNUS_OPTIONS.map((item) => (
                                                     <li
                                                         key={item.value}

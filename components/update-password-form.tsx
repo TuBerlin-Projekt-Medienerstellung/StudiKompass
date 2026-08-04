@@ -68,7 +68,7 @@ export function UpdatePasswordForm({
                                 />
                             </div>
                             {error && <p className="text-sm text-flag-red">{error}</p>}
-                            <Button type="submit" className="w-full bg-flag-red" disabled={isLoading}>
+                            <Button type="submit" className="w-full bg-flag-red" disabled={isLoading || !password.trim()}>
                                 {isLoading ? "Speichern..." : "Speichere neues Passwort"}
                             </Button>
                         </div>
