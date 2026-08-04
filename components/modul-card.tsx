@@ -111,19 +111,17 @@ const ModulCard = (props: modulInfo & {
         });
 
         if (!ergebnis.success) {
-            
             if (ergebnis.error === "Dieses Modul ist bereits in deinem Planer.") {
                 setImPlaner(true);
                 const gewaehltesSemester = semesterListe.find(s => s.id === semesterId);
                 setImPlanerSemester(gewaehltesSemester?.name ?? null);
                 setWarnung("Dieses Modul ist bereits in deinem Planer.");
-                return;}
-        } else {
-            
-            console.error("Speichern fehlgeschlagen:", ergebnis.error);
-            return;
+                return;
+            } else {
+                console.error("Speichern fehlgeschlagen:", ergebnis.error);
+                return;
+            }
         }
-
     }
 
     const detailBoxen = [
