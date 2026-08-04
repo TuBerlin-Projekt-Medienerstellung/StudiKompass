@@ -2,7 +2,7 @@
 
 import SemesterCard from "@/components/semester-card";
 import SemesterModulCard from "@/components/semester-modul-card";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Trash2 } from 'lucide-react';
 import { reduceSemesterTable, deleteSemester, createSemester, updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul, loescheSemesterMitModulen, getProfilTurnus} from './actions';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
@@ -28,6 +28,8 @@ const Page = () => {
     const [proWoche, setProWoche] = useState(false);
     const [currentSemester, setCurrentSemester] = useState<number | null>(null);
     const [currentTurnus, setCurrentTurnus] = useState<string | null>(null);
+    const semesterOperationLaeuft = useRef(false);
+    const [semesterButtonsDisabled, setSemesterButtonsDisabled] = useState(false);
     const [vollesSemester, setVollesSemester] = useState<number | null>(null);
     const [vollesSemesterSichtbar, setvollesSemesterSichtbar] = useState(false);
     const [richtigerTurnus, setRichtigerTurnus] = useState<string | null>(null);
@@ -166,36 +168,58 @@ const Page = () => {
 
 
     async function handleAddSemester() {
+
+        //Guard: läuft schin eine Semesteroperation? Wenn ja, ignorieren
+        if (semesterOperationLaeuft.current) return;
+
         // Grenze: maximal 20 Semester (konsistent mit den Settings)
         if (semesterList.length >= 20) {
             return;   // nichts tun, Grenze erreicht
         }
 
-        const maxNummer =
-            semesterList.length > 0
-                ? Math.max(...semesterList.map((s) => s.nummer))
-                : 0;
+        semesterOperationLaeuft.current = true;
+        setSemesterButtonsDisabled(true);
+        try {
+            const maxNummer =
+                semesterList.length > 0
+                    ? Math.max(...semesterList.map((s) => s.nummer))
+                    : 0;
 
-        const neueNummer = maxNummer + 1;
+            const neueNummer = maxNummer + 1;
 
-        await createSemester();
-        const neueZeile = await updateSemesterTable(neueNummer);
+            await createSemester();
+            const neueZeile = await updateSemesterTable(neueNummer);
 
-        setSemesterList((prev) => [
-            ...prev,
-            {
-                id: neueZeile.id,
-                nummer: neueNummer,
-                modules: [],
-            },
-        ]);
+            setSemesterList((prev) => [
+                ...prev,
+                {
+                    id: neueZeile.id,
+                    nummer: neueNummer,
+                    modules: [],
+                },
+            ]);
+        } finally {
+            semesterOperationLaeuft.current = false;
+            setSemesterButtonsDisabled(false);
+        }
     }
 
     async function handleDeleteSemester(semesterId: string, semesterNummer: number) {
-        await deleteSemester();                        // zieht max_semester runter (profiles)
-        await loescheSemesterMitModulen(semesterId);   // löscht Semester + Module
 
-        setSemesterList((prev) => prev.filter((sem) => sem.id !== semesterId));
+        //Guard: läuft schon eine Semesteroperation? Wenn ja, ignorieren
+        if (semesterOperationLaeuft.current) return;
+
+        semesterOperationLaeuft.current = true;
+        setSemesterButtonsDisabled(true);
+        try {
+            await deleteSemester();                        // zieht max_semester runter (profiles)
+            await loescheSemesterMitModulen(semesterId);   // löscht Semester + Module
+
+            setSemesterList((prev) => prev.filter((sem) => sem.id !== semesterId));
+        } finally {
+            semesterOperationLaeuft.current = false;
+            setSemesterButtonsDisabled(false);
+        }
     }
 
     // Entfernt ein Modul aus dem State (nach dem Löschen aus der DB).
@@ -372,11 +396,11 @@ const Page = () => {
                         ))}
                     </div>
 
-                    {/* Buttons auf Mobile untereinander, auf Desktop nebeneinander */}
+                     {/* Buttons auf Mobile untereinander, auf Desktop nebeneinander */}
                     <div className='flex flex-col gap-4 md:flex-row'>
                         <button onClick={handleAddSemester}
-                            disabled={semesterList.length >= 20}
-                            className={`border-2 rounded-2xl border-dashed p-4 flex items-center justify-center px-6 py-4 md:w-5/6 w-full ${semesterList.length >= 20
+                            disabled={semesterList.length >= 20 || semesterButtonsDisabled}
+                            className={`border-2 rounded-2xl border-dashed p-4 flex items-center justify-center px-6 py-4 md:w-5/6 w-full ${semesterList.length >= 20 || semesterButtonsDisabled
                                 ? 'opacity-50 cursor-not-allowed'
                                 : 'cursor-pointer'
                                 }`}>
@@ -386,7 +410,9 @@ const Page = () => {
                             const letztes = semesterList[semesterList.length - 1];
                             if (letztes) handleDeleteSemester(letztes.id, letztes.nummer);
                         }}
-                            className='flex border-2 rounded-2xl border-flag-red cursor-pointer md:w-1/6 w-full items-center justify-center'>
+                            disabled={semesterButtonsDisabled}
+                            className={`flex border-2 rounded-2xl border-flag-red md:w-1/6 w-full items-center justify-center ${semesterButtonsDisabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
+                                }`}>
                             <Trash2></Trash2>
                         </button>
                     </div>
