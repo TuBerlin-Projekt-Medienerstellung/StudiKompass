@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { SquareArrowOutUpRight, Grip, Trash2, ChevronDown, ChevronUp, Circle, CircleCheckBig } from 'lucide-react';
@@ -8,12 +9,14 @@ import { useState, useEffect } from "react";
 import { handleModule } from "@/lib/utils";
 import { ladeDetailedModulAction } from "@/app/protected/modules/actions";
 import { getTries, saveTries, saveGrade, saveStatus, deleteGrade, loescheModul } from "@/app/protected/planner/actions";
+import ModulStatusBadge, { Module_Check_Info } from "@/components/check_modules";
 
 type Props = {
     modul: modulInfo;
     proWoche: boolean;
     onToggleAufwand: () => void;
     onDeleteModul: (modulId: string) => void;
+    checkInfo?: Module_Check_Info; 
 };
 
 type ModulDetails = {
@@ -21,7 +24,8 @@ type ModulDetails = {
     [key: string]: unknown;
 };
 
-const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: Props) => {
+const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul, checkInfo }: Props) => {
+    const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [details, setDetails] = useState<ModulDetails | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
@@ -29,8 +33,9 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
     const [counter, setCount] = useState(0);
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [noteInput, setNoteInput] = useState<number>(modul.note ?? 2.3);
+    const [savedNote, setSavedNote] = useState<number | null>(modul.note ?? null);
     const [isSavingNote, setIsSavingNote] = useState(false);
-    const [gewichtung, setGewichtung] = useState<boolean>(modul.gewichtung === 1);
+    const [gewichtung, setGewichtung] = useState<number>(modul.gewichtung ?? 1);
 
     const {
         attributes,
@@ -119,9 +124,15 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
 
         if (modul.note !== undefined && modul.note !== null) {
             setNoteInput(modul.note);
+            setSavedNote(modul.note);
+        } else {
+            setSavedNote(null);
         }
+
         if (modul.gewichtung !== undefined && modul.gewichtung !== null) {
-            setGewichtung(modul.gewichtung === 1);
+            setGewichtung(modul.gewichtung);
+        } else {
+            setGewichtung(1);
         }
 
         if (modul.abgeschlossen !== undefined && modul.abgeschlossen !== null) {
@@ -170,7 +181,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
                         <h1 className="break-words text-base font-bold leading-snug sm:text-lg">
                             {modul.name}
                         </h1>
-
+                        <ModulStatusBadge info={checkInfo}/>
                         <div className="mt-2 flex flex-col gap-1 text-sm opacity-80">
 
                             {/* ECTS und Turnus immer nebeneinander */}
@@ -228,9 +239,9 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
                         </button>
                         </div>
 
-                        {modul.note !== undefined && modul.note !== null  && (
+                                                {savedNote !== null && (
                             <div className="mt-3 rounded-md bg-blue-bell/10 border border-blue-bell/20 px-2 py-0.5 text-xs font-bold text-blue-bell whitespace-nowrap">
-                                Note: {modul.note}
+                                Note: {savedNote.toFixed(1)}
                             </div>
                         )}
                     </div>
@@ -319,20 +330,31 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
                                                         <button className="px-1 font-bold hover:opacity-70 disabled:opacity-30 text-sm" onClick={increaseNote} disabled={noteInput >= 4.0}>+</button>
                                                     </div>
 
-                                                    {/* Gewichtungs-Toggle */}
+                                                    {/* Gewichtung */}
                                                     <div
-                                                        title="Welche Noten (nicht) in den Gesamtschnitt einfließen, steht in der StuPo zum Studiengang."
-                                                        className="flex items-center justify-between md:justify-center gap-3 px-3 py-2 bg-background border rounded-xl flex-1 md:flex-none select-none">
-                                                        <span className="text-xs font-normal opacity-70 whitespace-nowrap">
-                                                            {gewichtung ? "normal gewichtet" : "nicht gewichtet"}
-                                                        </span>
-                                                        <button
-                                                            onClick={() => setGewichtung(!gewichtung)}
-                                                            className={`${gewichtung ? "bg-mint-leaf" : "bg-muted border shadow-inner"} relative inline-flex h-3.5 w-7 shrink-0 cursor-pointer rounded-full transition-colors duration-200 ease-in-out focus:outline-none items-center`}>
-                                                            <span
-                                                                className={`${gewichtung ? "translate-x-3.5 bg-background" : "translate-x-0.5 bg-muted-foreground/60"} pointer-events-none inline-block h-2.5 w-2.5 transform rounded-full shadow transition duration-200 ease-in-out`}
-                                                            />
-                                                        </button>
+                                                        title="Welche Noten in den Gesamtschnitt einfließen, steht in der StuPo zum Studiengang."
+                                                        className="flex flex-col gap-1 px-3 py-2 bg-background border rounded-xl flex-1 md:flex-none"
+                                                    >
+                                                        <label className="text-xs font-normal opacity-70 whitespace-nowrap">
+                                                            Gewichtung
+                                                        </label>
+
+                                                        <input
+                                                            type="number"
+                                                            min={0}
+                                                            step={1}
+                                                            value={gewichtung}
+                                                            onChange={(e) => {
+                                                                const value = Number(e.target.value);
+                                                                setGewichtung(Number.isNaN(value) ? 0 : value);
+                                                            }}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                            className="w-20 rounded-md border border-border bg-background px-2 py-1 text-center text-xs font-semibold"
+                                                        />
+
+                                                        <p className="text-[10px] font-normal opacity-60">
+                                                            0 = nicht, 1 = normal, 2 = doppelt
+                                                        </p>
                                                     </div>
                                                 </div>
 
@@ -349,10 +371,12 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
                                                                 const result = await saveGrade(handleModule(modul.modul_id), noteInput, gewichtung);
 
                                                                 if (result.success) {
-                                                                    console.log("Erfolgreich gespeichert!");
+                                                                    setSavedNote(noteInput);
+                                                                    router.refresh();
                                                                 } else {
                                                                     setErrorMsg(result.error || "Fehler beim Speichern.");
                                                                 }
+
                                                             } catch (error) {
                                                                 console.error("Fehler beim Speichern der Note:", error);
                                                                 setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");
@@ -376,10 +400,12 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
                                                                 const result = await deleteGrade(handleModule(modul.modul_id));
 
                                                                 if (result.success) {
-                                                                    console.log("Erfolgreich gelöscht!");
+                                                                    setSavedNote(null);
+                                                                    router.refresh();
                                                                 } else {
                                                                     setErrorMsg(result.error || "Fehler beim Löschen.");
                                                                 }
+
                                                             } catch (error) {
                                                                 console.error("Fehler beim Löschen der Note:", error);
                                                                 setErrorMsg("Ein unerwarteter Fehler ist aufgetreten.");
@@ -410,10 +436,13 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
 
                                         try {
                                             const result = await saveStatus(handleModule(modul.modul_id), nextCheckedState);
-                                            if (!result.success) {
+                                            if (result.success) {
+                                                router.refresh();
+                                            } else {
                                                 setChecked(checked);
                                                 setErrorMsg(result.error || "Status konnte nicht gespeichert werden.");
                                             }
+                                            
                                         } catch (error) {
                                             setChecked(checked);
                                             console.error("Fehler beim Speichern des Status:", error);
