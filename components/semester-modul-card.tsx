@@ -9,12 +9,14 @@ import { useState, useEffect } from "react";
 import { handleModule } from "@/lib/utils";
 import { ladeDetailedModulAction } from "@/app/protected/modules/actions";
 import { getTries, saveTries, saveGrade, saveStatus, deleteGrade, loescheModul } from "@/app/protected/planner/actions";
+import ModulStatusBadge, { Module_Check_Info } from "@/components/check_modules";
 
 type Props = {
     modul: modulInfo;
     proWoche: boolean;
     onToggleAufwand: () => void;
     onDeleteModul: (modulId: string) => void;
+    checkInfo?: Module_Check_Info; 
 };
 
 type ModulDetails = {
@@ -22,9 +24,8 @@ type ModulDetails = {
     [key: string]: unknown;
 };
 
-const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: Props) => {
+const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul, checkInfo }: Props) => {
     const router = useRouter();
-
     const [isOpen, setIsOpen] = useState(false);
     const [details, setDetails] = useState<ModulDetails | null>(null);
     const [loadingDetails, setLoadingDetails] = useState(false);
@@ -180,7 +181,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul }: 
                         <h1 className="break-words text-base font-bold leading-snug sm:text-lg">
                             {modul.name}
                         </h1>
-
+                        <ModulStatusBadge info={checkInfo}/>
                         <div className="mt-2 flex flex-col gap-1 text-sm opacity-80">
 
                             {/* ECTS und Turnus immer nebeneinander */}
