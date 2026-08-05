@@ -29,12 +29,14 @@ const ModulCard = (props: modulInfo & {
     const [liked, setLiked] = useState(true);
     const [open, setOpen] = useState(false);
     const [details, setDetails] = useState<ModulDetails | null>(null);
-    const [loadingDetails, setLoadingDetails] = useState(false);
+    // const [loadingDetails, setLoadingDetails] = useState(false);
+    const [, setLoadingDetails] = useState(false);
     const [showLernergebnisse, setShowLernergebnisse] = useState(false);
     const [plannerOpen, setPlannerOpen] = useState(false);
     const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
     const [imPlaner, setImPlaner] = useState(false);
     const [imPlanerSemester, setImPlanerSemester] = useState<string | null>(null);
+    const [warnung, setWarnung] = useState<string | null>(null);
 
 
     const {
@@ -106,15 +108,20 @@ const ModulCard = (props: modulInfo & {
             benotet: details.benotet ?? false,
             voraussetzungen: details.voraussetzungen ?? "",
             moseslink: details.link ?? "",
+            module_type: no_deg ? "extended" : "basic",
         });
 
         if (!ergebnis.success) {
-            console.error("Speichern fehlgeschlagen:", ergebnis.error);
-        } else {
-            console.log("Modul gespeichert:", ergebnis.modulId);
-            setImPlaner(true);
-            const gewaehltesSemester = semesterListe.find(s => s.id === semesterId);
-            setImPlanerSemester(gewaehltesSemester?.name ?? null);
+            if (ergebnis.error === "Dieses Modul ist bereits in deinem Planer.") {
+                setImPlaner(true);
+                const gewaehltesSemester = semesterListe.find(s => s.id === semesterId);
+                setImPlanerSemester(gewaehltesSemester?.name ?? null);
+                setWarnung("Dieses Modul ist bereits in deinem Planer.");
+                return;
+            } else {
+                console.error("Speichern fehlgeschlagen:", ergebnis.error);
+                return;
+            }
         }
     }
 
@@ -256,6 +263,13 @@ const ModulCard = (props: modulInfo & {
                                         plannerOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />
                                     )}
                                 </button>
+
+                                {warnung && (
+                                    <div className="text-flag-red">
+                                        {warnung}
+                                    </div>
+                                )}
+    
 
                                 <div className={`grid transition-all duration-300 ease-in-out ${plannerOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"}`}>
                                     <div className="overflow-hidden">
