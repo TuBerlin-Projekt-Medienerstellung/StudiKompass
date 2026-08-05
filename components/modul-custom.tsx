@@ -1,7 +1,7 @@
 "use client"
 
 import { X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { createCustomModul } from '@/app/protected/modules/actions';
 import { getSemesters } from '@/app/protected/planner/actions';
 import ModulCustomJob from './modul-custom-job';
@@ -39,6 +39,8 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
     // Semester des Nutzers laden
     const [semesterListe, setSemesterListe] = useState<{ id: string; semesterzahl: number; name: string }[]>([]);
     const [plannerOpen, setPlannerOpen] = useState(false);
+    const submitLaeuft = useRef(false);
+    const [submitDisabled, setSubmitDisabled] = useState(false);
 
     useEffect(() => {
         async function ladeSemester() {
@@ -77,6 +79,11 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
     }
 
     const handleSubmit = async (semesterId: string) => {
+
+        if (submitLaeuft.current) return;
+
+        submitLaeuft.current = true;
+        setSubmitDisabled(true);
         try {
             const modulId = await createCustomModul(
                 formData.modulname,
@@ -94,6 +101,9 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
             onClose();
         } catch (err) {
             console.error('Fehler beim Speichern:', err);
+
+            submitLaeuft.current = false;
+            setSubmitDisabled(false);
         }
     };
 
@@ -202,9 +212,9 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                             }
                                             className="flex-1 w-full bg-transparent text-gray-900 outline-none dark:text-white">
                                             <option value="">Bitte wählen</option>
-                                            <option value="WiSe">WiSe</option>
-                                            <option value="SoSe">SoSe</option>
-                                            <option value="WiSe/SoSe">WiSe/SoSe</option>
+                                            <option value="Wintersemester">WiSe</option>
+                                            <option value="Sommersemester">SoSe</option>
+                                            <option value="Winter- und Sommersemester">WiSe/SoSe</option>
                                         </select>
                                     </div>
                                 </div>
@@ -297,7 +307,9 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                             <button
                                                 key={sem.id}
                                                 onClick={() => handleSubmit(sem.id)}
-                                                className='flex items-center px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#16081f] transition-colors text-left'>
+                                                disabled={submitDisabled}
+                                                className={`flex items-center px-3 py-2.5 rounded-lg hover:bg-gray-100 dark:hover:bg-[#16081f] transition-colors text-left ${submitDisabled ? 'opacity-50 cursor-not-allowed' : ''
+                                                    }`}>
                                                 <span className='font-medium'>{sem.name}</span>
                                             </button>
                                         ))
