@@ -546,6 +546,7 @@ export async function createCustomModul(
                 ? arbeitsaufwand
                 : ects * 30,
             user_id: user.id,
+            module_type: "custom",
         })
         .select()
         .single();

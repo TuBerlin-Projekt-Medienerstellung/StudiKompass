@@ -11,11 +11,16 @@ import {
     TrendingUp,
     CircleCheckBig,
     Circle,
+    ChevronDown,
 } from "lucide-react";
+
+import DashboardContent from "@/components/dashboard-content";
 import {
-    berechneGesamtschnitt,
-    berechneUrteil,
+  berechneGesamtschnitt,
+  berechneUrteil,
+  berechneWunschschnittFortschritt,
 } from "@/lib/grades";
+
 
 type AktuellesModul = {
     name: string;
@@ -24,10 +29,48 @@ type AktuellesModul = {
     laufend: boolean;
 };
 
-type Meilenstein = {
+type MilestoneCardProps = {
     titel: string;
     fortschritt: number;
+    children?: React.ReactNode;
 };
+
+function MilestoneCard({
+    titel,
+    fortschritt,
+    children,
+}: MilestoneCardProps) {
+    return (
+        <div className="rounded-2xl border border-border bg-card p-4">
+            <div className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex min-w-0 items-center gap-3">
+                    {fortschritt >= 100 ? (
+                        <CircleCheckBig className="h-5 w-5 shrink-0 text-mint-leaf" />
+                    ) : (
+                        <Circle className="h-5 w-5 shrink-0 text-gray-400 dark:text-muted-foreground" />
+                    )}
+
+                    <h3 className="font-medium">{titel}</h3>
+                </div>
+
+                <span className="shrink-0">{fortschritt}%</span>
+            </div>
+
+            <div className="h-2 rounded-full bg-gray-200 dark:bg-muted">
+                <div
+                    className={`h-2 rounded-full ${
+                        fortschritt >= 100
+                            ? "bg-mint-leaf"
+                            : "bg-flag-red"
+                    }`}
+                    style={{ width: `${fortschritt}%` }}
+                />
+            </div>
+
+            {children}
+        </div>
+    );
+}
 
 function firstOrSingle<T>(value: T | T[] | null | undefined): T | null {
     if (!value) {
@@ -51,17 +94,19 @@ export default async function DashboardPage() {
             .select("ects, note, gewichtung, benotet, abgeschlossen")
             .eq("user_id", user.id)
         : {data: []};
+        console.log(notenModule);
 
     const gesamtschnitt = berechneGesamtschnitt(notenModule ?? []);
+    console.log("Gesamtschnitt:", gesamtschnitt);
     const urteil = berechneUrteil(gesamtschnitt);
 
     const {data: profile} = user
-        ? await supabase
-            .from("profiles")
-            .select("current_semester, max_semester")
-            .eq("id", user.id)
-            .single()
-        : {data: null};
+    ? await supabase
+        .from("profiles")
+        .select("current_semester, max_semester, total_ects, target_grade")
+        .eq("id", user.id)
+        .single()
+    : {data: null};
 
     const {data: plannedModules} = user
         ? await supabase
@@ -97,36 +142,9 @@ export default async function DashboardPage() {
         .filter(Boolean);
 
 
-    // Aktuelles Semester ist das erste Planer-Semester, das noch offene Module enthält.
-    const semesterAusPlaner = plannedModuleItems
-        .map((item) => firstOrSingle(item.semester))
-        .filter(Boolean);
+    const aktuellesSemester = profile?.current_semester ?? 1;
 
-    const eindeutigeSemester = Array.from(
-        new Map(
-            semesterAusPlaner.map((semester) => [semester?.semesterzahl, semester])
-        ).values()
-    ).sort((a, b) => (a?.semesterzahl ?? 0) - (b?.semesterzahl ?? 0));
-
-    const aktuellesSemesterObjekt =
-        eindeutigeSemester.find((semester) => {
-            const moduleInSemester = plannedModuleItems.filter((item) => {
-                const itemSemester = firstOrSingle(item.semester);
-                return itemSemester?.semesterzahl === semester?.semesterzahl;
-            });
-
-            return moduleInSemester.some((item) => {
-                const modul = firstOrSingle(item.module);
-                return !modul?.abgeschlossen;
-            });
-        }) ??
-        eindeutigeSemester[eindeutigeSemester.length - 1] ??
-        null;
-
-    const aktuellesSemester =
-        aktuellesSemesterObjekt?.semesterzahl ?? profile?.current_semester ?? 1;
-
-    const gesamtEcts = 180;
+    const gesamtEcts = profile?.total_ects ?? 180;
 
     const aktuelleEcts = modules
         .filter((modul) => modul?.abgeschlossen)
@@ -172,17 +190,29 @@ export default async function DashboardPage() {
             )
             : 0;
 
-    const meilensteine: Meilenstein[] = [
-        {
-            titel: "Module abgeschlossen",
-            fortschritt: moduleFortschritt,
-        },
+    const naechstesSemester = aktuellesSemester + 1;
 
-        {
-            titel: "Aktuelles Semester",
-            fortschritt: aktuellesSemesterFortschritt,
-        },
-    ];
+    const moduleImNaechstenSemester = plannedModuleItems.filter((item) => {
+        const semester = firstOrSingle(item.semester);
+        return semester?.semesterzahl === naechstesSemester;
+    });
+
+    const angezeigteModuleNaechstesSemester: AktuellesModul[] =
+        moduleImNaechstenSemester
+            .filter((item) => {
+                const modul = firstOrSingle(item.module);
+                return !modul?.abgeschlossen;
+            })
+            .map((item) => {
+                const modul = firstOrSingle(item.module);
+
+                return {
+                    name: modul?.name ?? "Unbekanntes Modul",
+                    prof: "Planner",
+                    ects: modul?.ects ?? 0,
+                    laufend: false,
+                };
+            });
 
     const angezeigteModule: AktuellesModul[] =
         moduleImAktuellenSemester.length > 0
@@ -204,6 +234,12 @@ export default async function DashboardPage() {
             }));
 
 
+    const wunschSchnittFortschritt = berechneWunschschnittFortschritt(
+    notenModule ?? [],
+    profile?.target_grade ?? null,
+    gesamtEcts
+);
+
     return (
         <div className="space-y-6 px-4 py-4 sm:px-6 lg:px-8">
             <div>
@@ -213,144 +249,203 @@ export default async function DashboardPage() {
                 </p>
             </div>
 
-            <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <DashboardContent
+            initialTotalEcts={gesamtEcts}
+            initialTargetGrade={profile?.target_grade ?? null}
+            gesamtfortschrittCard={
                 <div className="rounded-2xl bg-flag-red p-4 text-white">
-                    <div className="flex items-center justify-between gap-4">
-                        <Award className="h-6 w-6"/>
-                        <h2 className="text-3xl font-bold">{gesamtfortschritt}%</h2>
-                    </div>
+                <div className="flex items-center justify-between gap-4">
+                <Award className="h-6 w-6" />
 
-                    <p className="text-sm">Gesamtfortschritt</p>
-
-                    <div className="mt-4 h-2 rounded-full bg-red-400">
-                        <div
-                            className="h-2 rounded-full bg-white"
-                            style={{width: `${gesamtfortschritt}%`}}
-                        />
-                    </div>
+                    <h2 className="text-3xl font-bold">
+                    {gesamtfortschritt}%
+                    </h2>
                 </div>
 
-                <div className="rounded-2xl border border-border p-5 flex flex-col justify-center bg-card">
-                    <div className="flex items-center justify-between gap-4">
-                        <Shell className="h-6 w-6 text-flag-red"/>
-                        <div>
-                            <h2 className="text-xl font-bold">
-                                {aktuelleEcts}/{180}
-                            </h2>
-                            <p className="text-sm text-muted-foreground">ECTS</p>
-                        </div>
-                    </div>
+                <p className="text-sm">
+                    Gesamtfortschritt
+                </p>
+
+                <div className="mt-4 h-2 rounded-full bg-red-400">
+                    <div
+                        className="h-2 rounded-full bg-white"
+                        style={{
+                            width: `${gesamtfortschritt}%`,
+                        }}
+                    />
                 </div>
+            </div>
+        }
 
-                <div className="rounded-2xl border border-border bg-card p-5 flex flex-col justify-center">
-                    <div className="flex items-center justify-between gap-4">
-                        <Calendar className="h-6 w-6 text-flag-red"/>
-                        <div>
-                            <h2 className="text-xl font-bold">{aktuellesSemester}</h2>
-                            <p className="text-sm text-muted-foreground">Semester</p>
-                        </div>
-                    </div>
-                </div>
+    ectsCard={
+        <div className="flex flex-col justify-center rounded-2xl border border-border bg-card p-5">
+            <div className="flex items-center justify-between gap-4">
+                <Shell className="h-6 w-6 text-flag-red" />
 
+                <div>
+                    <h2 className="text-xl font-bold">
+                        {aktuelleEcts}/{gesamtEcts}
+                    </h2>
 
-                <div className="rounded-2xl border border-border bg-card p-5 flex flex-col justify-center">
-                    <div className="flex items-center justify-between gap-4">
-                        <TrendingUp className="h-6 w-6 text-flag-red"/>
-                        <div>
-                            <h2 className="text-xl font-bold">
-                                {gesamtschnitt !== null ? gesamtschnitt.toFixed(1) : "—"}
-                            </h2>
-                            <p className="text-sm text-muted-foreground">Gesamtschnitt</p>
-                            <p className="text-xs text-muted-foreground">{urteil}</p>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <section className="rounded-2xl border border-border p-4 bg-card sm:p-5">
-                <div className="mb-5 flex items-center justify-between">
-                    <h2 className="text-xl font-bold">Aktuelles Semester</h2>
                     <p className="text-sm text-muted-foreground">
-                        {moduleImAktuellenSemester.length} Module
+                        ECTS
                     </p>
                 </div>
+            </div>
+        </div>
+    }
 
-                <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
-                    {angezeigteModule.map((modul) => (
-                        <div
-                            key={modul.name}
-                            className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-start"
+    aktuellesSemesterCard={
+        <div className="flex flex-col justify-center rounded-2xl border border-border bg-card p-5">
+            <div className="flex items-center justify-between gap-4">
+                <Calendar className="h-6 w-6 text-flag-red" />
+
+                <div>
+                    <h2 className="text-xl font-bold">
+                        {aktuellesSemester}
+                    </h2>
+
+                    <p className="text-sm text-muted-foreground">
+                        Semester
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+
+    gesamtschnittCard={
+        <div className="flex flex-col justify-center rounded-2xl border border-border bg-card p-5">
+            <div className="flex items-center justify-between gap-4">
+                <TrendingUp className="h-6 w-6 text-flag-red" />
+
+                <div>
+                    <h2 className="text-xl font-bold">
+                        {gesamtschnitt !== null
+                            ? gesamtschnitt.toFixed(1)
+                            : "—"}
+                    </h2>
+
+                    <p className="text-sm text-muted-foreground">
+                        Gesamtschnitt
+                    </p>
+
+                    <p className="text-xs text-muted-foreground">
+                        {urteil}
+                    </p>
+                </div>
+            </div>
+        </div>
+    }
+
+    aktuellesSemesterModule={
+    <section className="rounded-2xl border border-border p-4 bg-card sm:p-5">
+        <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-xl font-bold">Aktuelles Semester</h2>
+
+            <p className="text-sm text-muted-foreground">
+                {moduleImAktuellenSemester.length} Module
+            </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            {angezeigteModule.map((modul) => (
+                <div
+                    key={modul.name}
+                    className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-start"
+                >
+                    <div>
+                        <h3 className="text-base font-medium text-gray-900 dark:text-white">
+                            {modul.name}
+                        </h3>
+
+                        <p className="text-sm text-muted-foreground">
+                            {modul.prof}
+                        </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 sm:justify-end lg:justify-start">
+                        <p className="text-sm text-muted-foreground">
+                            {modul.ects} ECTS
+                        </p>
+
+                        <span
+                            className={`rounded-full px-4 py-1 text-sm ${
+                                modul.laufend
+                                    ? "bg-blue-bell/30 text-blue-bell"
+                                    : "bg-mint-leaf/30 text-mint-leaf"
+                            }`}
                         >
-                            <div>
-                                <h3 className="text-base font-medium text-gray-900 dark:text-white">
-                                    {modul.name}
-                                </h3>
-                                <p className="text-sm text-muted-foreground">{modul.prof}</p>
-                            </div>
-
-                            <div className="flex flex-wrap items-center gap-3 sm:justify-end lg:justify-start">
-                                <p className="text-sm text-muted-foreground">
-                                    {modul.ects} ECTS
-                                </p>
-
-                                <span
-                                    className={`rounded-full px-4 py-1 text-sm ${
-                                        modul.laufend
-                                            ? "bg-blue-bell/30 text-blue-bell"
-                                            : "bg-mint-leaf/30 text-mint-leaf "
-                                    }`}
-                                >
-                  {modul.laufend ? "Laufend" : "Abgeschlossen"}
-                </span>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </section>
-
-            <section className="rounded-2xl border border-border p-4 flex flex-col justify-center bg-card sm:p-5">
-                <div className="mb-5">
-                    <div className="flex items-center gap-2">
-                        <TrendingUp className="h-6 w-6 text-flag-red"/>
-                        <h2 className="text-xl font-bold">Meilensteine</h2>
-                    </div>
-
-                    <div className="mt-4 space-y-3">
-                        {meilensteine.map((meilenstein) => (
-                            <div
-                                key={meilenstein.titel}
-                                className="rounded-2xl border border-border bg-card p-4 ">
-                                <div
-                                    className="mb-2 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                                    <div className="flex min-w-0 items-center gap-3">
-                                        {meilenstein.fortschritt >= 100 ? (
-                                            <CircleCheckBig className="h-5 w-5 shrink-0 text-mint-leaf"/>
-                                        ) : (
-                                            <Circle
-                                                className="h-5 w-5 shrink-0 text-gray-400 dark:text-muted-foreground"/>
-                                        )}
-
-                                        <h3 className="font-medium">{meilenstein.titel}</h3>
-                                    </div>
-
-                                    <span className="shrink-0">{meilenstein.fortschritt}%</span>
-                                </div>
-
-                                <div className="h-2 rounded-full bg-gray-200 dark:bg-muted">
-                                    <div
-                                        className={`h-2 rounded-full ${
-                                            meilenstein.fortschritt >= 100
-                                                ? "bg-mint-leaf"
-                                                : "bg-flag-red"
-                                        }`}
-                                        style={{width: `${meilenstein.fortschritt}%`}}
-                                    />
-                                </div>
-                            </div>
-                        ))}
+                            {modul.laufend ? "Laufend" : "Abgeschlossen"}
+                        </span>
                     </div>
                 </div>
-            </section>
+            ))}
+        </div>
+    </section>
+}
+    naechstesSemesterModule={
+    <section className="rounded-2xl border border-border p-4 bg-card sm:p-5">
+        <div className="mb-5 flex items-center justify-between">
+            <h2 className="text-xl font-bold">Nächstes Semester</h2>
+
+            <p className="text-sm text-muted-foreground">
+                {angezeigteModuleNaechstesSemester.length} Module
+            </p>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 lg:grid-cols-3">
+            {angezeigteModuleNaechstesSemester.map((modul) => (
+                <div
+                    key={modul.name}
+                    className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-4 sm:flex-row sm:items-center sm:justify-between lg:flex-col lg:items-start"
+                >
+                    <div>
+                        <h3 className="text-base font-medium text-gray-900 dark:text-white">
+                            {modul.name}
+                        </h3>
+
+                        <p className="text-sm text-muted-foreground">
+                            {modul.prof}
+                        </p>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-3 sm:justify-end lg:justify-start">
+                        <p className="text-sm text-muted-foreground">
+                            {modul.ects} ECTS
+                        </p>
+
+                        <span className="rounded-full bg-gray-200 px-4 py-1 text-sm text-gray-700 dark:bg-gray-700 dark:text-gray-200">
+                            Nicht laufend
+                        </span>
+                    </div>
+                </div>
+            ))}
+        </div>
+    </section>
+}
+moduleAbgeschlossenMilestone={
+    <MilestoneCard
+        titel="Module abgeschlossen"
+        fortschritt={moduleFortschritt}
+    />
+}
+
+semesterFortschrittMilestone={
+    <MilestoneCard
+        titel="Aktuelles Semester"
+        fortschritt={aktuellesSemesterFortschritt}
+    />
+}
+
+wunschSchnittMilestone={
+    <MilestoneCard
+        titel="Wie nah zum Wunschschnitt?"
+        fortschritt={wunschSchnittFortschritt}
+    />
+}
+
+/>          
         </div>
     );
+    
 }
