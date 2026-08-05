@@ -204,8 +204,7 @@ export async function saveTries(modulId: string, counter: number) {
     return { success: true };
 }
 
-// speichert die eingetragene Note und Gewichtung
-export async function saveGrade(modulId: string, note: number, gewichtung: boolean) {
+export async function saveGrade(modulId: string, note: number, gewichtung: number) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
@@ -217,7 +216,7 @@ export async function saveGrade(modulId: string, note: number, gewichtung: boole
         .from("module")
         .update({
             note: note,
-            gewichtung: gewichtung ? 1 : 0,
+            gewichtung: gewichtung >= 0 ? gewichtung : 0,
         })
         .eq("user_id", user.id)
         .eq("id", modulId)
