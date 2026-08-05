@@ -7,6 +7,9 @@ import { Plus, Trash2 } from 'lucide-react';
 import { reduceSemesterTable, deleteSemester, createSemester, updateSemesterTable, getSemesters, getSemestersMitModulen, verschiebeModul, loescheSemesterMitModulen, getProfilTurnus} from './actions';
 import { DndContext, closestCenter, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core';
 import { arrayMove } from '@dnd-kit/sortable';
+import { Check_modules } from "./actions";
+import { RefreshCw, ShieldCheck } from "lucide-react";
+import { Module_Check_Info } from "@/components/check_modules"
 import { modulInfo } from "@/constants";
 
 
@@ -31,6 +34,21 @@ const Page = () => {
     const [vollesSemesterSichtbar, setvollesSemesterSichtbar] = useState(false);
     const [richtigerTurnus, setRichtigerTurnus] = useState<string | null>(null);
     const [richtigerTurnusSichtbar, setRichtigerTurnusSichtbar] = useState(false);
+
+    const [checkResults, setCheckResults] = useState<Record<string, Module_Check_Info>>({});
+    const [checking, setChecking] = useState(false);
+
+    async function handle_Check() {
+        setChecking(true);
+        try {
+            const results = await Check_modules();
+            setCheckResults(results);
+        } catch (e) {
+            console.error("Fehler beim Prüfen:", e);
+        } finally {
+            setChecking(false);
+        }
+    }
 
     useEffect(() => {
         async function loadSemesters() {
@@ -321,8 +339,7 @@ const Page = () => {
                                 duration-1000 ease-in-out ${vollesSemesterSichtbar ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"}`}>
                         Das {vollesSemester}. Semester überschreitet den empfohlenen Arbeitsaufwand.
                 </div>
-
-
+                
             )}
 
             {richtigerTurnus && (
@@ -344,6 +361,23 @@ const Page = () => {
                         <h1 className="text-3xl font-bold md:text-4xl">Studienplaner</h1>
                         <p className="text-sm opacity-70 md:text-base">Plane dein Studium semesterweise</p>
                     </div>
+                    <button
+                        onClick={handle_Check}
+                        disabled={checking}
+                        className="w-full sm:w-auto sm:self-end flex items-center justify-center gap-2 rounded-2xl border-2 border-border bg-card px-4 py-2.5 font-medium transition-all hover:opacity-80 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto shadow-sm"
+                    >
+                        {checking ? (
+                            <>
+                                <RefreshCw className="h-4 w-4 animate-spin text-flag-red" />
+                                <span className="text-sm">Überprüfe deine Module..</span>
+                            </>
+                        ) : (
+                            <>
+                                <ShieldCheck className="h-4 w-4 text-mint-leaf" />
+                                <span className="text-sm">Aktualität prüfen</span>
+                            </>
+                        )}
+                    </button>
 
                     <div className="flex flex-col gap-6">
                         {semesterList.map((semester) => (
@@ -357,6 +391,7 @@ const Page = () => {
                                 currentSemester={currentSemester}
                                 currentTurnus={currentTurnus}
                                 onDeleteModul={entferneModulAusState}
+                                checkResults={checkResults}
                             />
                         ))}
                     </div>
@@ -389,7 +424,10 @@ const Page = () => {
                             modul={activeModul}
                             proWoche={proWoche}
                             onToggleAufwand={() => setProWoche(!proWoche)}
+                            // currentSemester={currentSemester}
+                            // currentTurnus={currentTurnus}
                             onDeleteModul={() => { }}
+                            //checkResults={checkResults}
                         />
                     ) : null}
                 </DragOverlay>

@@ -1,8 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-
-
+import { fetchMoses} from "@/app/protected/modules/actions";
 //Semester aus Supabase laden
 export async function getSemesters() {
     const supabase = await createClient();
@@ -282,8 +281,8 @@ export async function saveStatus(modulId: string, isChecked: boolean) {
     }
 
     return { success: true };
-}
-
+}//for new feature
+export type ModuleType = "custom" | "basic" | "extended";
 // Fügt ein Modul aus der Suche zu einem Semester im Planer hinzu.
 // Schritt 1: Modul in die `module`-Tabelle schreiben.
 // Schritt 2: Verknüpfung in die `planner`-Tabelle schreiben.
@@ -300,6 +299,7 @@ export async function moduleZuPlanerHinzufuegen(
         benotet: boolean;
         voraussetzungen?: string;
         moseslink: string;
+        module_type: ModuleType;
     }
 ) {
     const supabase = await createClient();
@@ -326,6 +326,7 @@ export async function moduleZuPlanerHinzufuegen(
             moseslink: modul.moseslink ?? "",
             arbeitsaufwand: arbeitsaufwand,
             user_id: user.id,
+            module_type: modul.module_type,
         })
         .select()
         .single();
@@ -590,4 +591,136 @@ export async function getProfilTurnus(): Promise<{
         currentSemester: data.current_semester ?? null,
         currentTurnus: data.current_turnus ?? null,
     };
+}
+//To-Do:
+/*
+We need to implement a new feature to give the user the option to check whether his planner is up to date with the latest modules:
+
+To do this we will be checking the Modulename, ECTS and "semesterBis" in {base_url}/bolognamodulversion/{version_id} using max(id) in data[0]?.bolognamodulVersionList from  /bolognamodul/{modul_id}
+if semesterBis exists -> module is outdated, only name changed -> Warning about changes to module
+
+Path A: User-added content: Custom Modul/Job -> Add column in Supabase for modules "custom" -> no check
+Path B: Basic Module: Added using StuPO and Studiengang in Settings and then Basic Search -> Add column in Supabase for modules "basic" -> the basic search doesn't pass the actual module id, it goes by zuordnung (studiengangzuordnung/ modulzuordnungsListe)-> fetch the version Id from zuordnung -> shared path
+Path C: Extended Module: Added using extended Module Search -> Add column in Supabase for modules "extended" -> get the newest version by fetching max(bolognamodulVersionList.id) from /bolognamodul/{id} -> shared path
+
+in the shared path: */ 
+
+
+
+// On another note: Adding a feed, where the Admin can post updates would be useful
+
+export type CheckStatus = "UP_TO_DATE" | "WARNING" | "ERROR";
+
+export interface Module_Check_Info {
+    status: CheckStatus;
+    message: string;
+}
+export type CheckModulesResult = Record<string, Module_Check_Info>;
+
+export async function Check_modules(): Promise<CheckModulesResult>{
+    const supabase= await createClient();
+    const {data:{user}} = await supabase.auth.getUser();
+
+    const results: CheckModulesResult = {};
+    if (!user) return results;
+    const { data: userModules, error } = await supabase
+        .from("module")
+        .select("id, name, ects, moses_id, module_type")
+        .eq("user_id", user.id);
+
+    if (error || !userModules) {
+        console.error("Failed to fetch user modules:", error);
+        return results;
+    }
+    for (const module of userModules) {
+        try {
+            //Path A
+            if (!module.module_type ||module.module_type === "custom"|| !module.moses_id) {
+                results[module.id] = {status: "UP_TO_DATE", message: "Everything up to date",};
+                continue;
+            }
+            let BolognaId: string | number | null = null;
+            //Path B
+            if (module.module_type === "basic") {
+                let zuordnungRaw = await fetchMoses(`/studiengangszuordnung/${module.moses_id}`);
+                let zuordnung = zuordnungRaw?.data?.[0];
+
+                if (!zuordnung) {
+                    zuordnungRaw = await fetchMoses(`/bolognamodullistenzuordnung/${module.moses_id}`);
+                    zuordnung = zuordnungRaw?.data?.[0];
+                }
+
+                BolognaId = zuordnung?.bolognamodulVersion?.id ?? null;
+            }
+
+            // PATH C:
+            else if (module.module_type === "extended") {
+                const modulRaw = await fetchMoses(`/bolognamodul/${module.moses_id}`);
+                const versionen = modulRaw?.data?.[0]?.bolognamodulVersionList ?? [];
+
+                if (versionen.length > 0) {
+                    BolognaId = Math.max(...versionen.map((v: any) => v.id));
+                }
+            }
+            //SHARED PATH
+            if (!BolognaId) {
+                results[module.id] = { status: "ERROR", message: "Module version not found (404)" };
+                continue;
+            }
+            const versionRaw = await fetchMoses(`/bolognamodulversion/${BolognaId}`);
+            const versionDetail = versionRaw?.data?.[0];
+
+            if (!versionDetail) {
+                results[module.id] = { status: "ERROR", message: "Version details not found (404)" };
+                continue;
+            }
+            const desc_id = versionDetail.bolognamodulBeschreibung?.id;
+            if (!desc_id) {
+                results[module.id] = { status: "ERROR", message: "Description ID not found (404)" };
+                continue;
+            }
+            const descRaw = await fetchMoses(`/bolognamodulbeschreibung/${desc_id}`);
+            const desc = descRaw?.data?.[0]?.lp;
+            if (desc == null) {
+                results[module.id] = { status: "ERROR", message: "LP details not found (404)" };
+                continue;
+            }
+
+            const isOutdated = versionDetail.semesterBis != null;
+            const isRenamed = versionDetail.name?.trim() !== module.name?.trim();
+            const isEctsChanged = (desc ?? 0) !== (module.ects ?? 0);
+
+            const warningMessages: string[] = [];
+
+            if (isOutdated) {
+                warningMessages.push(`Expired in ${versionDetail.semesterBis.name}`);
+            }
+            if (isRenamed) {
+                warningMessages.push(`Renamed to "${versionDetail.name}"`);
+            }
+            if (isEctsChanged) {
+                warningMessages.push(`LP changed from ${module.ects} to ${desc} LP`);
+            }
+
+            if (warningMessages.length > 0) {
+                results[module.id] = {
+                    status: "WARNING",
+                    message: warningMessages.join(" • "),
+                };
+            } else {
+                results[module.id] = {
+                    status: "UP_TO_DATE",
+                    message: "Everything up to date",
+                };
+            }
+
+        } catch (e) {
+            console.error(`Error checking module ${module.id}:`, e);
+            results[module.id] = {
+                status: "ERROR",
+                message: "Failed to check status",
+            };
+        }
+    }
+   return results;
 }

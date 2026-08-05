@@ -108,6 +108,7 @@ const ModulCard = (props: modulInfo & {
             benotet: details.benotet ?? false,
             voraussetzungen: details.voraussetzungen ?? "",
             moseslink: details.link ?? "",
+            module_type: no_deg ? "extended" : "basic",
         });
 
         if (!ergebnis.success) {
