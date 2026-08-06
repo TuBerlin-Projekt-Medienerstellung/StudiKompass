@@ -43,3 +43,40 @@ export function berechneTurnus(
     // anderer Turnus
     return currentTurnus === "WiSe" ? "SoSe" : "WiSe";
 }
+
+function wechselBisDatum(datum: Date): number {
+
+    const jahr = datum.getFullYear();
+
+    //getMonth() ist 0 basiert => januar = 0, april = 3, oktober = 9 , dezember = 11
+    const monat = datum.getMonth();
+
+    const tag = datum.getDate();
+
+    let zaehler = jahr * 2;
+    
+    //Ist der 1.4. dieses Jahres erreicht? (Monat > April, ODER genau April ab Tag 1)
+    if (monat > 3 || (monat === 3 && tag >= 1)) {
+        zaehler += 1;
+    }
+
+    //Ist der 1.10. dieses Jahres erreicht?
+    if (monat > 9 || (monat === 9 && tag >= 1)) {
+        zaehler += 1;
+    }
+
+    return zaehler;
+}
+
+//Zählt die Semesterwechsel zwischen zwei Daten (merker < heute).
+export function zaehleSemesterWechsel(merker: Date, heute: Date): number {
+    return wechselBisDatum(heute) - wechselBisDatum(merker);
+}
+
+// Formatiert ein Date als "YYYY-MM-DD" anhand der LOKALEN Zeit
+export function formatiereDatumLokal(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}

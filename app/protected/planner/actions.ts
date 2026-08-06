@@ -1,7 +1,9 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { berechneTurnus, zaehleSemesterWechsel, formatiereDatumLokal} from "@/lib/utils";
 import { fetchMoses} from "@/app/protected/modules/actions";
+
 //Semester aus Supabase laden
 export async function getSemesters() {
     const supabase = await createClient();
@@ -592,6 +594,69 @@ export async function getProfilTurnus(): Promise<{
         currentTurnus: data.current_turnus ?? null,
     };
 }
+
+// Prüft beim Laden, ob seit dem letzten Update Semesterwechsel (1.4./1.10.) vergangen sind,
+// und erhöht current_semester entsprechend (gedeckelt bei max_semester).
+export async function pruefeSemesterUpdate() {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // Profil laden
+    const { data: profil, error } = await supabase
+        .from("profiles")
+        .select("current_semester, max_semester, current_turnus, last_semester_update, auto_semester_update_enabled")
+        .eq("id", user.id)
+        .single();
+
+    if (error || !profil) return;
+
+    const heute = new Date();
+
+    // NULL-Fall: erstes Mal → Merker auf heute setzen, nicht hochzählen
+    if (!profil.last_semester_update) {
+        await supabase
+            .from("profiles")
+            .update({ last_semester_update: formatiereDatumLokal(heute) })
+            .eq("id", user.id);
+        return;
+    }
+
+    // Automatik-Prüfung (Variante A: bei "aus" Merker aktuell halten, kein Nachholen)
+    if (profil.auto_semester_update_enabled !== true) {
+        await supabase
+            .from("profiles")
+            .update({ last_semester_update: formatiereDatumLokal(heute) })
+            .eq("id", user.id);
+        return;
+    }
+
+    // Wie viele Wechsel seit dem Merker?
+    const merker = new Date(profil.last_semester_update);
+    const anzahlWechsel = zaehleSemesterWechsel(merker, heute);
+
+    // Keine Wechsel → nichts tun (keine unnötige Schreibung)
+    if (anzahlWechsel <= 0) return;
+
+    // current erhöhen, aber bei max deckeln
+    const current = profil.current_semester ?? 0;
+    const max = profil.max_semester ?? current;
+    const neuesCurrent = Math.min(current + anzahlWechsel, max);
+
+    // Turnus mitwandern lassen — richtet sich nach dem NEUEN (gedeckelten) current
+    const neuerTurnus = berechneTurnus(neuesCurrent, current, profil.current_turnus);
+
+    // Update: neues current + Merker auf heute
+    await supabase
+        .from("profiles")
+        .update({
+            current_semester: neuesCurrent,
+            current_turnus: neuerTurnus,
+            last_semester_update: formatiereDatumLokal(heute),
+        })
+        .eq("id", user.id);
+}
+
 //To-Do:
 /*
 We need to implement a new feature to give the user the option to check whether his planner is up to date with the latest modules:
@@ -603,7 +668,7 @@ Path A: User-added content: Custom Modul/Job -> Add column in Supabase for modul
 Path B: Basic Module: Added using StuPO and Studiengang in Settings and then Basic Search -> Add column in Supabase for modules "basic" -> the basic search doesn't pass the actual module id, it goes by zuordnung (studiengangzuordnung/ modulzuordnungsListe)-> fetch the version Id from zuordnung -> shared path
 Path C: Extended Module: Added using extended Module Search -> Add column in Supabase for modules "extended" -> get the newest version by fetching max(bolognamodulVersionList.id) from /bolognamodul/{id} -> shared path
 
-in the shared path: */ 
+in the shared path: */
 
 
 
