@@ -39,6 +39,7 @@ export function UpdateSemesterForm({
     const [originalTurnus, setOriginalTurnus] = useState<string | null>(null);
     const [autoUpdate, setAutoUpdate] = useState<boolean>(false);
     const [originalMax, setOriginalMax] = useState<string | null>(null);
+    const [originalAutoUpdate, setOriginalAutoUpdate] = useState<boolean>(false);
 
 
     const filteredTurnus = TURNUS_OPTIONS.filter((opt) =>
@@ -74,6 +75,7 @@ export function UpdateSemesterForm({
                 setOriginalCurrent(data?.current_semester ?? null);
                 setOriginalTurnus(data?.current_turnus ?? null);
                 setAutoUpdate(data?.auto_semester_update_enabled ?? false);
+                setOriginalAutoUpdate(data?.auto_semester_update_enabled ?? false);
             } catch (e) {
                 console.error("Fehler beim Laden der Semesterdaten:", e);
             } finally {
@@ -170,6 +172,7 @@ export function UpdateSemesterForm({
             setOriginalCurrent(Number(currentSemester));
             setOriginalTurnus(selectedTurnus);
             setOriginalMax(maxSemester);
+            setOriginalAutoUpdate(autoUpdate);
         } catch (error: unknown) {
             setError(error instanceof Error ? error.message : "Ein Fehler ist aufgetreten.");
         } finally {
@@ -179,7 +182,7 @@ export function UpdateSemesterForm({
 
     // Prüfen: Hat sich etwas ggü der gespeicherten Werte geändert?
     const isUnchanged =
-        currentSemester === (originalCurrent !== null ? String(originalCurrent) : "") && selectedTurnus === (originalTurnus ?? "") && maxSemester === (originalMax ?? "");
+        currentSemester === (originalCurrent !== null ? String(originalCurrent) : "") && selectedTurnus === (originalTurnus ?? "") && maxSemester === (originalMax ?? "") && autoUpdate === originalAutoUpdate;;
     const isDisabled = isLoading || isUnchanged;
 
     return (
