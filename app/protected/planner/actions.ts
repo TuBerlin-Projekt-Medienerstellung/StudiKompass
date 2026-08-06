@@ -667,7 +667,8 @@ Path A: User-added content: Custom Modul/Job -> Add column in Supabase for modul
 Path B: Basic Module: Added using StuPO and Studiengang in Settings and then Basic Search -> Add column in Supabase for modules "basic" -> the basic search doesn't pass the actual module id, it goes by zuordnung (studiengangzuordnung/ modulzuordnungsListe)-> fetch the version Id from zuordnung -> shared path
 Path C: Extended Module: Added using extended Module Search -> Add column in Supabase for modules "extended" -> get the newest version by fetching max(bolognamodulVersionList.id) from /bolognamodul/{id} -> shared path
 
-in the shared path: */ 
+in the shared path: The chosen version (for extended that's the max version) gets compared with the supabase version, as it was saved by the user
+The params of comparison being: name, semesterBis and ects. If semesterBis exists the module is automatically outdated */ 
 
 
 
