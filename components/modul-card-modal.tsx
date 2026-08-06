@@ -3,8 +3,8 @@
 import Link from "next/link";
 import {useState, useEffect} from 'react';
 import { X , SquareArrowOutUpRight, Circle, CircleCheckBig,} from 'lucide-react';
-import { link } from "fs";
-import { details } from "@/constants";
+// import { link } from "fs";
+// import { details } from "@/constants";
 
 interface ModulInfo {
     modul_id: number;

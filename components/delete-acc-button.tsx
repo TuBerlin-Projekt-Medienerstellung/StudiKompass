@@ -4,7 +4,7 @@ import { deleteUserAction } from "@/app/protected/settings/actions";
 import {Button} from "@/components/ui/button";
 import {CardHeader, CardTitle} from "@/components/ui/card";
 import {Trash2} from "lucide-react";
-import React, {useState} from "react";
+import {useState} from "react";
 
 export default function DeleteAccount() {
     const [isOpen, setIsOpen] = useState(false);

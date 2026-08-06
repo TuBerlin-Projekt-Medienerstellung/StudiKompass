@@ -11,8 +11,8 @@ export default async function Studiengangwahl() {
     if (apiUrl) { 
         try { 
             const baseHeaders: Record<string, string> = {};
-            if (process.env.moses_API_KEY) { 
-                baseHeaders['x-api-key'] = process.env.moses_API_KEY;
+            if (apiKey) { 
+                baseHeaders['x-api-key'] = apiKey;
             } 
              
             const degreeResponse = await fetch(`${apiUrl}/studiengang?pageSize=500`, { 

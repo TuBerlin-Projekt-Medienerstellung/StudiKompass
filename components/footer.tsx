@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react'
+import { useState } from 'react'
 import Image from "next/image"
 import Link from "next/link"
 import { Heart, Github } from 'lucide-react';
@@ -140,7 +140,7 @@ const Footer = () => {
                             <ul className="list-disc list-inside pl-4 space-y-1">
                                 <li>
                                     <a href="mailto:annaglavatska.dev@gmail.com" className="hover:underline">
-                                        Lead Backend; Architektur: annaglavatska.dev@gmail.com
+                                        Tech Lead; Architektur: annaglavatska.dev@gmail.com
                                     </a>
                                 </li>
                                 <li>
