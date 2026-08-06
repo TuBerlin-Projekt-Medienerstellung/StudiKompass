@@ -2,8 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import {words} from "@/constants"
 import Footer from "@/components/footer"
-import { ThemeSwitcher } from "../components/theme-switcher";
-import { NavButton } from "@/components/landingPage-button";
+import {ThemeSwitcher} from "../components/theme-switcher";
+import {NavButton} from "@/components/landingPage-button";
 
 export const metadata = {
     title: 'Navis | TU Berlin',
@@ -11,7 +11,8 @@ export const metadata = {
 };
 export default function Home() {
     return (
-        <main className="relative z-0 flex flex-col justify-start min-h-screen text-zinc-950 dark:text-zinc-50 w-full overflow-x-hidden">
+        <main
+            className="relative z-0 flex flex-col justify-start min-h-screen text-zinc-950 dark:text-zinc-50 w-full overflow-x-hidden">
             {/* Background */}
             <div className="absolute inset-0 -z-10 overflow-hidden">
                 <div
@@ -41,10 +42,10 @@ export default function Home() {
             {/*</div>*/}
 
             <section className="relative z-10 p-4 md:p-15 w-full">
-                    <div className="absolute right-4 top-4 z-50 md:right-8 md:top-8">
-                        <ThemeSwitcher />
-                    </div>
-                    <div className="h-8 md:h-11" />
+                <div className="absolute right-4 top-4 z-50 md:right-8 md:top-8">
+                    <ThemeSwitcher/>
+                </div>
+                <div className="h-8 md:h-11"/>
                 <div className="text-center max-w-3xl space-y-8 z-50">
                     {/*Title*/}
                     <h1 className="flex flex-row gap-4 md:gap-6 w-full items-center">
@@ -110,6 +111,40 @@ export default function Home() {
                     </div>
                 </div>
 
+            </section>
+            {/* Vorstellungsvideo */}
+            <section className="relative z-10 w-full px-4 pb-16 md:px-15">
+                <div className="max-w-3xl space-y-5">
+                    <div className="space-y-2">
+                        <h2 className="text-3xl font-bold md:text-4xl">
+                            Navis in <span className="text-flag-red">Aktion</span>
+                        </h2>
+                        <p className="text-base opacity-70 md:text-lg">
+                            Wir zeigen dir, wie du mit Navis deinen Studienverlauf planst.
+                        </p>
+                    </div>
+
+                    <div
+                        className="overflow-hidden rounded-2xl border border-zinc-300 bg-black shadow-xl dark:border-violet-ray/40">
+                        <video
+                            className="aspect-video w-full"
+                            src="/team-video-720p.mp4"
+                            poster="/team-video-poster.jpg"
+                            controls
+                            /* preload="none": die 17 MB werden erst beim Klick auf
+                               Play geladen, nicht schon beim Seitenaufruf */
+                            preload="none"
+                            /* verhindert, dass iOS das Video zwangsweise im
+                               Vollbild oeffnet */
+                            playsInline
+                        >
+                            Dein Browser kann dieses Video nicht abspielen.{" "}
+                            <a href="/team-video-720p.mp4" className="underline">
+                                Video herunterladen
+                            </a>
+                        </video>
+                    </div>
+                </div>
             </section>
 
 

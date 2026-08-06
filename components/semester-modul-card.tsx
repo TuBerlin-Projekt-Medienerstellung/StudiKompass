@@ -8,6 +8,7 @@ import { SquareArrowOutUpRight, Grip, Trash2, ChevronDown, ChevronUp, Circle, Ci
 import { useState, useEffect } from "react";
 import { handleModule } from "@/lib/utils";
 import { ladeDetailedModulAction } from "@/app/protected/modules/actions";
+import ModulFeedback from "./modul-feedback";
 import { getTries, saveTries, saveGrade, saveStatus, deleteGrade, loescheModul } from "@/app/protected/planner/actions";
 import ModulStatusBadge, { Module_Check_Info } from "@/components/check_modules";
 
@@ -454,10 +455,6 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul, ch
                                     {checked ? "Als abgeschlossen markiert" : "Als abgeschlossen markieren"}
                                 </button>
 
-                                <button className="bg-blue-bell text-white p-3 rounded-lg w-full md:flex-1">
-                                    Modul bewerten
-                                </button>
-
                                 <Link
                                     href={modul.link || "#"}
                                     target="_blank"
@@ -468,6 +465,15 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul, ch
                                     <SquareArrowOutUpRight className="w-4 h-4" />
                                 </Link>
                             </div>
+
+                            {/* Bewertungen — gleicher Bereich wie im Modulkatalog.
+                                Schlüssel ist die MOSES-Nummer, damit Planer und
+                                Katalog dieselben Bewertungen anzeigen. Eigene
+                                Module haben keine, dort dient die UUID als Schlüssel. */}
+                            <ModulFeedback
+                                modulId={modul.moses_id ?? handleModule(modul.modul_id)}
+                                modulName={modul.name}
+                            />
                         </div>
                     </div>
                 </div>

@@ -32,6 +32,10 @@ declare global {
 
         interface modulInfo {
         modul_id: ModuleId, //später zu UUID
+        // MOSES-Nummer des Moduls. Im Planer ist modul_id die Supabase-UUID,
+        // im Katalog die MOSES-Nummer — für Bewertungen muss aber überall
+        // derselbe Schlüssel verwendet werden. Bei eigenen Modulen leer.
+        moses_id?: string,
         name: string,
         turnus: string,
         bereichpfad: string,

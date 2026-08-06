@@ -18,7 +18,8 @@ import {
 } from "./ui/feedback-utlis";
 
 interface ModulFeedbackProps {
-    modulId: ModuleId;
+    // ModuleId aus dem Katalog, im Planer die MOSES-Nummer als String
+    modulId: ModuleId | string | number;
     modulName: string;
 }
 
