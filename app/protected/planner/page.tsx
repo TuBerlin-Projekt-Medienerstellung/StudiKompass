@@ -1,6 +1,7 @@
 "use client";
 
 import SemesterCard from "@/components/semester-card";
+import PlannerSkeleton from "@/components/planner-skeleton";
 import SemesterModulCard from "@/components/semester-modul-card";
 import { useState, useEffect, useRef } from "react";
 import { Plus, Trash2 } from 'lucide-react';
@@ -28,6 +29,9 @@ const Page = () => {
     const [proWoche, setProWoche] = useState(false);
     const [currentSemester, setCurrentSemester] = useState<number | null>(null);
     const [currentTurnus, setCurrentTurnus] = useState<string | null>(null);
+    // Startet auf true: die Daten werden erst nach der Hydration geladen,
+    // ohne diesen Zustand waere der Planer solange leer
+    const [laedt, setLaedt] = useState(true);
     const semesterOperationLaeuft = useRef(false);
     const [semesterButtonsDisabled, setSemesterButtonsDisabled] = useState(false);
     const [vollesSemester, setVollesSemester] = useState<number | null>(null);
@@ -60,6 +64,9 @@ const Page = () => {
                     // TODO: statt any einen Typ für DB-Module definieren
                     modules: (s.modules ?? []).map((m: any) => ({
                         modul_id: m.id,
+                        // wird für die Bewertungen gebraucht, damit Planer und
+                        // Modulkatalog denselben Schlüssel verwenden
+                        moses_id: m.moses_id,
                         name: m.name,
                         leistungspunkte: m.ects,
                         turnus: m.turnus,
@@ -85,8 +92,11 @@ const Page = () => {
             setCurrentTurnus(currentTurnus);
         }
 
-        loadSemesters();
-        loadTurnus();
+        // Skelett bleibt sichtbar, bis beide Abfragen durch sind.
+        // finally auch im Fehlerfall, sonst haengt die Seite dauerhaft im Ladezustand.
+        Promise.all([loadSemesters(), loadTurnus()])
+            .catch((e) => console.error("Planer konnte nicht geladen werden:", e))
+            .finally(() => setLaedt(false));
     }, []);
 
     //turnus in profiles anders gespeichert als in modules tabelle
@@ -329,6 +339,11 @@ const Page = () => {
         }
 
     };
+
+    // Muss nach allen Hooks stehen, sonst waere die Hook-Reihenfolge instabil
+    if (laedt) {
+        return <PlannerSkeleton/>;
+    }
 
     return (
         <div>
