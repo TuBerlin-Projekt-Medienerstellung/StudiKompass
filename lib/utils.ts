@@ -72,3 +72,11 @@ function wechselBisDatum(datum: Date): number {
 export function zaehleSemesterWechsel(merker: Date, heute: Date): number {
     return wechselBisDatum(heute) - wechselBisDatum(merker);
 }
+
+// Formatiert ein Date als "YYYY-MM-DD" anhand der LOKALEN Zeit
+export function formatiereDatumLokal(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}

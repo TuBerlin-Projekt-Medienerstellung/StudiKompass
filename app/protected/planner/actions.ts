@@ -1,7 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { berechneTurnus, zaehleSemesterWechsel } from "@/lib/utils";
+import { berechneTurnus, zaehleSemesterWechsel, formatiereDatumLokal} from "@/lib/utils";
 import { fetchMoses} from "@/app/protected/modules/actions";
 
 //Semester aus Supabase laden
@@ -617,7 +617,7 @@ export async function pruefeSemesterUpdate() {
     if (!profil.last_semester_update) {
         await supabase
             .from("profiles")
-            .update({ last_semester_update: heute.toISOString().split("T")[0] })
+            .update({ last_semester_update: formatiereDatumLokal(heute) })
             .eq("id", user.id);
         return;
     }
@@ -626,7 +626,7 @@ export async function pruefeSemesterUpdate() {
     if (profil.auto_semester_update_enabled !== true) {
         await supabase
             .from("profiles")
-            .update({ last_semester_update: heute.toISOString().split("T")[0] })
+            .update({ last_semester_update: formatiereDatumLokal(heute) })
             .eq("id", user.id);
         return;
     }
@@ -652,7 +652,7 @@ export async function pruefeSemesterUpdate() {
         .update({
             current_semester: neuesCurrent,
             current_turnus: neuerTurnus,
-            last_semester_update: heute.toISOString().split("T")[0],
+            last_semester_update: formatiereDatumLokal(heute),
         })
         .eq("id", user.id);
 }
