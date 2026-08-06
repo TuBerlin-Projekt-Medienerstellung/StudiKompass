@@ -37,12 +37,14 @@ export function UpdateSemesterForm({
     const [isOpen, setIsOpen] = useState(false);
     const [originalCurrent, setOriginalCurrent] = useState<number | null>(null);
     const [originalTurnus, setOriginalTurnus] = useState<string | null>(null);
+    const [autoUpdate, setAutoUpdate] = useState<boolean>(false);
     const [originalMax, setOriginalMax] = useState<string | null>(null);
+    const [originalAutoUpdate, setOriginalAutoUpdate] = useState<boolean>(false);
+
 
     const filteredTurnus = TURNUS_OPTIONS.filter((opt) =>
         opt.label.toLowerCase().includes(turnusQuery.toLowerCase())
     );
-    
     useEffect(() => {
         async function ladeSemester() {
             try {
@@ -52,7 +54,7 @@ export function UpdateSemesterForm({
 
                 const { data, error } = await supabase
                     .from("profiles")
-                    .select("current_semester, max_semester, current_turnus")
+                    .select("current_semester, max_semester, current_turnus, auto_semester_update_enabled")
                     .eq("id", user.id)
                     .single();
 
@@ -72,6 +74,8 @@ export function UpdateSemesterForm({
                 // Anker für die Turnus-Automatik merken
                 setOriginalCurrent(data?.current_semester ?? null);
                 setOriginalTurnus(data?.current_turnus ?? null);
+                setAutoUpdate(data?.auto_semester_update_enabled ?? false);
+                setOriginalAutoUpdate(data?.auto_semester_update_enabled ?? false);
             } catch (e) {
                 console.error("Fehler beim Laden der Semesterdaten:", e);
             } finally {
@@ -151,6 +155,7 @@ export function UpdateSemesterForm({
                 .update({
                     current_semester: Number(currentSemester),
                     max_semester: max,
+                    auto_semester_update_enabled: autoUpdate,
                     current_turnus: selectedTurnus,
                 })
                 .eq("id", user.id);
@@ -167,6 +172,7 @@ export function UpdateSemesterForm({
             setOriginalCurrent(Number(currentSemester));
             setOriginalTurnus(selectedTurnus);
             setOriginalMax(maxSemester);
+            setOriginalAutoUpdate(autoUpdate);
         } catch (error: unknown) {
             setError(error instanceof Error ? error.message : "Ein Fehler ist aufgetreten.");
         } finally {
@@ -176,7 +182,7 @@ export function UpdateSemesterForm({
 
     // Prüfen: Hat sich etwas ggü der gespeicherten Werte geändert?
     const isUnchanged =
-        currentSemester === (originalCurrent !== null ? String(originalCurrent) : "") && selectedTurnus === (originalTurnus ?? "") && maxSemester === (originalMax ?? "");
+        currentSemester === (originalCurrent !== null ? String(originalCurrent) : "") && selectedTurnus === (originalTurnus ?? "") && maxSemester === (originalMax ?? "") && autoUpdate === originalAutoUpdate;;
     const isDisabled = isLoading || isUnchanged;
 
     return (
@@ -281,6 +287,18 @@ export function UpdateSemesterForm({
                                             setIsSuccess(false);
                                         }}
                                     />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="checkbox"
+                                        id="autoUpdate"
+                                        checked={autoUpdate}
+                                        onChange={(e) => setAutoUpdate(e.target.checked)}
+                                        className="h-4 w-4"
+                                    />
+                                    <Label htmlFor="autoUpdate">
+                                        Automatisches Erhöhen des aktuellen Semesters zum Start des Wintersemesters (01.10.) und des Sommersemesters (01.04.)
+                                    </Label>
                                 </div>
                                 {error && <p className="text-sm text-flag-red">{error}</p>}
                                 {isSuccess && (
