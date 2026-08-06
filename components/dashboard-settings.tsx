@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { createClient } from "@/lib/supabase/client";
+// import { useState } from "react";
+// import { createClient } from "@/lib/supabase/client";
 import { ChevronDown, ChevronUp } from "lucide-react";
 import TotalEctsInput from "@/components/total-ects-input";
 import TargetGradeInput from "@/components/target-grade";
