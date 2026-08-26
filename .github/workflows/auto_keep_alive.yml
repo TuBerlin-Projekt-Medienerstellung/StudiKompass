@@ -7,19 +7,19 @@ on:
 
 jobs:
   ping-db:
-    runs-on: ubunto-latest
+    runs-on: ubuntu-latest
     steps:
       - name: Run every 3 days to ping Supabase Database
         env:
           SUPABASE_URL: ${{secrets.NEXT_PUBLIC_SUPABASE_URL}}
           SUPABASE_KEY: ${{secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}}
         run: |
-          response=$(curl -s -w"\n%{http_code}" -XGET "$SUPABASE_URL/rest/v1/auto_ping?select=id&limit=1"\
+          response=$(curl -s -w "\n%{http_code}" -X GET "$SUPABASE_URL/rest/v1/auto_ping?select=id&limit=1" \
             -H "apikey: $SUPABASE_KEY"\
-            -H "Authorization: BEARER $SUPABASE_KEY")
+            -H "Authorization: Bearer $SUPABASE_KEY")
           body= $(echo "$response" | head -n -1) 
           status_code= $(echo "$response" | tail -n 1)
-          if ["$status_code" -eq 200]; then 
+          if [ "$status_code" -eq 200 ]; then 
             echo "DB is alive/not auto paused"
             echo "Response: $body"
           else
