@@ -14,7 +14,7 @@ jobs:
           SUPABASE_URL: ${{secrets.NEXT_PUBLIC_SUPABASE_URL}}
           SUPABASE_KEY: ${{secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}}
         run: |
-          response=$(curl -s -w "\n%{http_code}" -X GET "$SUPABASE_URL/rest/v1/auto_ping?select=id&limit=1" \
+          response=$(curl -s -w "\n%{http_code}" -X GET "$SUPABASE_URL/rest/v1/auto_ping?select=status&limit=1" \
             -H "apikey: $SUPABASE_KEY"\
             -H "Authorization: Bearer $SUPABASE_KEY")
           body=$(echo "$response" | head -n -1) 
