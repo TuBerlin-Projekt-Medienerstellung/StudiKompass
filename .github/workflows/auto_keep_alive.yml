@@ -1,0 +1,28 @@
+name: Automated Supabase Keep - alive Fallback
+on:
+  workflow_dispatch:
+  #needs to be every 3 or 4 days, as Supabase does automated pausing, when there is no activity for about 7 days.. So this is a Fallback
+  schedule:
+    - cron: '0 0 * * */3'
+
+jobs:
+  ping-db:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run every 3 days to ping Supabase Database
+        env:
+          SUPABASE_URL: ${{secrets.NEXT_PUBLIC_SUPABASE_URL}}
+          SUPABASE_KEY: ${{secrets.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY}}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X GET "$SUPABASE_URL/rest/v1/auto_ping?select=id&limit=1" \
+            -H "apikey: $SUPABASE_KEY"\
+            -H "Authorization: Bearer $SUPABASE_KEY")
+          body=$(echo "$response" | head -n -1) 
+          status_code=$(echo "$response" | tail -n 1)
+          if [ "$status_code" -eq 200 ]; then 
+            echo "DB is alive/not auto paused"
+            echo "Response: $body"
+          else
+            echo "Database has been paused (due to inactivity?), please head to the Dashboard and unpause it"
+            exit 1
+          fi
