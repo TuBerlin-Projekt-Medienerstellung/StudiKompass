@@ -32,7 +32,7 @@ jobs:
             -H "apikey: $SUPABASE_KEY" \
             -H "Authorization: Bearer $SUPABASE_KEY" \
             -H "Content-Type: application/json" \
-            -d '{"status": "something meaningful"}'
+            -d '{"status": "something meaningful"}')
           insert_code=$(echo "$inserted" | tail -n 1)
 
           if [ "$insert_code" -ne 201 ]; then
