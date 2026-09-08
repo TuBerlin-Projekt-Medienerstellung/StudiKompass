@@ -4,7 +4,7 @@ on:
   #needs to be every 3 or 4 days, as Supabase does automated pausing, when there is no activity for about 7 days.. So this is a Fallback
   schedule:
     - cron: '0 0 * * */3'
-
+    
 jobs:
   ping-db:
     runs-on: ubuntu-latest
@@ -19,10 +19,40 @@ jobs:
             -H "Authorization: Bearer $SUPABASE_KEY")
           body=$(echo "$response" | head -n -1) 
           status_code=$(echo "$response" | tail -n 1)
-          if [ "$status_code" -eq 200 ]; then 
-            echo "DB is alive/not auto paused"
-            echo "Response: $body"
-          else
+          if [ "$status_code" -ne 200 ]; then 
             echo "Database has been paused (due to inactivity?), please head to the Dashboard and unpause it"
+            exit 1
+          fi
+          echo "DB is alive/not auto paused"
+          echo "Response: $body"
+
+          # I wanna insert a new row, write something meaningful in it, fetch that and delete my new row
+          ping_tag="ping_$(date +%s)"
+          inserted=$(curl -s -w "\n%{http_code}" -X POST "$SUPABASE_URL/rest/v1/auto_ping" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"status": "something meaningful"}'
+          insert_code=$(echo "$inserted" | tail -n 1)
+
+          if [ "$insert_code" -ne 201 ]; then
+            echo "Failed to insert keep-alive row (Status: $insert_code)"
+            exit 1
+          fi
+
+          #read smth important..
+          verified=$(curl -s -w "\n%{http_code}" -X GET "$SUPABASE_URL/rest/v1/auto_ping?status=eq.something%20meaningful&select=status" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY")
+          verify_body=$(echo "$verified" | head -n -1)
+          echo "Inserted row verified: $verify_body"
+          
+          deleted=$(curl -s -w "\n%{http_code}" -X DELETE "$SUPABASE_URL/rest/v1/auto_ping?status=eq.something%20meaningful" \
+            -H "apikey: $SUPABASE_KEY" \
+            -H "Authorization: Bearer $SUPABASE_KEY")
+          del_code=$(echo "$deleted" | tail -n 1)
+
+          if [ "$del_code" -ne 200 ] && [ "$del_code" -ne 204 ]; then
+            echo "Failed to delete keep-alive-workflow row (Status: $del_code)"
             exit 1
           fi
