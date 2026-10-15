@@ -204,13 +204,13 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                 {/** turnus */}
                                 <div>
                                     <p className='flex-1 font-bold text-[14px]'>Semester</p>
-                                    <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between'>
+                                    <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between bg-white dark:bg-[#24112f]'>
                                         <select
                                             value={formData.turnus}
                                             onChange={(e) =>
                                                 setFormData({ ...formData, turnus: e.target.value })
                                             }
-                                            className="flex-1 w-full bg-transparent text-gray-900 outline-none dark:text-white">
+                                            className="flex-1 w-full text-gray-900 outline-none bg-white dark:bg-[#24112f] dark:text-white">
                                             <option value="">Bitte wählen</option>
                                             <option value="Wintersemester">WiSe</option>
                                             <option value="Sommersemester">SoSe</option>
@@ -222,13 +222,13 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                 {/** Modulart */}
                                 <div>
                                     <p className='flex-1 font-bold text-[14px]'>Modulart</p>
-                                    <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between'>
+                                    <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between bg-white dark:bg-[#24112f]'>
                                         <select
                                             value={formData.bereichspfad}
                                             onChange={(e) =>
                                                 setFormData({ ...formData, bereichspfad: e.target.value })
                                             }
-                                            className="w-full bg-transparent text-gray-900 outline-none dark:text-white">
+                                            className="w-full text-gray-900 outline-none bg-white dark:bg-[#24112f] dark:text-white">
                                             <option value="">Bitte wählen</option>
                                             <option value="Pflicht">Pflicht</option>
                                             <option value="Wahlpflicht">Wahlpflicht</option>
@@ -240,7 +240,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                 {/** benotet */}
                                 <div>
                                     <p className='font-bold text-[14px]'>benotet?</p>
-                                    <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between'>
+                                    <div className='flex px-4 py-3 border-y-2 border-x-2 rounded-lg w-full justify-between bg-white dark:bg-[#24112f]'>
                                         <select
                                             value={formData.benotet === null ? "" : String(formData.benotet)}
                                             onChange={(e) =>
@@ -249,7 +249,7 @@ export default function ModulCustom({ isOpen, onClose }: Props) {
                                                     benotet: e.target.value === "" ? null : e.target.value === "true",
                                                 })
                                             }
-                                            className="w-full bg-transparent text-gray-900 outline-none dark:text-white">
+                                            className="w-full text-gray-900 outline-none bg-white dark:bg-[#24112f] dark:text-white">
                                             <option value="">Bitte wählen</option>
                                             <option value="true">Ja</option>
                                             <option value="false">Nein</option>

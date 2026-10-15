@@ -25,6 +25,9 @@ type ModulDetails = {
     [key: string]: unknown;
 };
 
+export function isJob(modul: modulInfo): boolean {
+    return modul.bereichpfad?.toLowerCase() === "job"; //better than just checking if it has 0 LP, bc what if you are just doing a module for fun but get no LP
+}
 const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul, checkInfo }: Props) => {
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
@@ -119,7 +122,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul, ch
             setCount(gespeicherteVersuche ?? 0);
         };
 
-        if (isOpen) {
+        if (isOpen && !isJob(modul)) {
             fetchVersuche();
         }
 
@@ -146,10 +149,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul, ch
         const aufwand = modul.arbeitsaufwand;
         if (!aufwand || aufwand <= 0) return "—";
 
-        const istJob = modul.leistungspunkte === 0;
-
-        if (istJob) {
-            // Job: gespeichert ist Stunden/Woche
+        if (isJob(modul)) {
             return proWoche ? `${aufwand} h/Woche` : `${aufwand * 15} h/Semester`;
         } else {
             // Modul: gespeichert ist Stunden/Semester
@@ -260,6 +260,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul, ch
                                     <div className="bg-flag-red text-card rounded-xl py-1 px-2 w-fit text-xs font-semibold">
                                         {modul.bereichpfad || "-"}
                                     </div>
+                                    {!isJob(modul) && ( <>
                                     <div className="text-muted-foreground">•</div>
 
                                     {/* Counter für Fehlversuche */}
@@ -270,7 +271,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul, ch
                                             <span className="font-semibold w-4 text-center">{counter}</span>
                                             <button className="px-1 font-bold hover:opacity-70" onClick={increaseTries}>+</button>
                                         </div>
-                                    </div>
+                                    </div></>)}
                                 </div>
                                 {errorMsg && <p className="text-flag-red text-xs">{errorMsg}</p>}
                             </div>
