@@ -466,6 +466,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul, ch
                                     <SquareArrowOutUpRight className="w-4 h-4" />
                                 </Link>
                             </div>
+                            {!isJob(modul) && ( <>
 
                             {/* Bewertungen — gleicher Bereich wie im Modulkatalog.
                                 Schlüssel ist die MOSES-Nummer, damit Planer und
@@ -474,7 +475,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul, ch
                             <ModulFeedback
                                 modulId={modul.moses_id ?? handleModule(modul.modul_id)}
                                 modulName={modul.name}
-                            />
+                            /></>)}
                         </div>
                     </div>
                 </div>
