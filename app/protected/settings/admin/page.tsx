@@ -33,7 +33,6 @@ interface ReportEntry {
 
 export default function AdminPage() {
   const [isAuthorized, setIsAuthorized] = useState(false);
-  const [loadingAuth, setLoadingAuth] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [logs, setLogs] = useState<LogEntry[]>([]);
   //track log entry 
