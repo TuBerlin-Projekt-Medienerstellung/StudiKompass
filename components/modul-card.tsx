@@ -332,7 +332,7 @@ const ModulCard = (props: modulInfo & {
                                 )}
                         </div >
 
-                        <ModulFeedback modulId={modul_id} modulName={name} />
+                        <ModulFeedback modulName={name} />
                     </div >
                 </div >
             </div >

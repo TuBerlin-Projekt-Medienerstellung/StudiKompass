@@ -7,7 +7,7 @@ import {initialenAusName} from "@/components/ui/feedback-utlis";
 interface BewertungRow {
     id: string;
     user_id: string;
-    modul_id: string;
+    modul_name: string;
     sterne_kategorie01: number | null;
     sterne_kategorie02: number | null;
     sterne_kategorie03: number | null;
@@ -45,7 +45,7 @@ function zuBewertung(row: BewertungRow, name: string, istEigene: boolean): Bewer
     };
 }
 
-export async function ladeBewertungenAction(modulId: string): Promise<Bewertung[]> {
+export async function ladeBewertungenAction(modulName: string): Promise<Bewertung[]> {
     const supabase = await createClient();
     const {data: {user}} = await supabase.auth.getUser();
     if (!user) return [];
@@ -53,7 +53,7 @@ export async function ladeBewertungenAction(modulId: string): Promise<Bewertung[
     const {data, error} = await supabase
         .from("bewertung")
         .select("*")
-        .eq("modul_id", modulId)
+        .eq("modul_name", modulName)
         .order("created_at", {ascending: false});
 
     if (error) {
@@ -80,7 +80,7 @@ export async function ladeBewertungenAction(modulId: string): Promise<Bewertung[
 }
 
 export async function erstelleBewertungAction(
-    modulId: string,
+    modulName: string,
     kategorien: KategorieBewertung,
     semester: string,
     kommentar: string
@@ -93,7 +93,7 @@ export async function erstelleBewertungAction(
         .from("bewertung")
         .insert({
             user_id: user.id,
-            modul_id: modulId,
+            modul_name: modulName,
             sterne_kategorie01: kategorien.dozent,
             sterne_kategorie02: kategorien.vorlesung,
             sterne_kategorie03: kategorien.tutorium,
@@ -135,4 +135,36 @@ export async function loescheBewertungAction(bewertungId: string): Promise<void>
         console.error("Fehler beim Löschen der Bewertung:", error);
         throw error;
     }
+}
+
+export async function reportReviewAction(reviewId: string) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Unauthorized");
+
+  //unique reports
+  const { data: existing } = await supabase
+    .from("review_reports")
+    .select("id")
+    .eq("review_id", reviewId)
+    .eq("reporter_id", user.id)
+    .single();
+
+  if (existing) {
+    throw new Error("Du hast diesen Beitrag bereits gemeldet");
+  }
+
+  const { error } = await supabase
+    .from("review_reports")
+    .insert({
+      review_id: reviewId,
+      reporter_id: user.id,
+    });
+
+  if (error?.code === "23505") {
+    throw new Error("Du hast diesen Beitrag bereits gemeldet");
+  }
+  if (error) throw new Error("Fehler beim Melden: " + error.message);
+
+  return { success: true };
 }

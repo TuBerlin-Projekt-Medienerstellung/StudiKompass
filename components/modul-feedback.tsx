@@ -10,7 +10,6 @@ import {
     ladeBewertungenAction,
     loescheBewertungAction,
 } from "@/app/protected/modules/feedback-actions";
-import {handleModule} from "@/lib/utils";
 import {
     berechneGesamtScore,
     berechneKategorieDurchschnitt,
@@ -18,8 +17,6 @@ import {
 } from "./ui/feedback-utlis";
 
 interface ModulFeedbackProps {
-    // ModuleId aus dem Katalog, im Planer die MOSES-Nummer als String
-    modulId: ModuleId | string | number;
     modulName: string;
 }
 
@@ -29,9 +26,8 @@ const sortierOptionen: { key: SortOption; label: string }[] = [
     {key: "beste", label: "Beste"},
 ];
 
-const ModulFeedback = ({modulId, modulName}: ModulFeedbackProps) => {
-    // bewertung.modul_id ist Text: speichert MOSES-Nummern und UUIDs gleichermaßen
-    const modulKey = handleModule(modulId);
+const ModulFeedback = ({modulName}: ModulFeedbackProps) => {
+    const modulKey = modulName;
 
     const [open, setOpen] = useState(false);
     const [schreibtBewertung, setSchreibtBewertung] = useState(false);

@@ -1,7 +1,9 @@
-import {ThumbsUp, MessageCircle, ChevronDown, Trash2} from "lucide-react";
+"use client";
+import {ThumbsUp, MessageCircle, ChevronDown, Trash2, Flag} from "lucide-react";
 import StarRatingDisplay from "./ui/starrating-display";
+import {useState} from "react";
 import {avatarFarbe} from "./ui/feedback-utlis";
-
+import { reportReviewAction } from "@/app/protected/modules/feedback-actions"
 interface ReviewCardProps {
     bewertung: Bewertung;
     onLoeschen?: (bewertungId: string) => void;
@@ -16,6 +18,24 @@ const kategorieLabels: { key: keyof KategorieBewertung; label: string }[] = [
 ];
 
 const ReviewCard = ({bewertung, onLoeschen}: ReviewCardProps) => {
+    const [gemeldet, setGemeldet] = useState(false);
+    const [meldetLaden, setMeldetLaden] = useState(false);
+
+    const handleReport = async () => {
+        if (gemeldet || meldetLaden) return;
+        if (!confirm("Diesen Kommentar wirklich als unangemessen melden?")) return;
+
+        setMeldetLaden(true);
+        try {
+            await reportReviewAction(bewertung.id);
+            setGemeldet(true);
+            alert("Vielen Dank! Der Beitrag wurde an das Admin-Team gemeldet.");
+        } catch (error: any) {
+            alert(error.message || "Fehler beim Melden.");
+        } finally {
+            setMeldetLaden(false);
+        }
+    };
     return (
         <div className="border border-gray-200 rounded-xl p-5 flex flex-col gap-3">
             <div className="flex justify-between items-start gap-3">
@@ -70,6 +90,23 @@ const ReviewCard = ({bewertung, onLoeschen}: ReviewCardProps) => {
                     >
                         <Trash2 size={14}/>
                         Löschen
+                    </button>
+                )}
+                {!bewertung.istEigene && (
+                    <button
+                        onClick={handleReport}
+                        disabled={gemeldet || meldetLaden}
+                        className={`flex items-center gap-1.5 transition-colors ${
+                            bewertung.istEigene ? "" : "ml-auto"
+                        } ${
+                            gemeldet 
+                                ? "text-green-600 cursor-default" 
+                                : "text-gray-400 hover:text-red-500"
+                        }`}
+                        title="Beitrag melden"
+                    >
+                        <Flag size={14}/>
+                        {gemeldet ? "Gemeldet" : meldetLaden ? "Melde..." : "Melden"}
                     </button>
                 )}
             </div>

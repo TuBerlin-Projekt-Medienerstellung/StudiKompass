@@ -468,12 +468,7 @@ const SemesterModulCard = ({ modul, proWoche, onToggleAufwand, onDeleteModul, ch
                             </div>
                             {!isJob(modul) && ( <>
 
-                            {/* Bewertungen — gleicher Bereich wie im Modulkatalog.
-                                Schlüssel ist die MOSES-Nummer, damit Planer und
-                                Katalog dieselben Bewertungen anzeigen. Eigene
-                                Module haben keine, dort dient die UUID als Schlüssel. */}
                             <ModulFeedback
-                                modulId={modul.moses_id ?? handleModule(modul.modul_id)}
                                 modulName={modul.name}
                             /></>)}
                         </div>

@@ -3,11 +3,7 @@ import {createClient} from '@/lib/supabase/server'
 import {notFound} from 'next/navigation'
 import Image from 'next/image'
 
-export default async function PublicProfilePage({
-                                                    params,
-                                                }: {
-    params: Promise<{ username: string }>
-}) {
+export default async function PublicProfilePage({params}: {params: Promise<{ username: string }>}) {
     noStore()
     const {username} = await params
 
