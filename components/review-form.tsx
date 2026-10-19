@@ -65,18 +65,18 @@ const ReviewForm = ({modulName, onAbbrechen, onAbschicken}: ReviewFormProps) => 
 
             <div className="grid md:grid-cols-2 gap-3">
                 {kategorieFelder.map(({key, label}) => (
-                    <div key={key} className="bg-[#E3E6EA] rounded-lg px-4 py-3 flex items-center justify-between">
-                        <span className="text-sm">{label}</span>
+                    <div key={key} className="bg-[#E3E6EA] dark:bg-[#110529] rounded-lg px-4 py-3 flex items-center justify-between">
+                        <span className="bg-transparent text-sm">{label}</span>
                         <StarRatingInput value={kategorien[key]} onChange={(wert) => setzeKategorie(key, wert)}
                                          size={18}/>
                     </div>
                 ))}
-                <div className="bg-[#E3E6EA] rounded-lg px-4 py-3 flex items-center justify-between">
+                <div className="bg-[#E3E6EA] dark:bg-[#110529] rounded-lg px-4 py-3 flex items-center justify-between">
                     <span className="text-sm">Semester</span>
                     <select
                         value={semester}
                         onChange={(e) => setSemester(e.target.value)}
-                        className="bg-transparent text-sm font-medium outline-none cursor-pointer"
+                        className="bg-[#E3E6EA] dark:bg-[#110529] text-sm font-medium outline-none cursor-pointer"
                     >
                         {semesterOptionen.map((option) => (
                             <option key={option} value={option}>
@@ -98,7 +98,7 @@ const ReviewForm = ({modulName, onAbbrechen, onAbschicken}: ReviewFormProps) => 
                 <span className="absolute bottom-2 right-3 text-xs text-gray-400">{kommentar.length}/500</span>
             </div>
 
-            <div className="flex justify-end gap-2">
+            <div className="flex justify-center gap-1">
                 <button
                     onClick={onAbbrechen}
                     className="px-4 py-2 rounded-lg text-sm border border-gray-200 hover:bg-gray-50 transition-colors"

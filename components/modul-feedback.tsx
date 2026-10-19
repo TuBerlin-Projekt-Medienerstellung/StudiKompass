@@ -127,24 +127,16 @@ const ModulFeedback = ({modulName}: ModulFeedbackProps) => {
                     <div className="flex flex-col gap-5">
                         <div className="flex justify-between items-center md:flex-row flex-col gap-3">
                             <h2 className="font-bold text-lg">Studierenden-Forum</h2>
-                            <button
-                                onClick={() => setSchreibtBewertung(!schreibtBewertung)}
-                                className={`px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors ${
-                                    schreibtBewertung ? "bg-white border border-gray-300" : "bg-flag-red text-white"
-                                }`}
-                            >
-                                {schreibtBewertung ? (
-                                    <>
-                                        <X size={14}/>
-                                        Abbrechen
-                                    </>
-                                ) : (
-                                    <>
-                                        <Star size={14} fill="currentColor"/>
-                                        Bewertung schreiben
-                                    </>
-                                )}
-                            </button>
+                            {!schreibtBewertung && (
+                                <button
+                                    onClick={() => setSchreibtBewertung(true)}
+                                    className="px-4 py-2 rounded-lg text-sm flex items-center gap-2 transition-colors bg-flag-red text-white"
+                                >
+                                    <Star size={14} fill="currentColor" />
+                                    Bewertung schreiben
+                                </button>
+                            )}
+                            {/* it was duplicate.. (Abbrechen) */}
                         </div>
 
                         {fehler && (
