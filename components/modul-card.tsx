@@ -25,21 +25,9 @@ const ModulCard = (props: modulInfo & {
     currentSemester: number | null;
     currentTurnus: string | null;
     no_deg?: boolean;
+    InPlanner?: boolean;
 }) => {
-    const [liked, setLiked] = useState(true);
-    const [open, setOpen] = useState(false);
-    const [details, setDetails] = useState<ModulDetails | null>(null);
-    // const [loadingDetails, setLoadingDetails] = useState(false);
-    const [, setLoadingDetails] = useState(false);
-    const [showLernergebnisse, setShowLernergebnisse] = useState(false);
-    const [plannerOpen, setPlannerOpen] = useState(false);
-    const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
-    const [imPlaner, setImPlaner] = useState(false);
-    const [imPlanerSemester, setImPlanerSemester] = useState<string | null>(null);
-    const [warnung, setWarnung] = useState<string | null>(null);
-
-
-    const {
+        const {
         modul_id,
         name,
         leistungspunkte,
@@ -50,7 +38,20 @@ const ModulCard = (props: modulInfo & {
         currentSemester,
         currentTurnus,
         no_deg = false,
+        InPlanner=false,
     } = props;
+
+    const [liked, setLiked] = useState(InPlanner); //pretty straightforward
+    const [open, setOpen] = useState(false);
+    const [details, setDetails] = useState<ModulDetails | null>(null);
+    // const [loadingDetails, setLoadingDetails] = useState(false);
+    const [, setLoadingDetails] = useState(false);
+    const [showLernergebnisse, setShowLernergebnisse] = useState(false);
+    const [plannerOpen, setPlannerOpen] = useState(false);
+    const [selectedSemester, setSelectedSemester] = useState<string | null>(null);
+    const [imPlaner, setImPlaner] = useState(false);
+    const [imPlanerSemester, setImPlanerSemester] = useState<string | null>(null);
+    const [warnung, setWarnung] = useState<string | null>(null);
 
     const angezeigterTurnus = turnus ?? undefined;
 
@@ -140,8 +141,19 @@ const ModulCard = (props: modulInfo & {
         <div className={`w-full min-w-0 flex flex-col border-y-2 border-x-4 border-border ${moduleBorderClass} bg-background dark:bg-card rounded-xl px-4 sm:px-6 pt-4 transition-all duration-700 ${open ? "pb-6" : "pb-4"}`}>
             <header className="flex w-full items-start justify-between gap-3">
                 <div className="flex min-w-0 flex-1 gap-3">
-                    <button onClick={() => setLiked(!liked)} className="mt-1 shrink-0">
-                        {liked ? <CircleCheckBig className="text-mint-leaf" /> : <Circle />}
+                    <button 
+                        onClick={() => {
+                            if (!InPlanner) {
+                                setLiked(!liked);
+                            }
+                        }} 
+                        disabled={InPlanner}
+                        className={`mt-1 shrink-0 ${InPlanner ? 'cursor-default' : 'cursor-pointer'}`}
+                    >
+                        {liked || InPlanner ? (
+                            <CircleCheckBig className="text-mint-leaf" />
+                        ) : (
+                            <Circle />)}
                     </button>
 
                     <div className="flex min-w-0 flex-1 flex-col gap-2 md:flex-row md:items-center md:gap-6">

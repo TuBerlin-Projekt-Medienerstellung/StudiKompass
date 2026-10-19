@@ -7,11 +7,9 @@ import {
     Shell,
     Award,
     Calendar,
-    Clock,
     TrendingUp,
     CircleCheckBig,
     Circle,
-    ChevronDown,
 } from "lucide-react";
 
 import DashboardContent from "@/components/dashboard-content";

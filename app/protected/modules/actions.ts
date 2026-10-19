@@ -605,3 +605,21 @@ export async function addCustomModulToPlanner(groupId?: UUID, modul_id?: ModuleI
 
     if (error) throw error;
 }//keep mine
+
+export async function getUserModules(): Promise<string[]> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("module")
+    .select("name") 
+    .eq("user_id", user.id);
+
+  if (error || !data) {
+    console.error("Fehler beim Laden der Nutzer Module:", error);
+    return [];}
+
+  return data.map((item) => item.name);
+}

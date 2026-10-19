@@ -21,7 +21,7 @@ import { handleModule } from '@/lib/utils';
 import { getSemesters, getProfilTurnus } from '@/app/protected/planner/actions';
 import ModulCard from '@/components/modul-card';
 import ModulSearch from './modulsearch';
-import { ladeModulBasisAction, ModulBasis } from '@/app/protected/modules/actions';
+import { ladeModulBasisAction, ModulBasis, getUserModules } from '@/app/protected/modules/actions';
 
 interface Props {
     // studiengangId wird von page.tsx weitergegeben
@@ -37,7 +37,7 @@ export default function MosesModulsuche({ studiengangId }: Props) {
 
     // Alle geladenen Module — wird beim ersten Knopfdruck befüllt
     const [moduleList, setModuleList] = useState<ModulBasis[]>([]);
-
+    const [userModSet, setUserModSet] = useState<Set<string>>(new Set()); //the modules the user has in their panner
     // Ladezustand — true während der Server Action läuft
     const [laden, setLaden] = useState(false);
 
@@ -88,8 +88,9 @@ export default function MosesModulsuche({ studiengangId }: Props) {
             try {
                 // Server Action aufrufen — läuft serverseitig
                 // kein CORS Problem, API-Key bleibt sicher auf dem Server
-                const modulItems = await ladeModulBasisAction(studiengangId);
+                const [modulItems, existingnames] = await Promise.all([ladeModulBasisAction(studiengangId), getUserModules()]);
                 setModuleList(modulItems);
+                setUserModSet(new Set(existingnames.map((n) => n.toLowerCase().trim())));
                 setGeladen(true);
             } catch (e) {
                 console.error("Fehler beim Laden der Module:", e);
@@ -192,7 +193,9 @@ export default function MosesModulsuche({ studiengangId }: Props) {
                             Keine Module gefunden.
                         </p>
                     ) : (
-                        gefilterteModule.map((modul, index) => (
+                        gefilterteModule.map((modul, index) => {
+                            const existing= userModSet.has(modul.name.toLowerCase().trim());
+                            return(
                             /**
                              * key: Kombination aus id und index wegen möglicher
                              * doppelter IDs in der MOSES Demo-API
@@ -200,24 +203,25 @@ export default function MosesModulsuche({ studiengangId }: Props) {
                              * onAusklappen: gibt modulId weiter für späteren Detail-Fetch
                              * TODO: Detail-Fetch implementieren
                              */
-                            <ModulCard
-                                key={`${handleModule(modul.id)}-${index}`}
-                                modul_id={modul.id}
-                                name={modul.name}
-                                leistungspunkte={modul.lp}
-                                bereichpfad={modul.bereichPfad[0] ?? "—"}
-                                link={''}
-                                turnus={modul.semester}
-                                lernergebnisse={''}
-                                pruefungsform=""
-                                pruefungselemente={[]}
-                                benotet={false}
-                                arbeitsaufwand={0}
-                                semesterListe={semesterListe}
-                                currentSemester={currentSemester}
-                                currentTurnus={currentTurnus}
-                            />
-                        ))
+                                <ModulCard
+                                    key={`${handleModule(modul.id)}-${index}`}
+                                    modul_id={modul.id}
+                                    name={modul.name}
+                                    leistungspunkte={modul.lp}
+                                    bereichpfad={modul.bereichPfad[0] ?? "—"}
+                                    link={''}
+                                    turnus={modul.semester}
+                                    lernergebnisse={''}
+                                    pruefungsform=""
+                                    pruefungselemente={[]}
+                                    benotet={false}
+                                    arbeitsaufwand={0}
+                                    semesterListe={semesterListe}
+                                    currentSemester={currentSemester}
+                                    currentTurnus={currentTurnus}
+                                    InPlanner = {existing}
+                                />);
+                        })
                     )}
                 </div>
             )}
