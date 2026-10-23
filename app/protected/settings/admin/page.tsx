@@ -26,9 +26,9 @@ interface ReportEntry {
       user_id: string;
       email: string | null;
       profiles?: {
-        username: string;
-      }| null;
-  } | null;
+        username: string | null; reports: number | 0;
+      };
+  };
 }
 
 export default function AdminPage() {
@@ -48,7 +48,7 @@ export default function AdminPage() {
 
     const { data } = await supabase
       .from('profiles')
-      .select('username, studiengang, avatar_url, is_admin')
+      .select('is_admin')
       .eq('id', user.id)
       .single();
     if (!data?.is_admin) { return; }
@@ -192,6 +192,7 @@ export default function AdminPage() {
                 <div className="flex justify-between items-center text-xs text-gray-400">
                   <span>Autor: <strong className="text-gray-200">{report.bewertung?.profiles?.username ?? "Unbekannt"}</strong>{report.bewertung?.email ? ` · ${report.bewertung.email}` : ""}</span>
                   <span>{new Date(report.created_at).toLocaleDateString()}</span>
+                  <span>Strikes: <strong className="text-gray-200">{report.bewertung?.profiles?.reports ?? "Unbekannt"}</strong></span>
                 </div>
                 
                 <p className="text-sm italic bg-neutral-800 p-2.5 rounded text-gray-300 border-l-2 border-red-500">
