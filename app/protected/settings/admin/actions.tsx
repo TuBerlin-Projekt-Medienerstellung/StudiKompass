@@ -64,7 +64,7 @@ export async function fetchReportsAction() {
         id, 
         kommentar, 
         user_id,
-        profiles (username)
+        profiles (username, reports)
       )
     `)
     .order("created_at", { ascending: false });
@@ -78,7 +78,7 @@ export async function fetchReportsAction() {
       id: string;
       kommentar: string;
       user_id: string;
-      profiles: { username: string } | null;
+      profiles: { username: string; reports: number } | null;
     } | null;
   };
 //review id-> user id(join on public.review_reports and public.bewertung) ->email (auth) (i joined the tables)
