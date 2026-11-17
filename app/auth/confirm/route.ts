@@ -20,13 +20,10 @@ export async function GET(request: NextRequest) {
       // redirect user to specified redirect URL or root of app
       redirect(next);
     } else {
-      // redirect the user to an error page with some instructions
-      redirect(`/auth/error?error=${error?.message}`);
+      // stay on the same page if there is an error with the password -> change it without having to restart and also see the error
+      redirect(`/auth/forgot-password?error=${encodeURIComponent(error.message)}`);
     }
   }
 
-  // redirect the user to an error page with some instructions
-  redirect(`/auth/error?error=No token hash or type`);
+  redirect(`/auth/forgot-password?error=${encodeURIComponent("Invalid or expired reset link")}`);
 }
-
-// Add E-MailOTP Re-authentification
