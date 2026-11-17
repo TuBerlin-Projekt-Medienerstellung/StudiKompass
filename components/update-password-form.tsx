@@ -3,6 +3,7 @@
 import {cn} from "@/lib/utils";
 import { updatePassword } from "@/app/protected/settings/actions";
 import {Button} from "@/components/ui/button";
+import { createClient } from "@/lib/supabase/client";
 import {
     Card,
     CardContent,
@@ -40,10 +41,22 @@ export function UpdatePasswordForm({
 
         try {
             const result = await updatePassword(password);
-            if (result?.error) setError(result.error);
-            setShowConfirm(false);
-            // Update this route to redirect to an authenticated route. The user already has an active session.
+            if (result?.error){ setError(result.error);
+                setShowConfirm(false);
+                return;}
+            const supabase = createClient();
+
+            const { data: { user } } = await supabase.auth.getUser();
+    
+            if (user) {
             router.push("/protected");
+            } else {
+            router.push("/auth/login");
+            }
+            //User always gets logged out ->login 
+            //however if they click cancel changes without a session they now get pushed to login (no 404) and when they do they stay on /protected like before
+            
+            
         } catch (error: unknown) {
             setError(error instanceof Error ? error.message : "Es ist ein Fehler aufgetreten.");
             setShowConfirm(false);
